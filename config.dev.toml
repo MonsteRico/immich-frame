@@ -1,0 +1,25 @@
+[device]
+name = "Desktop Dev Frame"
+timezone = "auto"
+
+[server]
+host = "127.0.0.1"
+port = 8787
+hostname = "localhost"
+
+[source]
+mode = "local_folder"
+
+[source.local_folder]
+path = "./dev/photos"
+shuffle = true
+
+[display]
+fit = "contain"
+background = "blur"
+transition = "crossfade"
+transition_ms = 800
+
+[slideshow]
+interval_seconds = 10
+recent_history_limit = 50

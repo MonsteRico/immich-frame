@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Immich Frame Setup</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #f7f7f2;
+        color: #171716;
+        font-family: system-ui, sans-serif;
+        display: grid;
+        place-items: center;
+      }
+
+      main {
+        width: min(28rem, calc(100vw - 2rem));
+      }
+
+      input,
+      button {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 2.75rem;
+        margin-top: 0.75rem;
+        font: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Immich Frame Setup</h1>
+      <p>The setup portal scaffold is ready. Full setup flows arrive after the local frame loop.</p>
+      <input placeholder="Immich URL" />
+      <input placeholder="Immich API key" type="password" />
+      <button type="button">Save setup</button>
+    </main>
+  </body>
+</html>
