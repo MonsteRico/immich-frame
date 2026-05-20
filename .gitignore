@@ -1,0 +1,5 @@
+.immich-frame/
+dist/
+node_modules/
+coverage/
+*.log

@@ -1,0 +1,16 @@
+{
+  "name": "immich-frame-workspace",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "build": "pnpm --filter @immich-frame/shared build && pnpm --filter @immich-frame/frame build && pnpm --filter @immich-frame/setup build",
+    "build:embedded-ui": "pnpm build && node scripts/sync-ui-assets.mjs",
+    "typecheck": "pnpm --filter @immich-frame/shared typecheck && pnpm --filter @immich-frame/frame typecheck && pnpm --filter @immich-frame/setup typecheck",
+    "dev:frame": "pnpm --filter @immich-frame/frame dev",
+    "dev:setup": "pnpm --filter @immich-frame/setup dev"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  }
+}
