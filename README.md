@@ -4,7 +4,7 @@ A self-hosted digital picture frame for Immich libraries, designed for self-buil
 
 ## Status
 
-Planning scaffold. Implementation has not started yet.
+Phase 0 scaffold is in place. The local daemon can run a development-only mock slideshow from `dev/photos` in a desktop browser while later Immich/setup work is still pending.
 
 Start here:
 
@@ -53,6 +53,45 @@ It is not primarily a hosted web app, Docker dashboard, or cloud service.
 - Flashable image.
 - Auto-updates.
 - Docker/LAN deployment mode.
+
+## Local Development
+
+Prerequisites:
+
+- Go 1.22 or newer.
+- Node.js with Corepack.
+- pnpm 9.x.
+
+Install frontend dependencies:
+
+```sh
+corepack pnpm install
+```
+
+Run checks:
+
+```sh
+go test ./...
+corepack pnpm typecheck
+corepack pnpm build
+```
+
+Prepare embedded UI assets before a release Go build:
+
+```sh
+corepack pnpm build:embedded-ui
+```
+
+Run the desktop mock slideshow:
+
+```sh
+go run ./cmd/immich-frame serve -config config.dev.toml -dev-source dev/photos
+```
+
+Then open:
+
+- `http://127.0.0.1:8787/frame`
+- `http://127.0.0.1:8787/setup`
 
 ## License Plan
 

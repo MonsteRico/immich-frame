@@ -44,27 +44,27 @@ For the first implementation session, stop when **Phase 0** is complete and enou
 
 ### Phase 0 Done Checklist
 
-- [ ] Repo structure exists.
-- [ ] Go module initialized.
-- [ ] CLI skeleton compiles.
-- [ ] Config/secrets/state file paths and data types exist.
-- [ ] Frame UI bundle scaffold exists.
-- [ ] Setup UI bundle scaffold exists.
-- [ ] Shared UI package exists.
-- [ ] Release embedding strategy is represented in code/build files.
-- [ ] Basic CI commands are documented or configured.
-- [ ] CI scope is Go unit tests plus frontend typecheck/build.
+- [x] Repo structure exists.
+- [x] Go module initialized.
+- [x] CLI skeleton compiles.
+- [x] Config/secrets/state file paths and data types exist.
+- [x] Frame UI bundle scaffold exists.
+- [x] Setup UI bundle scaffold exists.
+- [x] Shared UI package exists.
+- [x] Release embedding strategy is represented in code/build files.
+- [x] Basic CI commands are documented or configured.
+- [x] CI scope is Go unit tests plus frontend typecheck/build.
 
 ### Phase 1 Partial Done Checklist
 
-- [ ] Local folder/mock source can produce photo candidates.
-- [ ] Cache manifest can track cached local media.
-- [ ] Playback queue can advance current/next/previous in memory.
-- [ ] `/api/state` returns frame state.
-- [ ] `/api/events` streams state updates with SSE.
-- [ ] `/media/:assetID` serves local cached media.
-- [ ] `/frame` renders slideshow in desktop browser.
-- [ ] Clock/photo-info/status overlay placeholders render.
+- [x] Local folder/mock source can produce photo candidates.
+- [x] Cache manifest can track cached local media.
+- [x] Playback queue can advance current/next/previous in memory.
+- [x] `/api/state` returns frame state.
+- [x] `/api/events` streams state updates with SSE.
+- [x] `/media/:assetID` serves local cached media.
+- [x] `/frame` renders slideshow in desktop browser.
+- [x] Clock/photo-info/status overlay placeholders render.
 
 ## Stop Conditions
 
