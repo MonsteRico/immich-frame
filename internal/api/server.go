@@ -1,15 +1,19 @@
 package api
 
 import (
+	"bytes"
 	"embed"
 	"encoding/json"
 	"fmt"
+	"mime"
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/MonsteRico/immich-frame/internal/cache"
 	"github.com/MonsteRico/immich-frame/internal/config"
@@ -75,8 +79,11 @@ func (s *Server) setup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) assets(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/assets/")
-	if s.serveDistAsset(w, r, s.FrameDist, path) || s.serveDistAsset(w, r, s.SetupDist, path) {
+	assetPath := strings.TrimPrefix(r.URL.Path, "/assets/")
+	if s.serveDistAsset(w, r, s.FrameDist, assetPath) ||
+		s.serveDistAsset(w, r, s.SetupDist, assetPath) ||
+		s.serveEmbeddedAsset(w, r, "static/frame/assets", assetPath) ||
+		s.serveEmbeddedAsset(w, r, "static/setup/assets", assetPath) {
 		return
 	}
 	http.NotFound(w, r)
@@ -190,6 +197,31 @@ func (s *Server) serveDistAsset(w http.ResponseWriter, r *http.Request, distDir,
 	}
 	http.ServeFile(w, r, full)
 	return true
+}
+
+func (s *Server) serveEmbeddedAsset(w http.ResponseWriter, r *http.Request, root, assetPath string) bool {
+	clean := cleanAssetPath(assetPath)
+	if clean == "" {
+		return false
+	}
+	embeddedPath := path.Join(root, clean)
+	data, err := embeddedStatic.ReadFile(embeddedPath)
+	if err != nil {
+		return false
+	}
+	if contentType := mime.TypeByExtension(path.Ext(clean)); contentType != "" {
+		w.Header().Set("Content-Type", contentType)
+	}
+	http.ServeContent(w, r, path.Base(clean), time.Time{}, bytes.NewReader(data))
+	return true
+}
+
+func cleanAssetPath(assetPath string) string {
+	clean := path.Clean(strings.TrimPrefix(strings.ReplaceAll(assetPath, "\\", "/"), "/"))
+	if clean == "." || clean == ".." || strings.HasPrefix(clean, "../") {
+		return ""
+	}
+	return clean
 }
 
 func writeJSON(w http.ResponseWriter, value any) {
