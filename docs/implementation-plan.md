@@ -42,6 +42,24 @@ Checklist:
 - [ ] Add clock/photo-info/status overlay placeholders.
 - [ ] Add browser display-size reporting endpoint.
 
+## Phase 1.5: Base Validation And Embedding Cleanup
+
+Goal: tighten the local foundation before starting the real Immich adapter.
+
+Checklist:
+
+- [ ] Verify Go toolchain availability and run `go test ./...`.
+- [ ] Add unit tests for config defaults/validation.
+- [ ] Add unit tests for local folder candidate discovery.
+- [ ] Add unit tests for cache manifest ensure/list/mark-shown behavior.
+- [ ] Add unit tests for playback next/previous/pause/resume behavior.
+- [ ] Reconcile embedded release UI behavior.
+- [ ] If release embedding uses Vite output, serve embedded `/assets/*` from `embed.FS`.
+- [ ] If release embedding uses a deliberate inline fallback, document that and keep `build:embedded-ui` from producing broken asset references.
+- [ ] Run `pnpm typecheck`.
+- [ ] Run `pnpm build`.
+- [ ] Manually verify the local mock slideshow in a desktop browser when possible.
+
 ## Phase 2: Immich Adapter
 
 Goal: connect to real Immich through an isolated adapter.

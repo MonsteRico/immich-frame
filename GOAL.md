@@ -40,7 +40,9 @@ The MVP is done when all items below are complete on the reference Pi Zero 2 W h
 
 ## Current Session Goal
 
-For the first implementation session, stop when **Phase 0** is complete and enough of **Phase 1** exists to run a local mock slideshow in a desktop browser.
+Complete **Phase 1.5: Base Validation And Embedding Cleanup**.
+
+The local scaffold and mock frame loop exist. Before moving into the real Immich adapter, tighten the base so the next feature work lands on a verified foundation.
 
 ### Phase 0 Done Checklist
 
@@ -65,6 +67,25 @@ For the first implementation session, stop when **Phase 0** is complete and enou
 - [x] `/media/:assetID` serves local cached media.
 - [x] `/frame` renders slideshow in desktop browser.
 - [x] Clock/photo-info/status overlay placeholders render.
+
+### Phase 1.5 Base Validation And Embedding Cleanup Checklist
+
+- [ ] Verify the Go toolchain is available in the development environment, or document the exact blocker.
+- [ ] Run `go test ./...` successfully once Go is available.
+- [ ] Add focused Go unit tests for the existing local base:
+  - [ ] config defaults/validation.
+  - [ ] local folder candidate discovery.
+  - [ ] cache manifest ensure/list/mark-shown behavior.
+  - [ ] playback next/previous/pause/resume behavior.
+- [ ] Reconcile release UI embedding:
+  - [ ] Decide whether embedded release UI should use the built Vite bundles or a deliberately separate inline fallback.
+  - [ ] If using Vite bundles, make embedded `/assets/*` serving work from `embed.FS`.
+  - [ ] If keeping inline fallback, document that choice and ensure `build:embedded-ui` does not create broken embedded asset references.
+- [ ] Run `pnpm typecheck`.
+- [ ] Run `pnpm build`.
+- [ ] Run the local mock slideshow manually in a desktop browser if the Go toolchain is available.
+- [ ] Record verification results and any remaining environment limitations in docs or commit notes.
+- [ ] Commit fixes in meaningful slices, not as one broad phase commit.
 
 ## Stop Conditions
 
