@@ -6,6 +6,12 @@ Development should be possible on a normal desktop without a Raspberry Pi and wi
 
 The reference runtime is still Raspberry Pi Zero 2 W, but contributors should be able to build overlays, frame UI, setup UI, playback behavior, and cache logic locally.
 
+## Branching During MVP/Base Work
+
+Until the MVP/base is complete, work directly on `master` and commit meaningful slices there.
+
+Avoid creating feature branches for normal implementation work during this early phase unless the user explicitly requests one.
+
 ## Tooling
 
 - Go for daemon/core.
@@ -117,4 +123,3 @@ Useful test areas:
 Release builds embed built UI assets into the Go binary.
 
 Development may optionally serve Vite bundles or external UI assets, but appliance releases should not depend on separate UI files.
-

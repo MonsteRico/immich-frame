@@ -102,6 +102,8 @@ An agent can stop when:
 
 Keep git history useful and reviewable.
 
+Until the MVP/base is complete, agents should work directly on `master` and commit there. Do not create feature branches for ordinary implementation slices unless the user explicitly asks for one.
+
 Commit at coherent feature or fix boundaries rather than only at phase boundaries. A good history should explain what was built in practical slices, such as:
 
 - project scaffold and build tooling.

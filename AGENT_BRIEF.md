@@ -44,7 +44,7 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 
 Continue with **Phase 1.5: Base Validation And Embedding Cleanup**.
 
-Phase 0 and the first local Phase 1 slice are present on branch `codex/phase0-local-frame`. Before starting the real Immich adapter, verify and tighten the local base:
+Phase 0 and the first local Phase 1 slice are now on `master`. Before starting the real Immich adapter, verify and tighten the local base:
 
 - Go toolchain/test execution.
 - focused unit tests for config/source/cache/playback.
@@ -52,6 +52,8 @@ Phase 0 and the first local Phase 1 slice are present on branch `codex/phase0-lo
 - local mock slideshow verification.
 
 ## Git Commit Guidance
+
+Until the MVP/base is complete, work directly on `master` and commit there. Do not create feature branches for ordinary implementation slices unless the user explicitly asks for one.
 
 Create meaningful commits throughout the work. Prefer commits at coherent feature or fix boundaries, not just broad phase markers like `phase 0 done`.
 
@@ -73,7 +75,7 @@ Avoid committing every tiny file edit. Also avoid waiting until an entire phase 
 ## First Task Checklist
 
 - [ ] Read `GOAL.md`, especially the Phase 1.5 checklist.
-- [ ] Confirm the local branch and remote are correct.
+- [ ] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
 - [ ] Verify whether Go is available.
 - [ ] Run available checks: `go test ./...` when possible, plus `pnpm typecheck` and `pnpm build`.
 - [ ] Add focused tests for the existing local foundation.
