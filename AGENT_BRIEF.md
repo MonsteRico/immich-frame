@@ -42,7 +42,14 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 
 ## Current Phase
 
-Start with **Phase 0: Scaffold**, then enough of **Phase 1: Local Frame Loop** to run a mock slideshow locally in a desktop browser.
+Continue with **Phase 1.5: Base Validation And Embedding Cleanup**.
+
+Phase 0 and the first local Phase 1 slice are present on branch `codex/phase0-local-frame`. Before starting the real Immich adapter, verify and tighten the local base:
+
+- Go toolchain/test execution.
+- focused unit tests for config/source/cache/playback.
+- release UI embedding behavior.
+- local mock slideshow verification.
 
 ## Git Commit Guidance
 
@@ -65,18 +72,15 @@ Avoid committing every tiny file edit. Also avoid waiting until an entire phase 
 
 ## First Task Checklist
 
-- [ ] Create repo scaffold under `D:/Coding/immich-frame` without moving these planning docs.
-- [ ] Initialize a single Go module at repo root.
-- [ ] Add `cmd/immich-frame/main.go` with CLI skeleton.
-- [ ] Add internal package directories from `docs/architecture.md`.
-- [ ] Add Preact/Vite frame bundle under `ui/frame`.
-- [ ] Add Preact/Vite setup bundle under `ui/setup`.
-- [ ] Add shared frontend package under `ui/shared`.
-- [ ] Use pnpm for frontend tooling.
-- [ ] Add config/secrets/state model skeletons.
-- [ ] Add static UI embedding path for release builds.
-- [ ] Add local dev mode plan or placeholders for mock photo source.
-- [ ] Update `GOAL.md` with completed checklist items.
+- [ ] Read `GOAL.md`, especially the Phase 1.5 checklist.
+- [ ] Confirm the local branch and remote are correct.
+- [ ] Verify whether Go is available.
+- [ ] Run available checks: `go test ./...` when possible, plus `pnpm typecheck` and `pnpm build`.
+- [ ] Add focused tests for the existing local foundation.
+- [ ] Fix or document the release embedded UI asset strategy.
+- [ ] Manually run the local mock slideshow in a desktop browser when possible.
+- [ ] Update `GOAL.md` as items are completed.
+- [ ] Commit coherent slices as they are completed.
 
 ## Do Not Build Yet
 
