@@ -1,116 +1,13 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Immich Frame</title>
-    <style>
-      html,
-      body {
-        margin: 0;
-        width: 100%;
-        height: 100%;
-        background: #060607;
-        color: #f7f7f2;
-        font-family: system-ui, sans-serif;
-      }
-
-      body {
-        display: grid;
-        place-items: center;
-        overflow: hidden;
-      }
-
-      img {
-        width: 100vw;
-        height: 100vh;
-        object-fit: contain;
-        background: #050506;
-      }
-
-      .overlay {
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-      }
-
-      .clock,
-      .info,
-      .status {
-        position: absolute;
-        padding: 0.55rem 0.75rem;
-        border-radius: 0.45rem;
-        background: rgb(0 0 0 / 42%);
-        color: rgb(255 255 255 / 88%);
-        backdrop-filter: blur(12px);
-        text-shadow: 0 1px 10px rgb(0 0 0 / 45%);
-      }
-
-      .clock {
-        top: 1rem;
-        right: 1rem;
-        font-size: 1rem;
-      }
-
-      .info {
-        left: 1rem;
-        bottom: 1rem;
-        max-width: min(34rem, calc(100vw - 2rem));
-      }
-
-      .status {
-        left: 50%;
-        bottom: 1rem;
-        transform: translateX(-50%);
-      }
-    </style>
+    <script type="module" crossorigin src="/assets/index-DW__ochF.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CiPW52pQ.css">
   </head>
   <body>
-    <main id="app">
-      <p>Waiting for cached photos...</p>
-    </main>
-    <script>
-      const app = document.querySelector("#app");
-      const clock = document.createElement("div");
-      clock.className = "clock";
-      const info = document.createElement("div");
-      info.className = "info";
-      const status = document.createElement("div");
-      status.className = "status";
-      const overlay = document.createElement("div");
-      overlay.className = "overlay";
-      overlay.append(clock, info, status);
-      document.body.append(overlay);
-
-      const render = (state) => {
-        const asset = state.current;
-        if (!asset) {
-          app.innerHTML = "<p>No local mock photos found. Add images to dev/photos.</p>";
-          info.textContent = "";
-          status.textContent = state.message || "No photos cached";
-          return;
-        }
-        app.innerHTML = `<img src="${asset.mediaUrl}" alt="">`;
-        info.textContent = [asset.title, asset.sourceName].filter(Boolean).join(" · ");
-        status.textContent = state.status === "ready" ? "" : state.message || state.status;
-      };
-
-      const tickClock = () => {
-        clock.textContent = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" }).format(new Date());
-      };
-
-      fetch("/api/state").then((r) => r.json()).then(render);
-      const events = new EventSource("/api/events");
-      events.addEventListener("state", (event) => render(JSON.parse(event.data)));
-      tickClock();
-      setInterval(tickClock, 30000);
-      navigator.sendBeacon?.("/api/display", JSON.stringify({
-        width: innerWidth,
-        height: innerHeight,
-        devicePixelRatio,
-        screenWidth: screen.width,
-        screenHeight: screen.height
-      }));
-    </script>
+    <div id="app"></div>
   </body>
 </html>

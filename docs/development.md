@@ -120,6 +120,12 @@ Useful test areas:
 
 ## Release Build Expectation
 
-Release builds embed built UI assets into the Go binary.
+Release builds embed the built Vite UI assets into the Go binary.
+
+Run `pnpm build:embedded-ui` before a release Go build. That command builds
+`ui/frame` and `ui/setup`, then copies each Vite `dist` directory into
+`internal/api/static`. The embedded `index.html` files intentionally reference
+root-relative `/assets/*` URLs, and the Go server serves those assets from
+`embed.FS` when external development dist directories are absent.
 
 Development may optionally serve Vite bundles or external UI assets, but appliance releases should not depend on separate UI files.
