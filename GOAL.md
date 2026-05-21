@@ -70,22 +70,34 @@ The local scaffold and mock frame loop exist. Before moving into the real Immich
 
 ### Phase 1.5 Base Validation And Embedding Cleanup Checklist
 
-- [ ] Verify the Go toolchain is available in the development environment, or document the exact blocker.
-- [ ] Run `go test ./...` successfully once Go is available.
-- [ ] Add focused Go unit tests for the existing local base:
-  - [ ] config defaults/validation.
-  - [ ] local folder candidate discovery.
-  - [ ] cache manifest ensure/list/mark-shown behavior.
-  - [ ] playback next/previous/pause/resume behavior.
-- [ ] Reconcile release UI embedding:
-  - [ ] Decide whether embedded release UI should use the built Vite bundles or a deliberately separate inline fallback.
-  - [ ] If using Vite bundles, make embedded `/assets/*` serving work from `embed.FS`.
-  - [ ] If keeping inline fallback, document that choice and ensure `build:embedded-ui` does not create broken embedded asset references.
-- [ ] Run `pnpm typecheck`.
-- [ ] Run `pnpm build`.
+- [x] Verify the Go toolchain is available in the development environment, or document the exact blocker.
+- [x] Run `go test ./...` successfully once Go is available.
+- [x] Add focused Go unit tests for the existing local base:
+  - [x] config defaults/validation.
+  - [x] local folder candidate discovery.
+  - [x] cache manifest ensure/list/mark-shown behavior.
+  - [x] playback next/previous/pause/resume behavior.
+- [x] Reconcile release UI embedding:
+  - [x] Decide whether embedded release UI should use the built Vite bundles or a deliberately separate inline fallback.
+  - [x] If using Vite bundles, make embedded `/assets/*` serving work from `embed.FS`.
+  - [x] If keeping inline fallback, document that choice and ensure `build:embedded-ui` does not create broken embedded asset references.
+- [x] Run `pnpm typecheck`.
+- [x] Run `pnpm build`.
 - [ ] Run the local mock slideshow manually in a desktop browser if the Go toolchain is available.
-- [ ] Record verification results and any remaining environment limitations in docs or commit notes.
-- [ ] Commit fixes in meaningful slices, not as one broad phase commit.
+- [x] Record verification results and any remaining environment limitations in docs or commit notes.
+- [x] Commit fixes in meaningful slices, not as one broad phase commit.
+
+### Phase 1.5 Verification Notes - 2026-05-20
+
+- Go is available as `go1.26.3 windows/386`.
+- `go test ./...` passed after adding focused tests for config, source, cache, playback, and embedded UI serving.
+- Release embedding now uses built Vite bundles. `pnpm build:embedded-ui` copies `ui/frame/dist` and `ui/setup/dist` into `internal/api/static`, and `/assets/*` falls back to `embed.FS` when external dist directories are absent.
+- `pnpm typecheck` passed.
+- `pnpm build` passed.
+- `pnpm build:embedded-ui` passed.
+- Local mock daemon was run with missing external dist paths to force embedded UI serving: `go run ./cmd/immich-frame serve -config config.dev.toml -dev-source dev/photos -data-dir .immich-frame-verify -frame-dist missing-frame-dist -setup-dist missing-setup-dist`.
+- HTTP smoke checks against the running daemon passed: `/frame` 200, embedded frame JS asset 200, embedded frame CSS asset 200, `/api/state` returned ready local-folder state, `/media/:assetID` returned 200, and `POST /api/playback/pause` returned paused state.
+- Desktop browser verification remains outstanding. Project Playwright is not installed, Chrome extension automation was unavailable, installed Chrome/Edge headless runs failed before rendering with GPU process fatal errors, and a single-process Chrome retry hung before producing DOM evidence in this environment.
 
 ## Stop Conditions
 
