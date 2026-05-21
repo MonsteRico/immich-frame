@@ -87,18 +87,11 @@ refresh_interval_minutes = 360
 enabled = true
 slot = "top-right"
 visibility = "always"
-timezone = "auto"
-format = "12h"
-color = "auto"
 
 [overlays.photo_info]
 enabled = true
 slot = "bottom-left"
 visibility = "on-photo-change"
-show_date = true
-show_source = true
-show_location = false
-color = "auto"
 
 [overlays.status]
 enabled = true
@@ -169,13 +162,13 @@ Factory reset
 
 ## Overlay Config
 
-Overlay-specific schema/defaults live in the frontend for MVP. Backend validates only generic envelope fields:
+MVP overlay settings are intentionally limited to the generic envelope fields currently read and written by the backend:
 
 - `enabled`.
 - `slot`.
 - `visibility`.
 
-The backend should preserve overlay-specific options where possible.
+Future overlay-specific settings such as clock format, timezone, color, or photo-info field selection should either be explicitly added to the config model or stored in a preserved raw overlay options structure. Do not document new overlay-specific TOML fields as implemented until the backend can round-trip them.
 
 ## Cache Presets
 

@@ -43,7 +43,7 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 
 ## Current Phase
 
-**Phase 3: Setup Portal** is implemented on `master`.
+**Phase 3.5: Setup Portal Hardening** is the current goal on `master`.
 
 Phase 0, the first local Phase 1 slice, Phase 1.5 validation, and Phase 2 Immich adapter work are complete on `master`.
 
@@ -60,9 +60,16 @@ Current validated base:
 - Immich adapter exists behind `internal/immich` with mock HTTP tests.
 - Immich connection testing, album listing, album/random candidate listing, preview rendition fetching, and metadata normalization are implemented.
 
-Current validated base now includes the phone-first setup/settings portal flow and supporting backend routes, using the existing Immich adapter and preserving the local mock frame loop.
+Current base now includes the first phone-first setup/settings portal flow and supporting backend routes, using the existing Immich adapter and preserving the local mock frame loop.
 
-Next likely goal: **Phase 4: Pi Appliance** from `docs/implementation-plan.md`, unless the user asks for Phase 3 fixes or additional validation.
+PM review on 2026-05-21 found that Phase 3 needs a focused hardening pass before Phase 4:
+
+- setup completion must require a successful Immich validation for the saved URL/key, including random-library mode.
+- the planned lightweight status surface needs to exist or be intentionally removed from API docs.
+- setup/settings UI should clearly guard unavailable actions and explain required validation.
+- overlay configuration docs should match what the backend currently reads/writes.
+
+Do not start **Phase 4: Pi Appliance** until Phase 3.5 is complete.
 
 ## Git Commit Guidance
 
@@ -70,7 +77,7 @@ Until the MVP/base is complete, work directly on `master` and commit there. Do n
 
 Create meaningful commits throughout the work. Prefer commits at coherent feature or fix boundaries, not broad phase markers like `phase 3 done`.
 
-For Phase 3, generally commit and push after each completed checklist feature or checklist item with its subitems. Do not commit after every tiny edit, but do commit/push once a distinct feature is implemented, tested, and documented.
+For Phase 3.5, generally commit and push after each completed checklist feature or checklist item with its subitems. Do not commit after every tiny edit, but do commit/push once a distinct feature is implemented, tested, and documented.
 
 Good commit boundaries include:
 
@@ -91,6 +98,9 @@ Good commit boundaries include:
 - admin password/session auth.
 - settings read/write.
 - Immich setup validation and album picker API.
+- validation-required setup completion.
+- lightweight status API/settings surface.
+- setup UI guardrails.
 - setup UI screens.
 - focused bug fixes.
 - docs updates that record a changed decision or implemented behavior.
@@ -101,7 +111,7 @@ Avoid committing every tiny file edit. Also avoid waiting until an entire phase 
 
 Developer-facing docs must move with the code. When a feature changes how a human runs, configures, tests, or debugs the project, update the relevant docs in the same feature slice.
 
-For Phase 3, pay special attention to:
+For Phase 3.5, pay special attention to:
 
 - `docs/configuration.md` for config/state/secrets changes.
 - `docs/security.md` for setup/auth/session/media-access behavior.
@@ -111,15 +121,16 @@ For Phase 3, pay special attention to:
 
 ## First Task Checklist
 
-- [ ] Read `GOAL.md`, especially the Phase 3 checklist.
+- [ ] Read `GOAL.md`, especially the Phase 3.5 checklist.
 - [ ] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
 - [ ] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
-- [x] Implement setup backend state/auth/settings routes without exposing Immich secrets to browser-facing routes.
-- [x] Implement the phone-first setup/settings UI against those routes.
-- [x] Use mock/unit tests for setup/auth/settings behavior.
-- [x] Update developer-facing docs as setup commands, config, or verification steps change.
-- [x] Update `GOAL.md` as items are completed.
-- [x] Commit and push coherent slices as checklist features are completed.
+- [ ] Require successful Immich validation before setup can complete.
+- [ ] Add or reconcile the lightweight status surface.
+- [ ] Tighten setup/settings UI guardrails around validation and required fields.
+- [ ] Reconcile overlay configuration docs with implemented behavior.
+- [ ] Update developer-facing docs as setup commands, config, or verification steps change.
+- [ ] Update `GOAL.md` as items are completed.
+- [ ] Commit and push coherent slices as checklist features are completed.
 
 ## Do Not Build Yet
 

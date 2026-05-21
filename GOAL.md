@@ -40,9 +40,9 @@ The MVP is done when all items below are complete on the reference Pi Zero 2 W h
 
 ## Current Session Goal
 
-Complete **Phase 3: Setup Portal**.
+Complete **Phase 3.5: Setup Portal Hardening**.
 
-The local scaffold, mock frame loop, Phase 1.5 validation, and Phase 2 Immich adapter are complete. The next agent should build the phone-first setup/settings portal and supporting backend routes while preserving the local mock development loop.
+The local scaffold, mock frame loop, Phase 1.5 validation, Phase 2 Immich adapter, and first Phase 3 setup portal implementation are complete. The next agent should tighten the setup portal before starting Pi appliance work.
 
 ### Phase 0 Done Checklist
 
@@ -259,6 +259,49 @@ The local scaffold, mock frame loop, Phase 1.5 validation, and Phase 2 Immich ad
   - [x] Update `GOAL.md` as checklist items are completed.
 - [x] Commit and push after each coherent checklist feature or checklist item with subitems is completed.
 
+### Phase 3 PM Review Notes - 2026-05-21
+
+- Repo is clean on `master` at commit `3e0b0c2 Build setup portal`.
+- `go test ./...` passed.
+- `pnpm typecheck` passed.
+- `pnpm build` passed.
+- Phase 3 added setup state, first-boot code flow, admin password/session auth, settings read/write, Immich validation routes, setup/settings UI, and unconfigured frame setup screen.
+- Phase 3 is not accepted as fully ready for Phase 4 yet. A focused Phase 3.5 hardening pass is needed before Pi appliance installer work.
+
+### Phase 3.5 Setup Portal Hardening Checklist
+
+- [ ] Baseline verification before changes:
+  - [ ] Confirm branch is `master`.
+  - [ ] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+  - [ ] Run `go test ./...`.
+  - [ ] Run `pnpm typecheck`.
+  - [ ] Run `pnpm build`.
+- [ ] Require successful Immich validation before setup completion:
+  - [ ] Track whether the saved Immich URL/API key have passed validation.
+  - [ ] Prevent finishing setup when the user skipped validation or changed URL/key after validation.
+  - [ ] Preserve the saved-key replace-only rule.
+  - [ ] Add backend unit tests for validation-required setup completion.
+  - [ ] Add UI feedback that clearly tells the user why setup cannot finish yet.
+- [ ] Add a real lightweight status surface:
+  - [ ] Implement `GET /api/status` or document and intentionally remove it from planned API docs.
+  - [ ] Surface setup/configuration status, Immich connection status when known, source mode, cache count, and last error without leaking secrets.
+  - [ ] Show this status in the settings portal after setup.
+  - [ ] Add unit tests for the status response.
+- [ ] Tighten setup/settings UI behavior:
+  - [ ] Disable or guard source/finish actions until required fields and validation state are ready.
+  - [ ] Make random-library mode as validation-dependent as album mode.
+  - [ ] Keep phone-first layout and avoid turning the portal into a broad admin dashboard.
+- [ ] Reconcile overlay configuration docs with implementation:
+  - [ ] Either remove unimplemented overlay-specific TOML fields from current config docs, or implement preservation for raw overlay-specific fields.
+  - [ ] Keep MVP settings focused on implemented overlay controls.
+- [ ] Update stale project status docs:
+  - [ ] Update `README.md`.
+  - [ ] Update `AGENT_BRIEF.md`.
+  - [ ] Update `docs/implementation-plan.md` with Phase 3 done state and Phase 3.5 current work.
+  - [ ] Update `docs/configuration.md`, `docs/security.md`, `docs/local-development.md`, and `docs/developer-guide.md` for any behavior changes.
+  - [ ] Update `GOAL.md` with Phase 3.5 verification notes.
+- [ ] Commit and push after each coherent checklist feature or feature plus subitems is complete.
+
 ## Stop Conditions
 
 An agent can stop when:
@@ -293,7 +336,7 @@ Commit and push at coherent feature or fix boundaries rather than only at phase 
 
 Do not commit after every tiny edit. Do not wait until all of Phase 0 or Phase 1 is complete if several distinct working pieces can be committed separately.
 
-For Phase 3 specifically, generally commit and push after each completed checklist feature or checklist item with its subitems. Examples: setup state, setup code flow, auth/session handling, settings API, Immich setup validation, setup UI screens, frame setup screen, security fixes, and docs updates.
+For Phase 3.5 specifically, generally commit and push after each completed checklist feature or checklist item with its subitems. Examples: validation-required setup completion, status API/settings surface, setup UI guardrails, overlay docs reconciliation, security fixes, and docs updates.
 
 Before each commit:
 

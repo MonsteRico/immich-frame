@@ -4,7 +4,9 @@ A self-hosted digital picture frame for Immich libraries, designed for self-buil
 
 ## Status
 
-Phase 0, the local Phase 1 mock slideshow loop, Phase 1.5 validation, and Phase 2 Immich adapter are complete. The next major work is Phase 3: the phone-first setup/settings portal and supporting backend routes.
+Phase 0, the local Phase 1 mock slideshow loop, Phase 1.5 validation, Phase 2 Immich adapter, and the first Phase 3 setup portal implementation are complete.
+
+The next work is a focused **Phase 3.5 setup hardening pass** before moving to the Raspberry Pi appliance installer.
 
 Start here:
 

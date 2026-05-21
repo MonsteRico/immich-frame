@@ -85,24 +85,38 @@ Goal: configure the frame from a phone/laptop on same Wi-Fi.
 
 Checklist:
 
-- [ ] Add setup state model and backend boundary.
-- [ ] Generate fixed first-boot setup code until setup completes.
-- [ ] Render HDMI setup state with URL, IP fallback, code, and status.
-- [ ] Add `/setup` portal.
-- [ ] Claim setup code.
-- [ ] Create local admin password.
-- [ ] Store password hash in `secrets.json`.
-- [ ] Add admin login/logout/session behavior.
-- [ ] Add settings read/write API backed by `config.toml`.
-- [ ] Accept raw Immich URL and raw Immich API key fields.
-- [ ] Validate Immich connection.
-- [ ] Save Immich URL to config and API key to secrets.
-- [ ] Select source mode: one album or random library.
-- [ ] Provide a searchable album picker for album mode, showing album name and item count when available.
-- [ ] Configure interval, display fit, cache preset, and overlays.
+- [x] Add setup state model and backend boundary.
+- [x] Generate fixed first-boot setup code until setup completes.
+- [x] Render HDMI setup state with URL, IP fallback, code, and status.
+- [x] Add `/setup` portal.
+- [x] Claim setup code.
+- [x] Create local admin password.
+- [x] Store password hash in `secrets.json`.
+- [x] Add admin login/logout/session behavior.
+- [x] Add settings read/write API backed by `config.toml`.
+- [x] Accept raw Immich URL and raw Immich API key fields.
+- [x] Validate Immich connection.
+- [x] Save Immich URL to config and API key to secrets.
+- [x] Select source mode: one album or random library.
+- [x] Provide a searchable album picker for album mode, showing album name and item count when available.
+- [x] Configure interval, display fit, cache preset, and overlays.
 - [ ] Add lightweight status page.
-- [ ] Require admin session after setup.
-- [ ] Update setup/security/config/developer docs alongside behavior changes.
+- [x] Require admin session after setup.
+- [x] Update setup/security/config/developer docs alongside behavior changes.
+
+## Phase 3.5: Setup Portal Hardening
+
+Goal: close setup portal gaps before Raspberry Pi appliance work starts.
+
+Checklist:
+
+- [ ] Require a successful Immich validation for the saved URL/API key before setup completion.
+- [ ] Prevent random-library setup from bypassing Immich validation.
+- [ ] Add clear setup UI guardrails and messages for missing validation or required fields.
+- [ ] Add a lightweight status API/settings surface, or intentionally revise API docs if it remains out of scope.
+- [ ] Reconcile overlay configuration docs with implemented backend behavior.
+- [ ] Update README, agent handoff docs, and developer docs.
+- [ ] Run `go test ./...`, `pnpm typecheck`, and `pnpm build`.
 
 ## Phase 4: Pi Appliance
 
