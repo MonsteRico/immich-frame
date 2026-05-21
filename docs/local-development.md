@@ -1,0 +1,239 @@
+# Local Development And Verification
+
+This runbook is for developing and manually verifying Immich Frame on a desktop
+without a Raspberry Pi and without a real Immich server.
+
+The local mock mode uses `dev/photos` as the photo source. It is a development
+tool only; the MVP user-facing sources remain Immich album and random-library
+modes.
+
+## Prerequisites
+
+- Go 1.22 or newer.
+- Node.js with Corepack.
+- pnpm 9.x.
+- A desktop browser. Chromium or Chrome is closest to the target kiosk runtime.
+
+Check tool availability:
+
+```sh
+go version
+corepack pnpm --version
+```
+
+On Windows, plain `pnpm` is also fine if it is already available in your shell.
+
+## Install Frontend Dependencies
+
+From the repository root:
+
+```sh
+corepack pnpm install
+```
+
+If dependencies are already installed, this should be a no-op or a quick
+lockfile-confirming run.
+
+## Run The Standard Checks
+
+Run these before committing code that touches the daemon or frontend:
+
+```sh
+go test ./...
+corepack pnpm typecheck
+corepack pnpm build
+```
+
+The default CI scope for the MVP base is:
+
+- Go unit tests.
+- Frontend TypeScript typecheck.
+- Frontend production build.
+
+## Verify Embedded Release UI Assets
+
+Release binaries embed the built Vite assets from `internal/api/static`.
+
+Before a release-style Go build or embedded UI smoke test, run:
+
+```sh
+corepack pnpm build:embedded-ui
+```
+
+That command:
+
+1. Builds `ui/shared`, `ui/frame`, and `ui/setup`.
+2. Copies `ui/frame/dist` to `internal/api/static/frame`.
+3. Copies `ui/setup/dist` to `internal/api/static/setup`.
+
+The embedded `index.html` files intentionally reference root-relative
+`/assets/*` URLs. The Go server first checks external development dist
+directories, then falls back to embedded assets from `embed.FS`.
+
+## Run The Mock Slideshow
+
+From the repository root:
+
+```sh
+go run ./cmd/immich-frame serve -config config.dev.toml -dev-source dev/photos
+```
+
+Open these URLs in a desktop browser:
+
+- `http://127.0.0.1:8787/frame`
+- `http://127.0.0.1:8787/setup`
+
+Expected `/frame` behavior:
+
+- A full-window mock slideshow renders from `dev/photos`.
+- The clock overlay appears.
+- Photo info appears for the current mock photo.
+- The operational status overlay stays quiet while state is ready.
+- The current image URL is a local `/media/:assetID` URL, not an external URL.
+
+Expected `/setup` behavior at this stage:
+
+- The setup scaffold renders.
+- Full setup flow behavior is still future MVP work.
+
+Stop the server with `Ctrl+C`.
+
+## Verify Embedded Assets Locally
+
+To prove the server is using embedded Vite assets instead of external dist
+folders, first prepare the embedded UI:
+
+```sh
+corepack pnpm build:embedded-ui
+```
+
+Then run the daemon with intentionally missing dist paths:
+
+```sh
+go run ./cmd/immich-frame serve -config config.dev.toml -dev-source dev/photos -data-dir .immich-frame-verify -frame-dist missing-frame-dist -setup-dist missing-setup-dist
+```
+
+Open:
+
+- `http://127.0.0.1:8787/frame`
+- `http://127.0.0.1:8787/setup`
+
+Expected result:
+
+- Both pages load.
+- Browser devtools Network shows `/assets/index-*.js` and
+  `/assets/index-*.css` returning `200`.
+- `/frame` shows cached local mock media.
+
+Useful HTTP smoke checks:
+
+```sh
+curl -i http://127.0.0.1:8787/frame
+curl -i http://127.0.0.1:8787/api/state
+```
+
+On PowerShell:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8787/frame
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8787/api/state
+```
+
+After the embedded smoke test, remove the temporary verification data:
+
+```sh
+rm -rf .immich-frame-verify
+```
+
+On PowerShell:
+
+```powershell
+Remove-Item -LiteralPath .immich-frame-verify -Recurse -Force
+```
+
+## Manual Browser Verification Checklist
+
+Use a desktop Chromium-family browser when possible.
+
+1. Run the mock slideshow command.
+2. Open `http://127.0.0.1:8787/frame`.
+3. Confirm the page is not blank and no framework error overlay appears.
+4. Confirm at least one mock photo from `dev/photos` is visible.
+5. Confirm the clock and photo info overlays render.
+6. Open browser devtools and check the Console for relevant errors.
+7. Open browser devtools Network and confirm:
+   - `/api/state` returns `200`.
+   - `/api/events` is open as an event stream.
+   - `/media/:assetID` returns `200`.
+   - If testing embedded mode, `/assets/index-*.js` and
+     `/assets/index-*.css` return `200`.
+8. Test playback commands with HTTP requests:
+
+```sh
+curl -X POST http://127.0.0.1:8787/api/playback/pause
+curl -X POST http://127.0.0.1:8787/api/playback/resume
+curl -X POST http://127.0.0.1:8787/api/playback/next
+curl -X POST http://127.0.0.1:8787/api/playback/previous
+```
+
+On PowerShell:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing -Method Post http://127.0.0.1:8787/api/playback/pause
+Invoke-WebRequest -UseBasicParsing -Method Post http://127.0.0.1:8787/api/playback/resume
+Invoke-WebRequest -UseBasicParsing -Method Post http://127.0.0.1:8787/api/playback/next
+Invoke-WebRequest -UseBasicParsing -Method Post http://127.0.0.1:8787/api/playback/previous
+```
+
+The response JSON should reflect the updated playback state.
+
+## Useful Local Commands
+
+Validate config:
+
+```sh
+go run ./cmd/immich-frame config validate -config config.dev.toml
+```
+
+Print version:
+
+```sh
+go run ./cmd/immich-frame version
+```
+
+Inspect runtime state when using a custom data directory:
+
+```sh
+go run ./cmd/immich-frame status -data-dir .immich-frame
+```
+
+Reset local generated state and cache:
+
+```sh
+go run ./cmd/immich-frame reset -data-dir .immich-frame
+```
+
+## Troubleshooting
+
+If `go test ./...` fails on Windows with access errors under the Go build cache,
+try setting `GOCACHE` to a writable local directory for the command:
+
+```powershell
+$env:GOCACHE = "$PWD\.immich-frame-go-build"
+go test ./...
+```
+
+If `pnpm` fails but `corepack pnpm` works, prefer the `corepack pnpm ...`
+form in that shell.
+
+If the slideshow page is blank:
+
+- Confirm the daemon is still running.
+- Confirm `dev/photos` contains the sample SVG files.
+- Check `http://127.0.0.1:8787/api/state`.
+- Check browser devtools Console and Network.
+- Re-run `corepack pnpm build:embedded-ui` if testing embedded assets.
+
+If a browser automation tool cannot render locally, manually verify in a normal
+desktop browser window. Headless browser modes may behave differently from the
+target Chromium kiosk runtime on some Windows GPU/driver setups.

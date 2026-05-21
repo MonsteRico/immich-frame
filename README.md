@@ -13,6 +13,7 @@ Start here:
 - `docs/implementation-plan.md` for build phases.
 - `docs/architecture.md` for system design.
 - `docs/development.md` for local development expectations.
+- `docs/local-development.md` for desktop run, test, and manual verification steps.
 
 ## Product Direction
 
@@ -55,6 +56,8 @@ It is not primarily a hosted web app, Docker dashboard, or cloud service.
 - Docker/LAN deployment mode.
 
 ## Local Development
+
+For the complete desktop runbook, see `docs/local-development.md`.
 
 Prerequisites:
 

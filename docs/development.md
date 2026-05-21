@@ -25,6 +25,9 @@ Avoid creating feature branches for normal implementation work during this early
 
 ## Local Development Modes
 
+For command-by-command desktop setup, test, and manual verification steps, see
+`docs/local-development.md`.
+
 Supported development modes:
 
 ```text
