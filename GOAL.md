@@ -40,9 +40,9 @@ The MVP is done when all items below are complete on the reference Pi Zero 2 W h
 
 ## Current Session Goal
 
-Complete **Phase 1.5: Base Validation And Embedding Cleanup**.
+Complete **Phase 2: Immich Adapter**.
 
-The local scaffold and mock frame loop exist. Before moving into the real Immich adapter, tighten the base so the next feature work lands on a verified foundation.
+The local scaffold, mock frame loop, and Phase 1.5 validation are complete. The next agent should implement the real Immich adapter behind `internal/immich` while preserving the local mock development loop.
 
 ### Phase 0 Done Checklist
 
@@ -99,6 +99,71 @@ The local scaffold and mock frame loop exist. Before moving into the real Immich
 - HTTP smoke checks against the running daemon passed: `/frame` 200, embedded frame JS asset 200, embedded frame CSS asset 200, `/api/state` returned ready local-folder state, `/media/:assetID` returned 200, and `POST /api/playback/pause` returned paused state.
 - Desktop browser verification passed on 2026-05-21 using the Codex in-app Browser plugin against `http://127.0.0.1:8787/frame`. The daemon was run with missing external dist paths to force embedded UI serving. Browser evidence showed title `Immich Frame`, visible mock photo `sample-dawn`, clock/photo-info overlays, playback controls, local image source `/media/a0007e962ab0bb36`, embedded asset URLs `/assets/index-DW__ochF.js` and `/assets/index-CiPW52pQ.css`, and no console warnings/errors. HTTP checks also confirmed `/api/state`, the embedded JS/CSS assets, and `/media/a0007e962ab0bb36` returned `200`.
 
+### Phase 1.5 PM Readiness Confirmation - 2026-05-21
+
+- Repo is clean on `master`.
+- `go test ./...` passed.
+- Frontend package typechecks passed with project-pinned Corepack pnpm commands:
+  - `corepack pnpm --filter @immich-frame/shared typecheck`
+  - `corepack pnpm --filter @immich-frame/frame typecheck`
+  - `corepack pnpm --filter @immich-frame/setup typecheck`
+- Frontend package builds passed with project-pinned Corepack pnpm commands:
+  - `corepack pnpm --filter @immich-frame/shared build`
+  - `corepack pnpm --filter @immich-frame/frame build`
+  - `corepack pnpm --filter @immich-frame/setup build`
+- Note: this shell's global `pnpm` resolved to pnpm 11 under Node 20 and failed. Use the project-pinned Corepack pnpm setup or fix the local Node/pnpm environment if root `pnpm typecheck` / `pnpm build` fail for that reason.
+
+### Phase 2 Immich Adapter Checklist
+
+- [ ] Baseline verification before changes:
+  - [ ] Confirm branch is `master`.
+  - [ ] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+  - [ ] Run `go test ./...`.
+  - [ ] Run frontend typecheck/build using the project-pinned pnpm/Corepack setup.
+- [ ] Verify current Immich API behavior:
+  - [ ] Review official Immich docs/OpenAPI for required endpoints.
+  - [ ] Manually verify required behavior against Matthew's Immich instance when credentials/context are available.
+  - [ ] Record endpoint assumptions and version notes in docs or adapter comments.
+- [ ] Define the Immich adapter boundary in `internal/immich`:
+  - [ ] Connection/auth test method.
+  - [ ] Album listing method.
+  - [ ] Asset candidate listing for a selected album.
+  - [ ] Asset candidate listing for random library mode.
+  - [ ] Display-targeted rendition fetch method.
+  - [ ] Error normalization that hides low-level HTTP details from callers.
+- [ ] Implement Immich connection testing:
+  - [ ] Use the dedicated API key from secrets/config inputs.
+  - [ ] Return user-safe errors for invalid URL, invalid key, network failure, and incompatible response.
+  - [ ] Add mock HTTP unit tests.
+- [ ] Implement Immich album listing:
+  - [ ] Normalize album id, name, and item count when available.
+  - [ ] Keep setup/search UI needs in mind without implementing the full setup portal yet.
+  - [ ] Add mock HTTP unit tests.
+- [ ] Implement Immich asset candidate listing:
+  - [ ] Album source candidates.
+  - [ ] Random library candidates.
+  - [ ] Conservative default filters where the API supports them: photos only, exclude archived/hidden/trashed/videos.
+  - [ ] Avoid leaking raw Immich asset JSON outside `internal/immich`.
+  - [ ] Add mock HTTP unit tests.
+- [ ] Implement display-targeted rendition fetching:
+  - [ ] Prefer the best Immich-provided non-original rendition appropriate for the requested target.
+  - [ ] Preserve returned content type.
+  - [ ] Do not download originals by default.
+  - [ ] Add mock HTTP unit tests.
+- [ ] Normalize display metadata:
+  - [ ] Minimal asset id, media/rendition identity, taken date, source name, dimensions/orientation if available.
+  - [ ] Do not expose raw EXIF, GPS coordinates, file paths, people names, direct Immich URLs, or full Immich asset blobs to browser-facing code.
+  - [ ] Add unit tests for metadata normalization.
+- [ ] Integrate adapter with existing source/cache seams lightly:
+  - [ ] Preserve local folder source for development.
+  - [ ] Do not build full setup portal behavior yet unless needed for adapter verification.
+  - [ ] Keep playback/cache APIs source-agnostic.
+- [ ] Update docs:
+  - [ ] Record supported/tested Immich version assumptions.
+  - [ ] Record any manual verification steps.
+  - [ ] Update `GOAL.md` as checklist items are completed.
+- [ ] Commit and push after each coherent checklist feature or checklist item with subitems is completed.
+
 ## Stop Conditions
 
 An agent can stop when:
@@ -116,7 +181,7 @@ Keep git history useful and reviewable.
 
 Until the MVP/base is complete, agents should work directly on `master` and commit there. Do not create feature branches for ordinary implementation slices unless the user explicitly asks for one.
 
-Commit at coherent feature or fix boundaries rather than only at phase boundaries. A good history should explain what was built in practical slices, such as:
+Commit and push at coherent feature or fix boundaries rather than only at phase boundaries. A good history should explain what was built in practical slices, such as:
 
 - project scaffold and build tooling.
 - CLI skeleton.
@@ -133,12 +198,15 @@ Commit at coherent feature or fix boundaries rather than only at phase boundarie
 
 Do not commit after every tiny edit. Do not wait until all of Phase 0 or Phase 1 is complete if several distinct working pieces can be committed separately.
 
+For Phase 2 specifically, generally commit and push after each completed checklist feature or checklist item with its subitems. Examples: Immich connection test, album listing, asset candidate listing, rendition fetching, metadata normalization, adapter/source integration, and docs updates.
+
 Before each commit:
 
 - [ ] Review `git status`.
 - [ ] Review the diff for the intended scope.
 - [ ] Run the relevant tests/build checks when practical.
 - [ ] Use a specific commit message describing the completed slice.
+- [ ] Push `master` after the commit unless the user has asked you to hold local commits.
 
 ## Out Of Scope For MVP
 

@@ -42,20 +42,30 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 
 ## Current Phase
 
-Continue with **Phase 1.5: Base Validation And Embedding Cleanup**.
+Continue with **Phase 2: Immich Adapter**.
 
-Phase 0 and the first local Phase 1 slice are now on `master`. Before starting the real Immich adapter, verify and tighten the local base:
+Phase 0, the first local Phase 1 slice, and Phase 1.5 validation are complete on `master`.
 
-- Go toolchain/test execution.
-- focused unit tests for config/source/cache/playback.
-- release UI embedding behavior.
-- local mock slideshow verification.
+Current validated base:
+
+- Go daemon/CLI scaffold exists.
+- Local folder mock source works.
+- Cache manifest and playback queue exist.
+- `/api/state`, `/api/events`, `/media/:assetID`, and playback commands exist.
+- Frame/setup Preact bundles exist.
+- Built Vite UI bundles are embedded and served by the Go daemon.
+- Focused unit tests cover config, source, cache, playback, and embedded UI serving.
+- Local mock slideshow has been verified in a desktop browser.
+
+Next goal: implement the real Immich API adapter while preserving the local mock frame loop.
 
 ## Git Commit Guidance
 
 Until the MVP/base is complete, work directly on `master` and commit there. Do not create feature branches for ordinary implementation slices unless the user explicitly asks for one.
 
-Create meaningful commits throughout the work. Prefer commits at coherent feature or fix boundaries, not just broad phase markers like `phase 0 done`.
+Create meaningful commits throughout the work. Prefer commits at coherent feature or fix boundaries, not broad phase markers like `phase 2 done`.
+
+For Phase 2, generally commit and push after each completed checklist feature or checklist item with its subitems. Do not commit after every tiny edit, but do commit/push once a distinct feature is implemented, tested, and documented.
 
 Good commit boundaries include:
 
@@ -67,6 +77,11 @@ Good commit boundaries include:
 - embedded UI build path.
 - mock source/playback/cache loop.
 - SSE/API route group.
+- Immich connection test.
+- Immich album listing.
+- Immich album/random candidate listing.
+- Immich rendition fetching.
+- Immich metadata normalization.
 - focused bug fixes.
 - docs updates that record a changed decision or implemented behavior.
 
@@ -74,15 +89,14 @@ Avoid committing every tiny file edit. Also avoid waiting until an entire phase 
 
 ## First Task Checklist
 
-- [ ] Read `GOAL.md`, especially the Phase 1.5 checklist.
+- [ ] Read `GOAL.md`, especially the Phase 2 checklist.
 - [ ] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
-- [ ] Verify whether Go is available.
-- [ ] Run available checks: `go test ./...` when possible, plus `pnpm typecheck` and `pnpm build`.
-- [ ] Add focused tests for the existing local foundation.
-- [ ] Fix or document the release embedded UI asset strategy.
-- [ ] Manually run the local mock slideshow in a desktop browser when possible.
+- [ ] Run baseline checks: `go test ./...` and frontend checks using the project-pinned pnpm/Corepack setup.
+- [ ] Verify current Immich API behavior through official docs/OpenAPI and, where needed, manual testing against Matthew's Immich instance.
+- [ ] Implement the adapter behind `internal/immich` without leaking Immich details into playback/cache/setup code.
+- [ ] Use mock HTTP unit tests for adapter behavior; do not add real-Immich integration tests to repo/CI for MVP.
 - [ ] Update `GOAL.md` as items are completed.
-- [ ] Commit coherent slices as they are completed.
+- [ ] Commit and push coherent slices as checklist features are completed.
 
 ## Do Not Build Yet
 
