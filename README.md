@@ -4,7 +4,7 @@ A self-hosted digital picture frame for Immich libraries, designed for self-buil
 
 ## Status
 
-Phase 0 scaffold is in place. The local daemon can run a development-only mock slideshow from `dev/photos` in a desktop browser while later Immich/setup work is still pending.
+Phase 0, the local Phase 1 mock slideshow loop, Phase 1.5 validation, and Phase 2 Immich adapter are complete. The next major work is Phase 3: the phone-first setup/settings portal and supporting backend routes.
 
 Start here:
 
@@ -13,6 +13,7 @@ Start here:
 - `docs/implementation-plan.md` for build phases.
 - `docs/architecture.md` for system design.
 - `docs/development.md` for local development expectations.
+- `docs/developer-guide.md` for the human developer workflow and project map.
 - `docs/local-development.md` for desktop run, test, and manual verification steps.
 
 ## Product Direction

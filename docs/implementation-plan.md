@@ -85,12 +85,15 @@ Goal: configure the frame from a phone/laptop on same Wi-Fi.
 
 Checklist:
 
+- [ ] Add setup state model and backend boundary.
 - [ ] Generate fixed first-boot setup code until setup completes.
 - [ ] Render HDMI setup state with URL, IP fallback, code, and status.
 - [ ] Add `/setup` portal.
 - [ ] Claim setup code.
 - [ ] Create local admin password.
 - [ ] Store password hash in `secrets.json`.
+- [ ] Add admin login/logout/session behavior.
+- [ ] Add settings read/write API backed by `config.toml`.
 - [ ] Accept raw Immich URL and raw Immich API key fields.
 - [ ] Validate Immich connection.
 - [ ] Save Immich URL to config and API key to secrets.
@@ -99,6 +102,7 @@ Checklist:
 - [ ] Configure interval, display fit, cache preset, and overlays.
 - [ ] Add lightweight status page.
 - [ ] Require admin session after setup.
+- [ ] Update setup/security/config/developer docs alongside behavior changes.
 
 ## Phase 4: Pi Appliance
 

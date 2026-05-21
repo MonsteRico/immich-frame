@@ -26,6 +26,8 @@ Avoid creating feature branches for normal implementation work during this early
 
 ## Local Development Modes
 
+For the human developer workflow and project map, see `docs/developer-guide.md`.
+
 For command-by-command desktop setup, test, and manual verification steps, see
 `docs/local-development.md`.
 

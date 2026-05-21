@@ -40,9 +40,9 @@ The MVP is done when all items below are complete on the reference Pi Zero 2 W h
 
 ## Current Session Goal
 
-Complete **Phase 2: Immich Adapter**.
+Complete **Phase 3: Setup Portal**.
 
-The local scaffold, mock frame loop, and Phase 1.5 validation are complete. The next agent should implement the real Immich adapter behind `internal/immich` while preserving the local mock development loop.
+The local scaffold, mock frame loop, Phase 1.5 validation, and Phase 2 Immich adapter are complete. The next agent should build the phone-first setup/settings portal and supporting backend routes while preserving the local mock development loop.
 
 ### Phase 0 Done Checklist
 
@@ -175,6 +175,90 @@ The local scaffold, mock frame loop, and Phase 1.5 validation are complete. The 
 - Implemented `internal/immich` client methods for connection testing, album listing, album candidates, random candidates, preview rendition fetching, user-safe error normalization, and metadata normalization.
 - Integrated Immich candidates with the cache through a source-agnostic fetch path. Local folder source remains the default development loop.
 
+### Phase 2 PM Readiness Confirmation - 2026-05-21
+
+- Repo is clean on `master`.
+- `go test ./...` passed.
+- `pnpm typecheck` passed.
+- `pnpm build` passed.
+- Phase 2 commit history used meaningful slices:
+  - adapter boundary.
+  - rendition/cache integration.
+  - Immich endpoint assumption docs.
+- Phase 2 is accepted as complete. No Phase 2 fix phase is required before starting setup portal work.
+
+### Developer Documentation Baseline - 2026-05-21
+
+- Added `docs/developer-guide.md` as the human-oriented workflow and project map.
+- Existing command-level runbook remains in `docs/local-development.md`.
+- Future agents must update developer-facing docs alongside behavior changes, especially setup flow, configuration, verification, and Immich assumptions.
+
+### Phase 3 Setup Portal Checklist
+
+- [ ] Baseline verification before changes:
+  - [ ] Confirm branch is `master`.
+  - [ ] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+  - [ ] Run `go test ./...`.
+  - [ ] Run `pnpm typecheck`.
+  - [ ] Run `pnpm build`.
+- [ ] Define setup state model and backend boundary:
+  - [ ] Represent unconfigured, setup-code-required, configured, and error/degraded states.
+  - [ ] Keep setup state compatible with future Wi-Fi AP/captive portal work without implementing that future path.
+  - [ ] Add unit tests for setup-state transitions.
+- [ ] Implement first-boot setup code flow:
+  - [ ] Generate a fixed setup code until setup completes.
+  - [ ] Persist setup code/state in `state.json`.
+  - [ ] Expose setup state to the HDMI `/frame` UI and setup portal.
+  - [ ] Invalidate setup code after setup completes.
+  - [ ] Add unit tests.
+- [ ] Implement local admin auth:
+  - [ ] Create admin password during setup.
+  - [ ] Store only a password hash in `secrets.json`.
+  - [ ] Add 30-minute admin sessions that renew on activity.
+  - [ ] Add login/logout routes.
+  - [ ] Add unit tests for password/session behavior.
+- [ ] Implement settings/config API:
+  - [ ] `GET /api/settings`.
+  - [ ] `PUT /api/settings`.
+  - [ ] Read/write `config.toml` as the source of truth for non-secret settings.
+  - [ ] Preserve the rule that Immich API key is replace-only and never revealed.
+  - [ ] Add unit tests for config write/validation behavior.
+- [ ] Implement Immich setup validation routes:
+  - [ ] `POST /api/immich/test` using the Phase 2 adapter.
+  - [ ] `GET /api/immich/albums` for authenticated/setup-authorized callers.
+  - [ ] Return user-safe errors for invalid URL, invalid key, network failure, permission failure, and incompatible response.
+  - [ ] Add mock HTTP unit tests.
+- [ ] Implement source/settings selection support:
+  - [ ] Album mode with one selected album.
+  - [ ] Random library mode.
+  - [ ] Searchable album picker data shape with name and item count when available.
+  - [ ] Slide interval, display fit, cache preset, and overlay settings needed by MVP.
+- [ ] Implement phone-first setup/settings UI:
+  - [ ] Setup-code claim screen.
+  - [ ] Admin password creation.
+  - [ ] Immich URL/API key entry.
+  - [ ] Clear warning for HTTP Immich URLs.
+  - [ ] Connection test feedback.
+  - [ ] Source selection with searchable album picker.
+  - [ ] Lightweight status page.
+  - [ ] Existing setup scaffold should evolve into ongoing settings, not a full admin dashboard.
+- [ ] Update `/frame` unconfigured behavior:
+  - [ ] Show polished HDMI setup screen with `frame.local:8787/setup`, IP fallback if available, setup code, and status.
+  - [ ] Do not require keyboard/touch on the frame.
+  - [ ] Preserve the existing local slideshow behavior when configured or when using local dev source.
+- [ ] Security checks:
+  - [ ] Browser never receives Immich API key.
+  - [ ] Settings UI never reveals saved Immich API key.
+  - [ ] LAN clients cannot access cached media/settings without proper setup/admin authorization.
+  - [ ] Localhost kiosk access remains appliance-friendly.
+- [ ] Documentation updates:
+  - [ ] Update `docs/configuration.md` for any config/state/secrets shape changes.
+  - [ ] Update `docs/security.md` for setup/auth/session behavior.
+  - [ ] Update `docs/local-development.md` with setup portal run/verification steps.
+  - [ ] Update `docs/developer-guide.md` if daily workflow changes.
+  - [ ] Update `GOAL.md` as checklist items are completed.
+- [ ] Commit and push after each coherent checklist feature or checklist item with subitems is completed.
+
 ## Stop Conditions
 
 An agent can stop when:
@@ -209,7 +293,7 @@ Commit and push at coherent feature or fix boundaries rather than only at phase 
 
 Do not commit after every tiny edit. Do not wait until all of Phase 0 or Phase 1 is complete if several distinct working pieces can be committed separately.
 
-For Phase 2 specifically, generally commit and push after each completed checklist feature or checklist item with its subitems. Examples: Immich connection test, album listing, asset candidate listing, rendition fetching, metadata normalization, adapter/source integration, and docs updates.
+For Phase 3 specifically, generally commit and push after each completed checklist feature or checklist item with its subitems. Examples: setup state, setup code flow, auth/session handling, settings API, Immich setup validation, setup UI screens, frame setup screen, security fixes, and docs updates.
 
 Before each commit:
 

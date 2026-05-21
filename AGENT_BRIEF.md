@@ -43,9 +43,9 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 
 ## Current Phase
 
-Continue with **Phase 2: Immich Adapter**.
+Continue with **Phase 3: Setup Portal**.
 
-Phase 0, the first local Phase 1 slice, and Phase 1.5 validation are complete on `master`.
+Phase 0, the first local Phase 1 slice, Phase 1.5 validation, and Phase 2 Immich adapter work are complete on `master`.
 
 Current validated base:
 
@@ -57,16 +57,18 @@ Current validated base:
 - Built Vite UI bundles are embedded and served by the Go daemon.
 - Focused unit tests cover config, source, cache, playback, and embedded UI serving.
 - Local mock slideshow has been verified in a desktop browser.
+- Immich adapter exists behind `internal/immich` with mock HTTP tests.
+- Immich connection testing, album listing, album/random candidate listing, preview rendition fetching, and metadata normalization are implemented.
 
-Next goal: implement the real Immich API adapter while preserving the local mock frame loop.
+Next goal: build the phone-first setup/settings portal flow and supporting backend routes, using the existing Immich adapter and preserving the local mock frame loop.
 
 ## Git Commit Guidance
 
 Until the MVP/base is complete, work directly on `master` and commit there. Do not create feature branches for ordinary implementation slices unless the user explicitly asks for one.
 
-Create meaningful commits throughout the work. Prefer commits at coherent feature or fix boundaries, not broad phase markers like `phase 2 done`.
+Create meaningful commits throughout the work. Prefer commits at coherent feature or fix boundaries, not broad phase markers like `phase 3 done`.
 
-For Phase 2, generally commit and push after each completed checklist feature or checklist item with its subitems. Do not commit after every tiny edit, but do commit/push once a distinct feature is implemented, tested, and documented.
+For Phase 3, generally commit and push after each completed checklist feature or checklist item with its subitems. Do not commit after every tiny edit, but do commit/push once a distinct feature is implemented, tested, and documented.
 
 Good commit boundaries include:
 
@@ -83,19 +85,37 @@ Good commit boundaries include:
 - Immich album/random candidate listing.
 - Immich rendition fetching.
 - Immich metadata normalization.
+- setup code and setup state.
+- admin password/session auth.
+- settings read/write.
+- Immich setup validation and album picker API.
+- setup UI screens.
 - focused bug fixes.
 - docs updates that record a changed decision or implemented behavior.
 
 Avoid committing every tiny file edit. Also avoid waiting until an entire phase is complete if several distinct pieces are already working and verified.
 
+## Documentation Guidance
+
+Developer-facing docs must move with the code. When a feature changes how a human runs, configures, tests, or debugs the project, update the relevant docs in the same feature slice.
+
+For Phase 3, pay special attention to:
+
+- `docs/configuration.md` for config/state/secrets changes.
+- `docs/security.md` for setup/auth/session/media-access behavior.
+- `docs/local-development.md` for setup portal verification steps.
+- `docs/developer-guide.md` for durable human workflow notes.
+- `GOAL.md` for checklist progress and handoff status.
+
 ## First Task Checklist
 
-- [ ] Read `GOAL.md`, especially the Phase 2 checklist.
+- [ ] Read `GOAL.md`, especially the Phase 3 checklist.
 - [ ] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
 - [ ] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
-- [ ] Verify current Immich API behavior through official docs/OpenAPI and, where needed, manual testing against Matthew's Immich instance.
-- [ ] Implement the adapter behind `internal/immich` without leaking Immich details into playback/cache/setup code.
-- [ ] Use mock HTTP unit tests for adapter behavior; do not add real-Immich integration tests to repo/CI for MVP.
+- [ ] Implement setup backend state/auth/settings routes without exposing Immich secrets to browser-facing routes.
+- [ ] Implement the phone-first setup/settings UI against those routes.
+- [ ] Use mock/unit tests for setup/auth/settings behavior.
+- [ ] Update developer-facing docs as setup commands, config, or verification steps change.
 - [ ] Update `GOAL.md` as items are completed.
 - [ ] Commit and push coherent slices as checklist features are completed.
 
@@ -121,5 +141,6 @@ Avoid committing every tiny file edit. Also avoid waiting until an entire phase 
 4. `docs/security.md` before handling auth, secrets, or media routes.
 5. `docs/configuration.md` before writing config/state code.
 6. `docs/hardware.md` before writing installer/systemd/kiosk code.
-7. `docs/development.md` before setting up local dev scripts or tests.
-8. `docs/future.md` to preserve future extensibility without building it early.
+7. `docs/developer-guide.md` for human developer workflow expectations.
+8. `docs/development.md` before setting up local dev scripts or tests.
+9. `docs/future.md` to preserve future extensibility without building it early.
