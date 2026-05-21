@@ -16,7 +16,8 @@ Avoid creating feature branches for normal implementation work during this early
 
 - Go for daemon/core.
 - Preact + Vite for frontend bundles.
-- pnpm for frontend tooling.
+- Node and pnpm from the active PowerShell environment.
+- Matthew's PowerShell profile initializes fnm, so agent shells should be able to run `node` and `pnpm` directly.
 - Plain CSS/CSS modules.
 - Minimal inline SVG icons.
 - No Tailwind.

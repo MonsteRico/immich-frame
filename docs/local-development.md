@@ -10,25 +10,26 @@ modes.
 ## Prerequisites
 
 - Go 1.22 or newer.
-- Node.js with Corepack.
-- pnpm 9.x.
+- Node.js from the active PowerShell environment.
+- pnpm from the active PowerShell environment.
 - A desktop browser. Chromium or Chrome is closest to the target kiosk runtime.
 
 Check tool availability:
 
 ```sh
 go version
-corepack pnpm --version
+node --version
+pnpm --version
 ```
 
-On Windows, plain `pnpm` is also fine if it is already available in your shell.
+Matthew's PowerShell profile initializes fnm, so `node` and `pnpm` should work directly in agent shells.
 
 ## Install Frontend Dependencies
 
 From the repository root:
 
 ```sh
-corepack pnpm install
+pnpm install
 ```
 
 If dependencies are already installed, this should be a no-op or a quick
@@ -40,8 +41,8 @@ Run these before committing code that touches the daemon or frontend:
 
 ```sh
 go test ./...
-corepack pnpm typecheck
-corepack pnpm build
+pnpm typecheck
+pnpm build
 ```
 
 The default CI scope for the MVP base is:
@@ -57,7 +58,7 @@ Release binaries embed the built Vite assets from `internal/api/static`.
 Before a release-style Go build or embedded UI smoke test, run:
 
 ```sh
-corepack pnpm build:embedded-ui
+pnpm build:embedded-ui
 ```
 
 That command:
@@ -104,7 +105,7 @@ To prove the server is using embedded Vite assets instead of external dist
 folders, first prepare the embedded UI:
 
 ```sh
-corepack pnpm build:embedded-ui
+pnpm build:embedded-ui
 ```
 
 Then run the daemon with intentionally missing dist paths:
@@ -223,8 +224,7 @@ $env:GOCACHE = "$PWD\.immich-frame-go-build"
 go test ./...
 ```
 
-If `pnpm` fails but `corepack pnpm` works, prefer the `corepack pnpm ...`
-form in that shell.
+If `pnpm` or `node` resolve to an unexpected version in an agent shell, check the active PowerShell environment before changing project scripts.
 
 If the slideshow page is blank:
 
@@ -232,7 +232,7 @@ If the slideshow page is blank:
 - Confirm `dev/photos` contains the sample SVG files.
 - Check `http://127.0.0.1:8787/api/state`.
 - Check browser devtools Console and Network.
-- Re-run `corepack pnpm build:embedded-ui` if testing embedded assets.
+- Re-run `pnpm build:embedded-ui` if testing embedded assets.
 
 If a browser automation tool cannot render locally, manually verify in a normal
 desktop browser window. Headless browser modes may behave differently from the

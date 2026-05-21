@@ -103,15 +103,17 @@ The local scaffold, mock frame loop, and Phase 1.5 validation are complete. The 
 
 - Repo is clean on `master`.
 - `go test ./...` passed.
-- Frontend package typechecks passed with project-pinned Corepack pnpm commands:
-  - `corepack pnpm --filter @immich-frame/shared typecheck`
-  - `corepack pnpm --filter @immich-frame/frame typecheck`
-  - `corepack pnpm --filter @immich-frame/setup typecheck`
-- Frontend package builds passed with project-pinned Corepack pnpm commands:
-  - `corepack pnpm --filter @immich-frame/shared build`
-  - `corepack pnpm --filter @immich-frame/frame build`
-  - `corepack pnpm --filter @immich-frame/setup build`
-- Note: this shell's global `pnpm` resolved to pnpm 11 under Node 20 and failed. Use the project-pinned Corepack pnpm setup or fix the local Node/pnpm environment if root `pnpm typecheck` / `pnpm build` fail for that reason.
+- Matthew's PowerShell profile initializes fnm, and agent shells should use the active Node/pnpm from that PowerShell environment.
+- As of the cleanup after Phase 1.5, this resolves to Node `v24.12.0` and pnpm `11.x`.
+- Frontend package typechecks passed with plain pnpm:
+  - `pnpm --filter @immich-frame/shared typecheck`
+  - `pnpm --filter @immich-frame/frame typecheck`
+  - `pnpm --filter @immich-frame/setup typecheck`
+- Frontend package builds passed with plain pnpm:
+  - `pnpm --filter @immich-frame/shared build`
+  - `pnpm --filter @immich-frame/frame build`
+  - `pnpm --filter @immich-frame/setup build`
+- The repo intentionally does not pin pnpm with `packageManager`; use the machine's active PowerShell `pnpm`.
 
 ### Phase 2 Immich Adapter Checklist
 
@@ -119,7 +121,7 @@ The local scaffold, mock frame loop, and Phase 1.5 validation are complete. The 
   - [ ] Confirm branch is `master`.
   - [ ] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
   - [ ] Run `go test ./...`.
-  - [ ] Run frontend typecheck/build using the project-pinned pnpm/Corepack setup.
+  - [ ] Run `pnpm typecheck` and `pnpm build`.
 - [ ] Verify current Immich API behavior:
   - [ ] Review official Immich docs/OpenAPI for required endpoints.
   - [ ] Manually verify required behavior against Matthew's Immich instance when credentials/context are available.

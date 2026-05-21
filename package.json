@@ -1,7 +1,6 @@
 {
   "name": "immich-frame-workspace",
   "private": true,
-  "packageManager": "pnpm@9.15.4",
   "scripts": {
     "build": "pnpm --filter @immich-frame/shared build && pnpm --filter @immich-frame/frame build && pnpm --filter @immich-frame/setup build",
     "build:embedded-ui": "pnpm build && node scripts/sync-ui-assets.mjs",

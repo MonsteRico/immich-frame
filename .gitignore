@@ -1,5 +1,6 @@
 .immich-frame/
 dist/
 node_modules/
+.pnpm-store/
 coverage/
 *.log

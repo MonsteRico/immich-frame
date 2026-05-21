@@ -24,7 +24,8 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 - Runtime target is a local Raspberry Pi appliance.
 - Core daemon is Go.
 - Frontend uses Preact + Vite, with separate frame and setup bundles.
-- Frontend tooling uses pnpm.
+- Frontend tooling uses the active Node/pnpm from the PowerShell environment.
+- Matthew's PowerShell profile initializes fnm, so `node -v` and `pnpm -v` should resolve directly in agent shells.
 - Styling uses plain CSS/CSS modules, not Tailwind or a component library.
 - Icons are minimal inline SVGs, not an icon library.
 - Release Go binary embeds built UI assets.
@@ -91,7 +92,7 @@ Avoid committing every tiny file edit. Also avoid waiting until an entire phase 
 
 - [ ] Read `GOAL.md`, especially the Phase 2 checklist.
 - [ ] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
-- [ ] Run baseline checks: `go test ./...` and frontend checks using the project-pinned pnpm/Corepack setup.
+- [ ] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
 - [ ] Verify current Immich API behavior through official docs/OpenAPI and, where needed, manual testing against Matthew's Immich instance.
 - [ ] Implement the adapter behind `internal/immich` without leaking Immich details into playback/cache/setup code.
 - [ ] Use mock HTTP unit tests for adapter behavior; do not add real-Immich integration tests to repo/CI for MVP.

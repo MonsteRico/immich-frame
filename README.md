@@ -62,27 +62,27 @@ For the complete desktop runbook, see `docs/local-development.md`.
 Prerequisites:
 
 - Go 1.22 or newer.
-- Node.js with Corepack.
-- pnpm 9.x.
+- Node.js from the active PowerShell environment.
+- pnpm from the active PowerShell environment.
 
 Install frontend dependencies:
 
 ```sh
-corepack pnpm install
+pnpm install
 ```
 
 Run checks:
 
 ```sh
 go test ./...
-corepack pnpm typecheck
-corepack pnpm build
+pnpm typecheck
+pnpm build
 ```
 
 Prepare embedded UI assets before a release Go build:
 
 ```sh
-corepack pnpm build:embedded-ui
+pnpm build:embedded-ui
 ```
 
 Run the desktop mock slideshow:
