@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -155,13 +157,50 @@ type Secrets struct {
 }
 
 type State struct {
-	SetupComplete  bool      `json:"setupComplete"`
-	SetupStatus    string    `json:"setupStatus,omitempty"`
-	SetupCode      string    `json:"setupCode,omitempty"`
-	CurrentAssetID string    `json:"currentAssetId,omitempty"`
-	LastSync       time.Time `json:"lastSync,omitempty"`
-	LastError      string    `json:"lastError,omitempty"`
-	UpdatedAt      time.Time `json:"updatedAt"`
+	SetupComplete    bool                  `json:"setupComplete"`
+	SetupStatus      string                `json:"setupStatus,omitempty"`
+	SetupCode        string                `json:"setupCode,omitempty"`
+	ImmichValidation ImmichValidationState `json:"immichValidation"`
+	CurrentAssetID   string                `json:"currentAssetId,omitempty"`
+	LastSync         time.Time             `json:"lastSync,omitempty"`
+	LastError        string                `json:"lastError,omitempty"`
+	UpdatedAt        time.Time             `json:"updatedAt"`
+}
+
+type ImmichValidationState struct {
+	Validated         bool      `json:"validated"`
+	URL               string    `json:"url,omitempty"`
+	APIKeyFingerprint string    `json:"apiKeyFingerprint,omitempty"`
+	ValidatedAt       time.Time `json:"validatedAt,omitempty"`
+	Version           string    `json:"version,omitempty"`
+	KeyName           string    `json:"keyName,omitempty"`
+}
+
+func NewImmichValidation(url, apiKey, version, keyName string, validatedAt time.Time) ImmichValidationState {
+	return ImmichValidationState{
+		Validated:         true,
+		URL:               strings.TrimRight(strings.TrimSpace(url), "/"),
+		APIKeyFingerprint: ImmichAPIKeyFingerprint(apiKey),
+		ValidatedAt:       validatedAt,
+		Version:           version,
+		KeyName:           keyName,
+	}
+}
+
+func (v ImmichValidationState) Matches(url, apiKey string) bool {
+	return v.Validated &&
+		v.URL == strings.TrimRight(strings.TrimSpace(url), "/") &&
+		v.APIKeyFingerprint != "" &&
+		v.APIKeyFingerprint == ImmichAPIKeyFingerprint(apiKey)
+}
+
+func ImmichAPIKeyFingerprint(apiKey string) string {
+	apiKey = strings.TrimSpace(apiKey)
+	if apiKey == "" {
+		return ""
+	}
+	sum := sha256.Sum256([]byte(apiKey))
+	return hex.EncodeToString(sum[:])
 }
 
 func DefaultConfig() Config {

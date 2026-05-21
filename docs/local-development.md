@@ -96,7 +96,10 @@ Expected `/setup` behavior:
 
 - If `state.json` is unconfigured, the portal asks for the first-boot setup code shown by the frame.
 - After claiming the code, the portal creates a local admin password, accepts an Immich URL/API key, validates Immich, and lets you choose album or random-library mode.
+- The Immich step disables saving until the current URL/API key has passed the connection test.
+- The source step disables finish for both album and random-library mode until the saved URL/API key validation is current.
 - After setup is complete, `/setup` becomes the ongoing settings page and requires the admin password.
+- The settings page shows lightweight status: setup state, Immich validation state, source mode, cache count, and last error.
 - The settings page never displays a saved Immich API key. Paste a new key only when replacing it.
 
 For local mock slideshow work, `-dev-source dev/photos` keeps `/frame` on the local folder source even if setup is incomplete.
@@ -211,6 +214,9 @@ Open `http://127.0.0.1:8787/setup` and confirm:
 - the code from the HDMI frame advances setup.
 - admin password creation requires at least 8 characters.
 - HTTP Immich URLs show a warning.
+- the Immich settings step explains missing URL/key and missing validation before Save is enabled.
+- random-library mode cannot finish setup without a successful saved-credential validation.
+- `/api/status` requires the setup/admin session and does not expose the raw Immich API key.
 - saved settings do not reveal the Immich API key.
 
 Mock HTTP unit tests cover setup/auth/settings/Immich validation behavior. Do not add live Immich integration tests to repo or CI for the MVP.

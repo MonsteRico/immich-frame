@@ -13,7 +13,7 @@
 
 `secrets.json` stores Immich API key and admin password hash. It must be permissioned `0600` and owned by the `immich-frame` service user.
 
-`state.json` stores runtime recovery state such as current asset, setup stage, first-boot setup code, last sync, and last errors.
+`state.json` stores runtime recovery state such as current asset, setup stage, first-boot setup code, Immich validation status, last sync, and last errors.
 
 ## Permissions
 
@@ -125,14 +125,27 @@ First-boot setup code is generated once and remains fixed until setup completes.
 
 The setup code and setup status are persisted in `state.json`. The localhost kiosk `/frame` state may include the active setup code so the HDMI screen can display it. LAN callers can read setup status but do not receive the code from API state or SSE.
 
+## Immich Validation State
+
+Setup completion requires a successful Immich connection test for the saved Immich URL and API key. The daemon stores validation metadata in `state.json`:
+
+- validation boolean.
+- normalized Immich URL.
+- SHA-256 fingerprint of the API key, never the raw key.
+- validation timestamp.
+- Immich version and API key name when returned by Immich.
+
+Changing the saved Immich URL or replacing the API key clears the previous validation unless the new URL/key pair already matches a successful validation. This keeps random-library mode from bypassing the same connection check required by album mode.
+
 ## Settings API
 
 The setup/settings portal treats `config.toml` as the source of truth for non-secret settings and `secrets.json` as the source of truth for credentials.
 
 Implemented browser-facing behavior:
 
-- `GET /api/settings` returns sanitized config plus `hasImmichApiKey`.
+- `GET /api/settings` returns sanitized config plus `hasImmichApiKey` and the lightweight status payload.
 - `PUT /api/settings` writes non-secret settings to `config.toml`.
+- `GET /api/status` returns setup/configuration status, Immich validation status, source mode, cache count, and last error for setup/admin sessions.
 - `immichApiKey` is replace-only. The raw saved key is never returned.
 - The server preserves service/network-only fields such as listen host and local development source path when settings are written from the portal.
 - Album mode stores one selected album id in `[source.album]`.

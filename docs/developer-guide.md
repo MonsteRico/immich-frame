@@ -121,7 +121,7 @@ ui/frame
   Kiosk slideshow UI.
 
 ui/setup
-  Phone-first setup/settings UI. It claims the setup code, creates the admin password, validates Immich, chooses a source, and remains the settings portal after setup.
+  Phone-first setup/settings UI. It claims the setup code, creates the admin password, validates Immich, chooses a source, shows lightweight status, and remains the settings portal after setup.
 
 ui/shared
   Shared frontend API/types.
@@ -170,6 +170,9 @@ The setup/settings API is intentionally browser-safe:
 
 - use `hasImmichApiKey` instead of returning the saved API key.
 - require setup/admin sessions for settings and Immich setup routes.
+- treat `/api/status` as setup/admin-only; it reports validation state, source mode, cache count, and last error without raw secrets.
+- require a successful Immich validation for the saved URL/API key before setup completion, including random-library mode.
+- clear stale validation when the saved URL or API key changes.
 - keep live Immich checks in mock HTTP unit tests for repo/CI.
 - preserve local folder development mode when running with `-dev-source`.
 

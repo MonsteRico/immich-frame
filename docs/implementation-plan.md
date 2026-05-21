@@ -100,7 +100,7 @@ Checklist:
 - [x] Select source mode: one album or random library.
 - [x] Provide a searchable album picker for album mode, showing album name and item count when available.
 - [x] Configure interval, display fit, cache preset, and overlays.
-- [ ] Add lightweight status page.
+- [x] Add lightweight status page.
 - [x] Require admin session after setup.
 - [x] Update setup/security/config/developer docs alongside behavior changes.
 
@@ -110,13 +110,13 @@ Goal: close setup portal gaps before Raspberry Pi appliance work starts.
 
 Checklist:
 
-- [ ] Require a successful Immich validation for the saved URL/API key before setup completion.
-- [ ] Prevent random-library setup from bypassing Immich validation.
-- [ ] Add clear setup UI guardrails and messages for missing validation or required fields.
-- [ ] Add a lightweight status API/settings surface, or intentionally revise API docs if it remains out of scope.
-- [ ] Reconcile overlay configuration docs with implemented backend behavior.
-- [ ] Update README, agent handoff docs, and developer docs.
-- [ ] Run `go test ./...`, `pnpm typecheck`, and `pnpm build`.
+- [x] Require a successful Immich validation for the saved URL/API key before setup completion.
+- [x] Prevent random-library setup from bypassing Immich validation.
+- [x] Add clear setup UI guardrails and messages for missing validation or required fields.
+- [x] Add a lightweight status API/settings surface.
+- [x] Reconcile overlay configuration docs with implemented backend behavior.
+- [x] Update README, agent handoff docs, and developer docs.
+- [x] Run `go test ./...`, `pnpm typecheck`, and `pnpm build`.
 
 ## Phase 4: Pi Appliance
 

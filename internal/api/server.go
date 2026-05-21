@@ -76,6 +76,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/auth/session", s.authSession)
 	mux.HandleFunc("/api/auth/login", s.authLogin)
 	mux.HandleFunc("/api/auth/logout", s.authLogout)
+	mux.HandleFunc("/api/status", s.status)
 	mux.HandleFunc("/api/settings", s.settings)
 	mux.HandleFunc("/api/immich/test", s.immichTest)
 	mux.HandleFunc("/api/immich/albums", s.immichAlbums)
@@ -293,11 +294,10 @@ func (s *Server) setupComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.mu.Lock()
-	ready := s.Secrets.AdminPasswordHash != "" && s.Config.Immich.URL != "" && s.Secrets.ImmichAPIKey != "" &&
-		(s.Config.Source.Mode == "random" || (s.Config.Source.Mode == "album" && s.Config.Source.Album.ID != ""))
+	ready, reason := s.setupReadyLocked()
 	s.mu.Unlock()
 	if !ready {
-		http.Error(w, "admin password, Immich connection, and source selection are required", http.StatusConflict)
+		http.Error(w, reason, http.StatusConflict)
 		return
 	}
 	state, err := s.Setup.Complete()
@@ -362,6 +362,21 @@ func (s *Server) authLogout(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]bool{"ok": true})
 }
 
+func (s *Server) status(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if !s.hasSession(r, auth.ScopeSetup, auth.ScopeAdmin) {
+		http.Error(w, "admin authentication required", http.StatusUnauthorized)
+		return
+	}
+	s.mu.Lock()
+	response := s.portalStatusLocked()
+	s.mu.Unlock()
+	writeJSON(w, response)
+}
+
 func (s *Server) settings(w http.ResponseWriter, r *http.Request) {
 	if !s.hasSession(r, auth.ScopeSetup, auth.ScopeAdmin) {
 		http.Error(w, "admin authentication required", http.StatusUnauthorized)
@@ -370,7 +385,7 @@ func (s *Server) settings(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		s.mu.Lock()
-		response := settingsResponse{Config: s.Config, HasImmichAPIKey: s.Secrets.ImmichAPIKey != ""}
+		response := settingsResponse{Config: s.Config, HasImmichAPIKey: s.Secrets.ImmichAPIKey != "", Status: s.portalStatusLocked()}
 		s.mu.Unlock()
 		writeJSON(w, response)
 	case http.MethodPut:
@@ -387,6 +402,10 @@ func (s *Server) settings(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		nextValidation := s.State.ImmichValidation
+		if !nextValidation.Matches(cfg.Immich.URL, secrets.ImmichAPIKey) {
+			nextValidation = config.ImmichValidationState{}
+		}
 		if err := config.Save(s.Paths.ConfigFile, cfg); err != nil {
 			s.mu.Unlock()
 			http.Error(w, "config unavailable", http.StatusInternalServerError)
@@ -399,9 +418,17 @@ func (s *Server) settings(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+		if nextValidation != s.State.ImmichValidation {
+			s.State.ImmichValidation = nextValidation
+			if err := config.SaveState(s.Paths.StateFile, s.State); err != nil {
+				s.mu.Unlock()
+				http.Error(w, "state unavailable", http.StatusInternalServerError)
+				return
+			}
+		}
 		s.Config = cfg
 		s.Secrets = secrets
-		response := settingsResponse{Config: s.Config, HasImmichAPIKey: s.Secrets.ImmichAPIKey != ""}
+		response := settingsResponse{Config: s.Config, HasImmichAPIKey: s.Secrets.ImmichAPIKey != "", Status: s.portalStatusLocked()}
 		s.mu.Unlock()
 		writeJSON(w, response)
 	default:
@@ -443,7 +470,16 @@ func (s *Server) immichTest(w http.ResponseWriter, r *http.Request) {
 		writeImmichError(w, err)
 		return
 	}
-	writeJSON(w, map[string]any{"ok": true, "version": info.Version, "keyName": info.KeyName})
+	s.mu.Lock()
+	s.State.ImmichValidation = config.NewImmichValidation(req.URL, req.APIKey, info.Version, info.KeyName, time.Now())
+	err = config.SaveState(s.Paths.StateFile, s.State)
+	status := s.portalStatusLocked()
+	s.mu.Unlock()
+	if err != nil {
+		http.Error(w, "state unavailable", http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, map[string]any{"ok": true, "version": info.Version, "keyName": info.KeyName, "status": status})
 }
 
 func (s *Server) immichAlbums(w http.ResponseWriter, r *http.Request) {
@@ -475,6 +511,7 @@ func (s *Server) immichAlbums(w http.ResponseWriter, r *http.Request) {
 type settingsResponse struct {
 	Config          config.Config `json:"config"`
 	HasImmichAPIKey bool          `json:"hasImmichApiKey"`
+	Status          PortalStatus  `json:"status"`
 }
 
 type settingsRequest struct {
@@ -492,6 +529,80 @@ func applySettings(cfg *config.Config, secrets *config.Secrets, req settingsRequ
 	*cfg = next
 	if req.ImmichAPIKey != nil {
 		secrets.ImmichAPIKey = strings.TrimSpace(*req.ImmichAPIKey)
+	}
+}
+
+type PortalStatus struct {
+	Setup           SetupPublicState `json:"setup"`
+	Configured      bool             `json:"configured"`
+	HasImmichAPIKey bool             `json:"hasImmichApiKey"`
+	Immich          ImmichStatus     `json:"immich"`
+	SourceMode      string           `json:"sourceMode"`
+	CacheCount      int              `json:"cacheCount"`
+	LastError       string           `json:"lastError,omitempty"`
+}
+
+type ImmichStatus struct {
+	URL                string     `json:"url,omitempty"`
+	Configured         bool       `json:"configured"`
+	Validated          bool       `json:"validated"`
+	ValidationRequired bool       `json:"validationRequired"`
+	ValidatedAt        *time.Time `json:"validatedAt,omitempty"`
+	Version            string     `json:"version,omitempty"`
+	KeyName            string     `json:"keyName,omitempty"`
+}
+
+func (s *Server) portalStatusLocked() PortalStatus {
+	cacheCount := 0
+	if s.Cache != nil {
+		cacheCount = len(s.Cache.List())
+	}
+	validated := s.State.ImmichValidation.Matches(s.Config.Immich.URL, s.Secrets.ImmichAPIKey)
+	immichStatus := ImmichStatus{
+		URL:                s.Config.Immich.URL,
+		Configured:         strings.TrimSpace(s.Config.Immich.URL) != "" && s.Secrets.ImmichAPIKey != "",
+		Validated:          validated,
+		ValidationRequired: !validated,
+	}
+	if validated {
+		immichStatus.ValidatedAt = &s.State.ImmichValidation.ValidatedAt
+		immichStatus.Version = s.State.ImmichValidation.Version
+		immichStatus.KeyName = s.State.ImmichValidation.KeyName
+	}
+	return PortalStatus{
+		Setup:           s.setupPublicState(false),
+		Configured:      s.State.SetupComplete,
+		HasImmichAPIKey: s.Secrets.ImmichAPIKey != "",
+		Immich:          immichStatus,
+		SourceMode:      s.Config.Source.Mode,
+		CacheCount:      cacheCount,
+		LastError:       s.State.LastError,
+	}
+}
+
+func (s *Server) setupReadyLocked() (bool, string) {
+	if s.Secrets.AdminPasswordHash == "" {
+		return false, "create the local admin password before finishing setup"
+	}
+	if strings.TrimSpace(s.Config.Immich.URL) == "" {
+		return false, "enter and save the Immich URL before finishing setup"
+	}
+	if strings.TrimSpace(s.Secrets.ImmichAPIKey) == "" {
+		return false, "enter and save a dedicated Immich API key before finishing setup"
+	}
+	if !s.State.ImmichValidation.Matches(s.Config.Immich.URL, s.Secrets.ImmichAPIKey) {
+		return false, "test the saved Immich URL and API key successfully before finishing setup"
+	}
+	switch s.Config.Source.Mode {
+	case "random":
+		return true, ""
+	case "album":
+		if strings.TrimSpace(s.Config.Source.Album.ID) != "" {
+			return true, ""
+		}
+		return false, "choose an Immich album or random library mode before finishing setup"
+	default:
+		return false, "choose an Immich album or random library mode before finishing setup"
 	}
 }
 

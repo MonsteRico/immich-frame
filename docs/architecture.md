@@ -231,7 +231,7 @@ Near-future overlay:
 
 - Weather.
 
-Frontend owns overlay-specific schema/defaults/validation. Backend validates only generic overlay envelope fields such as `enabled`, `slot`, and `visibility`, and preserves overlay-specific options where possible.
+MVP overlay config is limited to the generic envelope fields currently read and written by the backend: `enabled`, `slot`, and `visibility`. The backend does not currently preserve arbitrary overlay-specific TOML fields. Future overlay-specific settings should be added explicitly to the config model or through a deliberate raw-options preservation structure before docs describe them as supported.
 
 ## Source Model
 

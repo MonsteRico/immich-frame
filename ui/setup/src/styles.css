@@ -151,6 +151,11 @@ button {
   font-weight: 800;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
 button.secondary,
 .segmented button {
   border: 1px solid #cfc6ad;
@@ -216,6 +221,39 @@ button.secondary,
 
 .settings-grid {
   grid-template-columns: 1fr;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding: 0.75rem;
+  border: 1px solid #d7cfb8;
+  border-radius: 0.5rem;
+  background: #f8f1df;
+}
+
+.status-grid div {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.status-grid span {
+  color: #686452;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.status-grid strong {
+  overflow-wrap: anywhere;
+  color: #20211d;
+  font-size: 0.95rem;
+}
+
+.status-wide {
+  grid-column: 1 / -1;
 }
 
 .toggle-row {

@@ -43,9 +43,9 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 
 ## Current Phase
 
-**Phase 3.5: Setup Portal Hardening** is the current goal on `master`.
+**Phase 3.5: Setup Portal Hardening** is complete on `master`.
 
-Phase 0, the first local Phase 1 slice, Phase 1.5 validation, and Phase 2 Immich adapter work are complete on `master`.
+Phase 0, the first local Phase 1 slice, Phase 1.5 validation, Phase 2 Immich adapter work, Phase 3 setup portal, and Phase 3.5 setup hardening are complete on `master`.
 
 Current validated base:
 
@@ -60,16 +60,17 @@ Current validated base:
 - Immich adapter exists behind `internal/immich` with mock HTTP tests.
 - Immich connection testing, album listing, album/random candidate listing, preview rendition fetching, and metadata normalization are implemented.
 
-Current base now includes the first phone-first setup/settings portal flow and supporting backend routes, using the existing Immich adapter and preserving the local mock frame loop.
+Current base now includes the phone-first setup/settings portal flow and supporting backend routes, using the existing Immich adapter and preserving the local mock frame loop.
 
-PM review on 2026-05-21 found that Phase 3 needs a focused hardening pass before Phase 4:
+Phase 3.5 closed the PM review gaps found on 2026-05-21:
 
-- setup completion must require a successful Immich validation for the saved URL/key, including random-library mode.
-- the planned lightweight status surface needs to exist or be intentionally removed from API docs.
-- setup/settings UI should clearly guard unavailable actions and explain required validation.
-- overlay configuration docs should match what the backend currently reads/writes.
+- setup completion now requires a successful Immich validation for the saved URL/key, including random-library mode.
+- changing the saved Immich URL or API key clears stale validation unless the new pair already matches a successful validation.
+- `GET /api/status` and `GET /api/settings` surface setup/configuration status, Immich validation status, source mode, cache count, and last error without raw secrets.
+- setup/settings UI guards unavailable actions and explains required validation or missing fields.
+- overlay configuration docs match the generic envelope fields the backend currently reads/writes.
 
-Do not start **Phase 4: Pi Appliance** until Phase 3.5 is complete.
+The next planned phase is **Phase 4: Pi Appliance**.
 
 ## Git Commit Guidance
 
@@ -121,16 +122,16 @@ For Phase 3.5, pay special attention to:
 
 ## First Task Checklist
 
-- [ ] Read `GOAL.md`, especially the Phase 3.5 checklist.
-- [ ] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
-- [ ] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
-- [ ] Require successful Immich validation before setup can complete.
-- [ ] Add or reconcile the lightweight status surface.
-- [ ] Tighten setup/settings UI guardrails around validation and required fields.
-- [ ] Reconcile overlay configuration docs with implemented behavior.
-- [ ] Update developer-facing docs as setup commands, config, or verification steps change.
-- [ ] Update `GOAL.md` as items are completed.
-- [ ] Commit and push coherent slices as checklist features are completed.
+- [x] Read `GOAL.md`, especially the Phase 3.5 checklist.
+- [x] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+- [x] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
+- [x] Require successful Immich validation before setup can complete.
+- [x] Add or reconcile the lightweight status surface.
+- [x] Tighten setup/settings UI guardrails around validation and required fields.
+- [x] Reconcile overlay configuration docs with implemented behavior.
+- [x] Update developer-facing docs as setup commands, config, or verification steps change.
+- [x] Update `GOAL.md` as items are completed.
+- [x] Commit and push coherent slices as checklist features are completed.
 
 ## Do Not Build Yet
 

@@ -8,11 +8,13 @@ import {
   fetchImmichAlbums,
   fetchSettings,
   fetchSetupState,
+  fetchStatus,
   login,
   saveSettings,
   testImmich,
   type AppConfig,
   type ImmichAlbum,
+  type PortalStatus,
   type SetupPublicState
 } from "@immich-frame/shared";
 import "./styles.css";
@@ -24,6 +26,7 @@ function App() {
   const [setup, setSetup] = useState<SetupPublicState | null>(null);
   const [settings, setSettings] = useState<AppConfig | null>(null);
   const [hasKey, setHasKey] = useState(false);
+  const [status, setStatus] = useState<PortalStatus | null>(null);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -46,6 +49,7 @@ function App() {
       const loaded = await fetchSettings();
       setSettings(loaded.config);
       setHasKey(loaded.hasImmichApiKey);
+      setStatus(loaded.status);
       if (!setupState.adminPasswordExists) setStep("password");
       else if (!setupState.configured) setStep("immich");
       else setStep("settings");
@@ -59,7 +63,14 @@ function App() {
     const loaded = await fetchSettings();
     setSettings(loaded.config);
     setHasKey(loaded.hasImmichApiKey);
+    setStatus(loaded.status);
     return loaded.config;
+  };
+
+  const refreshStatus = async () => {
+    const loaded = await fetchStatus();
+    setStatus(loaded);
+    return loaded;
   };
 
   return (
@@ -80,6 +91,7 @@ function App() {
         const loaded = await fetchSettings();
         setSettings(loaded.config);
         setHasKey(loaded.hasImmichApiKey);
+        setStatus(loaded.status);
         setStep(claimed.adminPasswordExists ? "immich" : "password");
       }} onError={setMessage} /> : null}
       {step === "login" ? <LoginPanel onLogin={async (password) => {
@@ -95,26 +107,30 @@ function App() {
         await refreshSettings();
         setStep("immich");
       }} onError={setMessage} /> : null}
-      {step === "immich" && settings ? <ImmichPanel config={settings} hasKey={hasKey} onSave={async (next, key) => {
+      {step === "immich" && settings ? <ImmichPanel config={settings} hasKey={hasKey} status={status} onValidated={setStatus} onSave={async (next, key) => {
         setMessage("");
         const saved = await saveSettings(next, key);
         setSettings(saved.config);
         setHasKey(saved.hasImmichApiKey);
+        setStatus(saved.status);
         setStep("source");
       }} onError={setMessage} /> : null}
-      {step === "source" && settings ? <SourcePanel config={settings} onBack={() => setStep("immich")} onSave={async (next) => {
+      {step === "source" && settings ? <SourcePanel config={settings} status={status} onBack={() => setStep("immich")} onSave={async (next) => {
         setMessage("");
         const saved = await saveSettings(next);
         setSettings(saved.config);
+        setStatus(saved.status);
         const finished = await completeSetup();
         setSetup(finished);
+        await refreshStatus();
         setStep("done");
       }} onError={setMessage} /> : null}
-      {step === "settings" && settings ? <SettingsPanel config={settings} hasKey={hasKey} onSave={async (next, key) => {
+      {step === "settings" && settings ? <SettingsPanel config={settings} hasKey={hasKey} status={status} onValidated={setStatus} onSave={async (next, key) => {
         setMessage("");
         const saved = await saveSettings(next, key);
         setSettings(saved.config);
         setHasKey(saved.hasImmichApiKey);
+        setStatus(saved.status);
         setMessage("Settings saved.");
       }} onError={setMessage} /> : null}
       {step === "done" ? <Panel>
@@ -159,33 +175,54 @@ function PasswordPanel({ onSave, onError }: { onSave: (password: string) => Prom
   </Panel>;
 }
 
-function ImmichPanel({ config, hasKey, onSave, onError }: {
+function ImmichPanel({ config, hasKey, status, onValidated, onSave, onError }: {
   config: AppConfig;
   hasKey: boolean;
+  status: PortalStatus | null;
+  onValidated: (status: PortalStatus) => void;
   onSave: (config: AppConfig, key?: string) => Promise<void>;
   onError: (message: string) => void;
 }) {
   const [url, setUrl] = useState(config.immich.url);
   const [apiKey, setApiKey] = useState("");
   const [result, setResult] = useState("");
+  const [validatedFor, setValidatedFor] = useState(status?.immich.validated ? validationKey(config.immich.url, "", hasKey) : "");
   const next = useMemo(() => ({ ...config, immich: { ...config.immich, url } }), [config, url]);
   const isHTTP = url.trim().startsWith("http://");
+  const currentValidationKey = validationKey(url, apiKey, hasKey);
+  const missingURL = url.trim() === "";
+  const missingKey = !hasKey && apiKey.trim() === "";
+  const validated = validatedFor === currentValidationKey;
+  const canTest = !missingURL && !missingKey;
+  const canSave = canTest && validated;
+  const resetValidation = () => {
+    setResult("");
+    setValidatedFor("");
+  };
   return <Panel>
     <p className="step">Step 3</p>
     <h2>Connect Immich</h2>
-    <label>Immich URL<input value={url} onInput={(event) => setUrl(event.currentTarget.value)} placeholder="https://immich.example.com" /></label>
+    <label>Immich URL<input value={url} onInput={(event) => { setUrl(event.currentTarget.value); resetValidation(); }} placeholder="https://immich.example.com" /></label>
     {isHTTP ? <p className="warning">HTTP sends the Immich API key over the local network without encryption. Use it only for trusted homelab URLs.</p> : null}
-    <label>{hasKey ? "Replace API key" : "Dedicated API key"}<input type="password" value={apiKey} onInput={(event) => setApiKey(event.currentTarget.value)} placeholder={hasKey ? "Leave blank to keep saved key" : "Paste API key"} /></label>
+    <label>{hasKey ? "Replace API key" : "Dedicated API key"}<input type="password" value={apiKey} onInput={(event) => { setApiKey(event.currentTarget.value); resetValidation(); }} placeholder={hasKey ? "Leave blank to keep saved key" : "Paste API key"} /></label>
+    {missingURL ? <p className="warning">Enter the Immich URL before testing the connection.</p> : null}
+    {missingKey ? <p className="warning">Paste a dedicated Immich API key before testing the connection.</p> : null}
+    {!validated && canTest ? <p className="warning">Test this URL and API key successfully before saving and finishing setup.</p> : null}
     {result ? <p className="test-result">{result}</p> : null}
     <div className="button-row">
-      <button type="button" className="secondary" onClick={() => testImmich(url, apiKey).then((info) => setResult(`Connected to Immich ${info.version}${info.keyName ? ` as ${info.keyName}` : ""}.`)).catch((err) => onError(errorText(err)))}>Test</button>
-      <button type="button" onClick={() => onSave(next, apiKey || undefined).catch((err) => onError(errorText(err)))}>Save</button>
+      <button type="button" className="secondary" disabled={!canTest} onClick={() => testImmich(url, apiKey).then((info) => {
+        setValidatedFor(currentValidationKey);
+        setResult(`Connected to Immich ${info.version}${info.keyName ? ` as ${info.keyName}` : ""}.`);
+        onValidated(info.status);
+      }).catch((err) => onError(errorText(err)))}>Test</button>
+      <button type="button" disabled={!canSave} onClick={() => canSave ? onSave(next, apiKey || undefined).catch((err) => onError(errorText(err))) : onError("Test the Immich connection successfully before saving.")}>Save</button>
     </div>
   </Panel>;
 }
 
-function SourcePanel({ config, onBack, onSave, onError }: {
+function SourcePanel({ config, status, onBack, onSave, onError }: {
   config: AppConfig;
+  status: PortalStatus | null;
   onBack: () => void;
   onSave: (config: AppConfig) => Promise<void>;
   onError: (message: string) => void;
@@ -203,6 +240,9 @@ function SourcePanel({ config, onBack, onSave, onError }: {
 
   const filtered = albums.filter((album) => albumName(album).toLowerCase().includes(query.toLowerCase()));
   const next = { ...config, source: { ...config.source, mode, album: { ...config.source.album, id: albumID }, random: { shuffle: true } } };
+  const validationReady = status?.immich.validated ?? false;
+  const sourceReady = mode === "random" || albumID.trim() !== "";
+  const canFinish = validationReady && sourceReady;
   return <Panel>
     <p className="step">Step 4</p>
     <h2>Choose what to show</h2>
@@ -222,28 +262,37 @@ function SourcePanel({ config, onBack, onSave, onError }: {
         })}
       </div>
     </> : <p className="muted">Random mode pulls a changing set of photos from the Immich library using conservative photo-only filters.</p>}
+    {!validationReady ? <p className="warning">Finish is locked until the saved Immich URL and API key pass a connection test.</p> : null}
+    {mode === "album" && !albumID.trim() ? <p className="warning">Choose an album or switch to random library mode before finishing setup.</p> : null}
     <div className="button-row">
       <button type="button" className="secondary" onClick={onBack}>Back</button>
-      <button type="button" onClick={() => onSave(next).catch((err) => onError(errorText(err)))}>Finish setup</button>
+      <button type="button" disabled={!canFinish} onClick={() => canFinish ? onSave(next).catch((err) => onError(errorText(err))) : onError("Validate Immich and choose a source before finishing setup.")}>Finish setup</button>
     </div>
   </Panel>;
 }
 
-function SettingsPanel({ config, hasKey, onSave, onError }: {
+function SettingsPanel({ config, hasKey, status, onValidated, onSave, onError }: {
   config: AppConfig;
   hasKey: boolean;
+  status: PortalStatus | null;
+  onValidated: (status: PortalStatus) => void;
   onSave: (config: AppConfig, key?: string) => Promise<void>;
   onError: (message: string) => void;
 }) {
   const [draft, setDraft] = useState(config);
   const [apiKey, setApiKey] = useState("");
+  const [testResult, setTestResult] = useState("");
   useEffect(() => setDraft(config), [config]);
+  const canTest = draft.immich.url.trim() !== "" && (hasKey || apiKey.trim() !== "");
   return <Panel>
     <h2>Settings</h2>
+    {status ? <StatusSummary status={status} /> : null}
     <label>Frame name<input value={draft.device.name} onInput={(event) => setDraft({ ...draft, device: { ...draft.device, name: event.currentTarget.value } })} /></label>
     <label>Immich URL<input value={draft.immich.url} onInput={(event) => setDraft({ ...draft, immich: { url: event.currentTarget.value } })} /></label>
     {draft.immich.url.startsWith("http://") ? <p className="warning">HTTP Immich URLs should only be used on trusted local networks.</p> : null}
     <label>{hasKey ? "Replace Immich API key" : "Immich API key"}<input type="password" value={apiKey} onInput={(event) => setApiKey(event.currentTarget.value)} placeholder={hasKey ? "Saved key is hidden" : "Paste API key"} /></label>
+    {status?.immich.validationRequired ? <p className="warning">Immich needs a successful connection test before first setup can finish. Saving a new URL or key clears the previous validation.</p> : null}
+    {testResult ? <p className="test-result">{testResult}</p> : null}
     <div className="settings-grid">
       <label>Slide seconds<input type="number" min="5" value={draft.slideshow.intervalSeconds} onInput={(event) => setDraft({ ...draft, slideshow: { ...draft.slideshow, intervalSeconds: Number(event.currentTarget.value) } })} /></label>
       <label>Display fit<select value={draft.display.fit} onInput={(event) => setDraft({ ...draft, display: { ...draft.display, fit: event.currentTarget.value as "contain" | "cover" } })}><option value="contain">Contain</option><option value="cover">Cover</option></select></label>
@@ -254,8 +303,27 @@ function SettingsPanel({ config, hasKey, onSave, onError }: {
       <label><input type="checkbox" checked={draft.overlays.photoInfo.enabled} onInput={(event) => setDraft({ ...draft, overlays: { ...draft.overlays, photoInfo: { ...draft.overlays.photoInfo, enabled: event.currentTarget.checked } } })} /> Photo info</label>
       <label><input type="checkbox" checked={draft.overlays.status.enabled} onInput={(event) => setDraft({ ...draft, overlays: { ...draft.overlays, status: { ...draft.overlays.status, enabled: event.currentTarget.checked } } })} /> Status</label>
     </div>
-    <button type="button" onClick={() => onSave(draft, apiKey || undefined).catch((err) => onError(errorText(err)))}>Save settings</button>
+    <div className="button-row">
+      <button type="button" className="secondary" disabled={!canTest} onClick={() => testImmich(draft.immich.url, apiKey).then((info) => {
+        setTestResult(`Connected to Immich ${info.version}${info.keyName ? ` as ${info.keyName}` : ""}.`);
+        onValidated(info.status);
+      }).catch((err) => onError(errorText(err)))}>Test Immich</button>
+      <button type="button" onClick={() => onSave(draft, apiKey || undefined).catch((err) => onError(errorText(err)))}>Save settings</button>
+    </div>
   </Panel>;
+}
+
+function StatusSummary({ status }: { status: PortalStatus }) {
+  const validatedAt = status.immich.validatedAt ? new Date(status.immich.validatedAt).toLocaleString() : "";
+  return <div className="status-grid" aria-label="Frame status">
+    <div><span>Setup</span><strong>{status.configured ? "Complete" : "In progress"}</strong></div>
+    <div><span>Immich</span><strong>{status.immich.validated ? "Validated" : "Needs test"}</strong></div>
+    <div><span>Source</span><strong>{status.sourceMode || "Not chosen"}</strong></div>
+    <div><span>Cache</span><strong>{status.cacheCount} photos</strong></div>
+    {status.immich.version ? <div><span>Version</span><strong>{status.immich.version}</strong></div> : null}
+    {validatedAt ? <div><span>Validated</span><strong>{validatedAt}</strong></div> : null}
+    {status.lastError ? <div className="status-wide"><span>Last error</span><strong>{status.lastError}</strong></div> : null}
+  </div>;
 }
 
 function Panel({ children }: { children: ComponentChildren }) {
@@ -285,6 +353,10 @@ function presetCache(cache: AppConfig["cache"], preset: string): AppConfig["cach
   if (preset === "light") return { ...cache, preset: "light", maxSizeMb: 512, targetItems: 150, prefetchItems: 10 };
   if (preset === "large") return { ...cache, preset: "large", maxSizeMb: 4096, targetItems: 1000, prefetchItems: 40 };
   return { ...cache, preset: "balanced", maxSizeMb: 2048, targetItems: 500, prefetchItems: 20 };
+}
+
+function validationKey(url: string, apiKey: string, hasSavedKey: boolean) {
+  return `${url.trim().replace(/\/+$/, "")}|${apiKey.trim() || (hasSavedKey ? "saved" : "")}`;
 }
 
 function errorText(err: unknown) {

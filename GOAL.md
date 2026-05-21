@@ -42,7 +42,7 @@ The MVP is done when all items below are complete on the reference Pi Zero 2 W h
 
 Complete **Phase 3.5: Setup Portal Hardening**.
 
-The local scaffold, mock frame loop, Phase 1.5 validation, Phase 2 Immich adapter, and first Phase 3 setup portal implementation are complete. The next agent should tighten the setup portal before starting Pi appliance work.
+Phase 3.5 is complete. The local scaffold, mock frame loop, Phase 1.5 validation, Phase 2 Immich adapter, Phase 3 setup portal, and Phase 3.5 hardening pass are complete. The next major phase is Phase 4: Pi Appliance.
 
 ### Phase 0 Done Checklist
 
@@ -270,37 +270,49 @@ The local scaffold, mock frame loop, Phase 1.5 validation, Phase 2 Immich adapte
 
 ### Phase 3.5 Setup Portal Hardening Checklist
 
-- [ ] Baseline verification before changes:
-  - [ ] Confirm branch is `master`.
-  - [ ] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
-  - [ ] Run `go test ./...`.
-  - [ ] Run `pnpm typecheck`.
-  - [ ] Run `pnpm build`.
-- [ ] Require successful Immich validation before setup completion:
-  - [ ] Track whether the saved Immich URL/API key have passed validation.
-  - [ ] Prevent finishing setup when the user skipped validation or changed URL/key after validation.
-  - [ ] Preserve the saved-key replace-only rule.
-  - [ ] Add backend unit tests for validation-required setup completion.
-  - [ ] Add UI feedback that clearly tells the user why setup cannot finish yet.
-- [ ] Add a real lightweight status surface:
-  - [ ] Implement `GET /api/status` or document and intentionally remove it from planned API docs.
-  - [ ] Surface setup/configuration status, Immich connection status when known, source mode, cache count, and last error without leaking secrets.
-  - [ ] Show this status in the settings portal after setup.
-  - [ ] Add unit tests for the status response.
-- [ ] Tighten setup/settings UI behavior:
-  - [ ] Disable or guard source/finish actions until required fields and validation state are ready.
-  - [ ] Make random-library mode as validation-dependent as album mode.
-  - [ ] Keep phone-first layout and avoid turning the portal into a broad admin dashboard.
-- [ ] Reconcile overlay configuration docs with implementation:
-  - [ ] Either remove unimplemented overlay-specific TOML fields from current config docs, or implement preservation for raw overlay-specific fields.
-  - [ ] Keep MVP settings focused on implemented overlay controls.
-- [ ] Update stale project status docs:
-  - [ ] Update `README.md`.
-  - [ ] Update `AGENT_BRIEF.md`.
-  - [ ] Update `docs/implementation-plan.md` with Phase 3 done state and Phase 3.5 current work.
-  - [ ] Update `docs/configuration.md`, `docs/security.md`, `docs/local-development.md`, and `docs/developer-guide.md` for any behavior changes.
-  - [ ] Update `GOAL.md` with Phase 3.5 verification notes.
-- [ ] Commit and push after each coherent checklist feature or feature plus subitems is complete.
+- [x] Baseline verification before changes:
+  - [x] Confirm branch is `master`.
+  - [x] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+  - [x] Run `go test ./...`.
+  - [x] Run `pnpm typecheck`.
+  - [x] Run `pnpm build`.
+- [x] Require successful Immich validation before setup completion:
+  - [x] Track whether the saved Immich URL/API key have passed validation.
+  - [x] Prevent finishing setup when the user skipped validation or changed URL/key after validation.
+  - [x] Preserve the saved-key replace-only rule.
+  - [x] Add backend unit tests for validation-required setup completion.
+  - [x] Add UI feedback that clearly tells the user why setup cannot finish yet.
+- [x] Add a real lightweight status surface:
+  - [x] Implement `GET /api/status` or document and intentionally remove it from planned API docs.
+  - [x] Surface setup/configuration status, Immich connection status when known, source mode, cache count, and last error without leaking secrets.
+  - [x] Show this status in the settings portal after setup.
+  - [x] Add unit tests for the status response.
+- [x] Tighten setup/settings UI behavior:
+  - [x] Disable or guard source/finish actions until required fields and validation state are ready.
+  - [x] Make random-library mode as validation-dependent as album mode.
+  - [x] Keep phone-first layout and avoid turning the portal into a broad admin dashboard.
+- [x] Reconcile overlay configuration docs with implementation:
+  - [x] Either remove unimplemented overlay-specific TOML fields from current config docs, or implement preservation for raw overlay-specific fields.
+  - [x] Keep MVP settings focused on implemented overlay controls.
+- [x] Update stale project status docs:
+  - [x] Update `README.md`.
+  - [x] Update `AGENT_BRIEF.md`.
+  - [x] Update `docs/implementation-plan.md` with Phase 3 done state and Phase 3.5 current work.
+  - [x] Update `docs/configuration.md`, `docs/security.md`, `docs/local-development.md`, and `docs/developer-guide.md` for any behavior changes.
+  - [x] Update `GOAL.md` with Phase 3.5 verification notes.
+- [x] Commit and push after each coherent checklist feature or feature plus subitems is complete.
+
+### Phase 3.5 Verification Notes - 2026-05-21
+
+- Baseline before code changes passed on `master`: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
+- `origin` was `https://github.com/MonsteRico/immich-frame.git`.
+- `state.json` now records Immich validation metadata for the saved URL/API key fingerprint without storing the raw key.
+- `POST /api/setup/complete` now requires the admin password, saved Immich URL/key, validation matching those saved credentials, and a valid album or random-library source.
+- Random-library setup can no longer bypass Immich validation.
+- `GET /api/status` and the `GET /api/settings` response expose setup status, Immich validation status, source mode, cache count, and last error without raw secrets.
+- Setup/settings UI now disables or guards Save/Finish actions until required fields and validation state are ready.
+- Overlay docs now match the backend's implemented generic envelope fields: `enabled`, `slot`, and `visibility`.
+- Final verification passed: `go test ./...`, `pnpm typecheck`, `pnpm build`, and `pnpm build:embedded-ui`.
 
 ## Stop Conditions
 

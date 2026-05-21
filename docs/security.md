@@ -21,7 +21,7 @@ First boot:
 3. Setup portal requires code.
 4. User creates local admin password.
 5. User enters Immich URL and dedicated API key.
-6. Daemon validates and stores settings.
+6. Daemon validates the Immich URL/API key and stores settings.
 7. Setup code is invalidated.
 
 After setup:
@@ -31,6 +31,8 @@ After setup:
 - Immich API key is stored in `secrets.json`.
 - Settings UI never reveals the saved Immich API key.
 - Settings UI allows replacing the Immich API key by pasting a new raw key.
+- Setup completion requires a successful Immich connection test for the saved URL/API key.
+- Random-library mode has the same validation requirement as album mode.
 - Admin sessions last about 30 minutes by default and renew on activity.
 - MVP does not include a remember-me session.
 
@@ -41,8 +43,9 @@ Implemented route shape:
 - `POST /api/setup/admin-password` stores only a password hash and creates an admin session.
 - `POST /api/auth/login` and `POST /api/auth/logout` manage admin sessions after setup.
 - `GET /api/settings` and `PUT /api/settings` require a setup or admin session.
+- `GET /api/status` requires a setup or admin session and returns setup/configuration status, Immich validation status, source mode, cache count, and last error without raw secrets.
 - `POST /api/immich/test` and `GET /api/immich/albums` require a setup or admin session.
-- `POST /api/setup/complete` invalidates the setup code once password, Immich credentials, and source selection are present.
+- `POST /api/setup/complete` invalidates the setup code only after admin password, saved Immich credentials, successful validation for those credentials, and source selection are present.
 
 ## Localhost Trust Boundary
 

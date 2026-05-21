@@ -14,6 +14,7 @@ import (
 	"github.com/MonsteRico/immich-frame/internal/auth"
 	"github.com/MonsteRico/immich-frame/internal/cache"
 	"github.com/MonsteRico/immich-frame/internal/config"
+	"github.com/MonsteRico/immich-frame/internal/playback"
 	setupstate "github.com/MonsteRico/immich-frame/internal/setup"
 	"github.com/MonsteRico/immich-frame/internal/source"
 )
@@ -166,6 +167,116 @@ func TestImmichValidationUsesUserSafeErrorsAndAlbums(t *testing.T) {
 	}
 }
 
+func TestSetupCompleteRequiresValidationForSavedImmichCredentials(t *testing.T) {
+	immichServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("x-api-key") != "good-key" {
+			http.Error(w, "nope", http.StatusUnauthorized)
+			return
+		}
+		switch r.URL.Path {
+		case "/api/server/version":
+			_, _ = w.Write([]byte(`{"major":1,"minor":2,"patch":3}`))
+		case "/api/api-keys/me":
+			_, _ = w.Write([]byte(`{"name":"Frame key"}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer immichServer.Close()
+
+	server := newTestServer(t)
+	cookie := setupAdminCookie(t, server)
+	cfg := config.DefaultConfig()
+	cfg.Immich.URL = immichServer.URL
+	cfg.Source.Mode = "random"
+
+	rec := httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, jsonRequest(http.MethodPut, "/api/settings", settingsRequest{
+		Config:       cfg,
+		ImmichAPIKey: ptr("good-key"),
+	}, cookie))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("settings status = %d body=%s", rec.Code, rec.Body.String())
+	}
+
+	rec = httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, jsonRequest(http.MethodPost, "/api/setup/complete", map[string]string{}, cookie))
+	if rec.Code != http.StatusConflict || !strings.Contains(rec.Body.String(), "test the saved Immich URL and API key") {
+		t.Fatalf("complete without validation = %d %s", rec.Code, rec.Body.String())
+	}
+
+	rec = httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, jsonRequest(http.MethodPost, "/api/immich/test", map[string]string{}, cookie))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("immich test status = %d body=%s", rec.Code, rec.Body.String())
+	}
+
+	rec = httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, jsonRequest(http.MethodPost, "/api/setup/complete", map[string]string{}, cookie))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("complete after validation = %d %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestSetupCompleteRejectsValidationAfterCredentialChange(t *testing.T) {
+	server := newTestServer(t)
+	cookie := setupAdminCookie(t, server)
+	cfg := config.DefaultConfig()
+	cfg.Immich.URL = "https://immich.example.com"
+	cfg.Source.Mode = "random"
+	server.Config = cfg
+	server.Secrets.ImmichAPIKey = "good-key"
+	server.State.ImmichValidation = config.NewImmichValidation(cfg.Immich.URL, "good-key", "1.2.3", "Frame key", time.Now())
+
+	cfg.Immich.URL = "https://new-immich.example.com"
+	rec := httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, jsonRequest(http.MethodPut, "/api/settings", settingsRequest{Config: cfg}, cookie))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("settings status = %d body=%s", rec.Code, rec.Body.String())
+	}
+
+	rec = httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, jsonRequest(http.MethodPost, "/api/setup/complete", map[string]string{}, cookie))
+	if rec.Code != http.StatusConflict || !strings.Contains(rec.Body.String(), "test the saved Immich URL and API key") {
+		t.Fatalf("complete after credential change = %d %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestStatusResponseIncludesSafeSetupImmichAndCacheState(t *testing.T) {
+	server := newTestServer(t)
+	cookie := setupAdminCookie(t, server)
+	sourcePath := filepath.Join(t.TempDir(), "photo.jpg")
+	if err := os.WriteFile(sourcePath, []byte("photo"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := server.Cache.Ensure([]source.Candidate{{ID: "asset-1", SourcePath: sourcePath, MediaType: "image/jpeg"}}); err != nil {
+		t.Fatal(err)
+	}
+	server.Config.Immich.URL = "https://immich.example.com"
+	server.Config.Source.Mode = "random"
+	server.Secrets.ImmichAPIKey = "good-key"
+	server.State.LastError = "network sleeping"
+	server.State.ImmichValidation = config.NewImmichValidation(server.Config.Immich.URL, "good-key", "1.2.3", "Frame key", time.Now())
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/status", nil)
+	req.Header.Set("Cookie", cookie)
+	server.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status response = %d %s", rec.Code, rec.Body.String())
+	}
+	if strings.Contains(rec.Body.String(), "good-key") || strings.Contains(rec.Body.String(), "apiKey") {
+		t.Fatalf("status response leaked secret material: %s", rec.Body.String())
+	}
+	var status PortalStatus
+	if err := json.Unmarshal(rec.Body.Bytes(), &status); err != nil {
+		t.Fatal(err)
+	}
+	if !status.Immich.Validated || status.Immich.Version != "1.2.3" || status.CacheCount != 1 || status.LastError != "network sleeping" {
+		t.Fatalf("unexpected status response: %+v", status)
+	}
+}
+
 func TestCleanAssetPathRejectsTraversal(t *testing.T) {
 	for _, tc := range []struct {
 		name string
@@ -185,6 +296,22 @@ func TestCleanAssetPathRejectsTraversal(t *testing.T) {
 			}
 		})
 	}
+}
+
+func setupAdminCookie(t *testing.T, server *Server) string {
+	t.Helper()
+	rec := httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, jsonRequest(http.MethodPost, "/api/setup/claim", map[string]string{"code": "123456"}, ""))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("claim status = %d body=%s", rec.Code, rec.Body.String())
+	}
+	setupCookie := rec.Result().Cookies()[0].String()
+	rec = httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, jsonRequest(http.MethodPost, "/api/setup/admin-password", map[string]string{"password": "correct horse"}, setupCookie))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("password status = %d body=%s", rec.Code, rec.Body.String())
+	}
+	return rec.Result().Cookies()[0].String()
 }
 
 func newTestServer(t *testing.T) *Server {
@@ -211,6 +338,7 @@ func newTestServer(t *testing.T) *Server {
 		State:    state,
 		Paths:    paths,
 		Cache:    store,
+		Queue:    playback.NewQueue(nil),
 		Hub:      NewHub(),
 		Setup:    setupstate.NewManager(paths.StateFile),
 		Sessions: auth.NewManager(30 * time.Minute),

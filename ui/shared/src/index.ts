@@ -104,6 +104,27 @@ export interface AppConfig {
 export interface SettingsResponse {
   config: AppConfig;
   hasImmichApiKey: boolean;
+  status: PortalStatus;
+}
+
+export interface PortalStatus {
+  setup: SetupPublicState;
+  configured: boolean;
+  hasImmichApiKey: boolean;
+  immich: ImmichStatus;
+  sourceMode: string;
+  cacheCount: number;
+  lastError?: string;
+}
+
+export interface ImmichStatus {
+  url?: string;
+  configured: boolean;
+  validated: boolean;
+  validationRequired: boolean;
+  validatedAt?: string;
+  version?: string;
+  keyName?: string;
 }
 
 export interface ImmichAlbum {
@@ -119,6 +140,7 @@ export interface ImmichTestResponse {
   ok: boolean;
   version: string;
   keyName: string;
+  status: PortalStatus;
 }
 
 export interface DisplayReport {
@@ -173,6 +195,14 @@ export async function fetchSettings(): Promise<SettingsResponse> {
   const response = await fetch("/api/settings");
   if (!response.ok) {
     throw new Error(`Settings request failed: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function fetchStatus(): Promise<PortalStatus> {
+  const response = await fetch("/api/status");
+  if (!response.ok) {
+    throw new Error(`Status request failed: ${response.status}`);
   }
   return response.json();
 }

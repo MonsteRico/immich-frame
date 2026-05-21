@@ -4,9 +4,9 @@ A self-hosted digital picture frame for Immich libraries, designed for self-buil
 
 ## Status
 
-Phase 0, the local Phase 1 mock slideshow loop, Phase 1.5 validation, Phase 2 Immich adapter, and the first Phase 3 setup portal implementation are complete.
+Phase 0, the local Phase 1 mock slideshow loop, Phase 1.5 validation, Phase 2 Immich adapter, Phase 3 setup portal, and Phase 3.5 setup hardening are complete.
 
-The next work is a focused **Phase 3.5 setup hardening pass** before moving to the Raspberry Pi appliance installer.
+The next work is **Phase 4: Pi Appliance**, which makes the reference Raspberry Pi boot directly into the frame.
 
 Start here:
 
@@ -39,6 +39,7 @@ It is not primarily a hosted web app, Docker dashboard, or cloud service.
 - pnpm frontend tooling.
 - Same-Wi-Fi setup portal.
 - Dedicated Immich API key per frame.
+- Setup completion requires a successful Immich connection test for the saved URL/API key.
 - Album and random-library modes.
 - Display-targeted local image cache.
 - Clock, photo info, and operational status overlays.
