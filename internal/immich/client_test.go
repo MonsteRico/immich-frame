@@ -104,7 +104,7 @@ func TestListAlbumCandidatesFiltersAndNormalizesMetadata(t *testing.T) {
 					"id": "img-1", "type": "IMAGE", "originalFileName": "sunset.jpg",
 					"originalMimeType": "image/jpeg", "localDateTime": "2026-05-01T12:30:00",
 					"visibility": "timeline",
-					"exifInfo": map[string]any{"exifImageWidth": 4000, "exifImageHeight": 3000},
+					"exifInfo":   map[string]any{"exifImageWidth": 4000, "exifImageHeight": 3000},
 				},
 				{"id": "video-1", "type": "VIDEO", "visibility": "timeline"},
 				{"id": "hidden-1", "type": "IMAGE", "visibility": "hidden"},

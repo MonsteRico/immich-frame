@@ -1,8 +1,11 @@
 package cache
 
 import (
+	"context"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/MonsteRico/immich-frame/internal/source"
@@ -61,6 +64,45 @@ func TestStoreEnsureListAndMarkShown(t *testing.T) {
 	entry, ok := reopened.Get("asset-one")
 	if !ok || entry.LastShown.IsZero() {
 		t.Fatalf("reopened manifest did not preserve LastShown: %+v ok=%t", entry, ok)
+	}
+}
+
+func TestStoreEnsureFetchedCachesRemoteRenditionMetadata(t *testing.T) {
+	root := t.TempDir()
+	store, err := Open(filepath.Join(root, "cache"))
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	entries, err := store.EnsureFetched(context.Background(), []source.Candidate{
+		{
+			ID: "immich-one", RenditionIdentity: "thumbnail-webp", Title: "One", SourceName: "Immich",
+			MediaType: "image/jpeg", Width: 1920, Height: 1080, Orientation: "landscape",
+		},
+	}, func(ctx context.Context, candidate source.Candidate) (io.ReadCloser, string, error) {
+		return io.NopCloser(strings.NewReader("remote image")), "image/webp", nil
+	})
+	if err != nil {
+		t.Fatalf("EnsureFetched() error = %v", err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("EnsureFetched() len = %d, want 1", len(entries))
+	}
+	entry := entries[0]
+	if entry.CachePath == "" || filepath.Ext(entry.CachePath) != ".webp" {
+		t.Fatalf("cache path = %q, want .webp", entry.CachePath)
+	}
+	if entry.SourcePath != "" || entry.RenditionIdentity != "thumbnail-webp" || entry.MediaType != "image/webp" {
+		t.Fatalf("unexpected entry source metadata: %+v", entry)
+	}
+	if entry.Width != 1920 || entry.Height != 1080 || entry.Orientation != "landscape" {
+		t.Fatalf("unexpected display metadata: %+v", entry)
+	}
+	data, err := os.ReadFile(entry.CachePath)
+	if err != nil {
+		t.Fatalf("read cached file: %v", err)
+	}
+	if string(data) != "remote image" {
+		t.Fatalf("cached data = %q", data)
 	}
 }
 

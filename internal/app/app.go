@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 	"github.com/MonsteRico/immich-frame/internal/api"
 	"github.com/MonsteRico/immich-frame/internal/cache"
 	"github.com/MonsteRico/immich-frame/internal/config"
+	"github.com/MonsteRico/immich-frame/internal/immich"
 	"github.com/MonsteRico/immich-frame/internal/playback"
 	"github.com/MonsteRico/immich-frame/internal/source"
 )
@@ -58,7 +60,11 @@ func New(opts Options) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	entries, err := seedCache(cfg, store)
+	secrets, err := config.LoadSecrets(paths.SecretsFile)
+	if err != nil {
+		return nil, err
+	}
+	entries, err := seedCache(context.Background(), cfg, secrets, store)
 	if err != nil {
 		return nil, err
 	}
@@ -124,9 +130,9 @@ func (a *App) runSlideshow(ctx context.Context) {
 	}
 }
 
-func seedCache(cfg config.Config, store *cache.Store) ([]cache.Entry, error) {
-	if cfg.Source.Mode != "local_folder" {
-		return store.List(), nil
+func seedCache(ctx context.Context, cfg config.Config, secrets config.Secrets, store *cache.Store) ([]cache.Entry, error) {
+	if cfg.Source.Mode == "album" || cfg.Source.Mode == "random" {
+		return seedImmichCache(ctx, cfg, secrets, store)
 	}
 	provider := source.LocalFolderProvider{Root: cfg.Source.LocalFolder.Path}
 	candidates, err := provider.Candidates()
@@ -137,4 +143,52 @@ func seedCache(cfg config.Config, store *cache.Store) ([]cache.Entry, error) {
 		return nil, err
 	}
 	return store.Ensure(candidates)
+}
+
+func seedImmichCache(ctx context.Context, cfg config.Config, secrets config.Secrets, store *cache.Store) ([]cache.Entry, error) {
+	client, err := immich.NewClient(cfg.Immich.URL, secrets.ImmichAPIKey)
+	if err != nil {
+		return store.List(), err
+	}
+	var candidates []immich.AssetCandidate
+	switch cfg.Source.Mode {
+	case "album":
+		candidates, err = client.ListAlbumCandidates(ctx, cfg.Source.Album.ID)
+	case "random":
+		limit := cfg.Cache.PrefetchItems
+		if limit <= 0 {
+			limit = cfg.Cache.TargetItems
+		}
+		candidates, err = client.ListRandomCandidates(ctx, limit)
+	}
+	if err != nil {
+		return store.List(), err
+	}
+	return store.EnsureFetched(ctx, sourceCandidates(candidates), func(ctx context.Context, candidate source.Candidate) (io.ReadCloser, string, error) {
+		rendition, err := client.FetchRendition(ctx, candidate.ID, immich.Target{
+			Width: cfg.Display.Width, Height: cfg.Display.Height, Format: cfg.Cache.Rendition,
+		})
+		if err != nil {
+			return nil, "", err
+		}
+		return rendition.Body, rendition.ContentType, nil
+	})
+}
+
+func sourceCandidates(candidates []immich.AssetCandidate) []source.Candidate {
+	out := make([]source.Candidate, 0, len(candidates))
+	for _, candidate := range candidates {
+		out = append(out, source.Candidate{
+			ID:                candidate.ID,
+			RenditionIdentity: candidate.RenditionIdentity,
+			Title:             candidate.Title,
+			SourceName:        candidate.SourceName,
+			TakenAt:           candidate.TakenAt,
+			MediaType:         candidate.MediaType,
+			Width:             candidate.Width,
+			Height:            candidate.Height,
+			Orientation:       candidate.Orientation,
+		})
+	}
+	return out
 }

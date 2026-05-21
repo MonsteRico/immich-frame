@@ -278,10 +278,32 @@ func assign(cfg *Config, table, key, value string) {
 		cfg.Immich.URL = stringValue
 	case "source.mode":
 		cfg.Source.Mode = stringValue
+	case "source.album.id":
+		cfg.Source.Album.ID = stringValue
+	case "source.album.shuffle":
+		cfg.Source.Album.Shuffle = boolValue
+	case "source.random.shuffle":
+		cfg.Source.Random.Shuffle = boolValue
 	case "source.local_folder.path":
 		cfg.Source.LocalFolder.Path = stringValue
 	case "source.local_folder.shuffle":
 		cfg.Source.LocalFolder.Shuffle = boolValue
+	case "filters.photos_only":
+		cfg.Filters.PhotosOnly = boolValue
+	case "filters.exclude_archived":
+		cfg.Filters.ExcludeArchived = boolValue
+	case "filters.exclude_hidden":
+		cfg.Filters.ExcludeHidden = boolValue
+	case "filters.exclude_trashed":
+		cfg.Filters.ExcludeTrashed = boolValue
+	case "filters.exclude_videos":
+		cfg.Filters.ExcludeVideos = boolValue
+	case "display.width":
+		cfg.Display.Width = intValue
+	case "display.height":
+		cfg.Display.Height = intValue
+	case "display.orientation":
+		cfg.Display.Orientation = stringValue
 	case "display.fit":
 		cfg.Display.Fit = stringValue
 	case "display.background":
@@ -294,6 +316,20 @@ func assign(cfg *Config, table, key, value string) {
 		cfg.Slideshow.IntervalSeconds = intValue
 	case "slideshow.recent_history_limit":
 		cfg.Slideshow.RecentHistoryLimit = intValue
+	case "cache.preset":
+		cfg.Cache.Preset = stringValue
+	case "cache.max_size_mb":
+		cfg.Cache.MaxSizeMB = intValue
+	case "cache.min_free_mb":
+		cfg.Cache.MinFreeMB = intValue
+	case "cache.target_items":
+		cfg.Cache.TargetItems = intValue
+	case "cache.prefetch_items":
+		cfg.Cache.PrefetchItems = intValue
+	case "cache.rendition":
+		cfg.Cache.Rendition = stringValue
+	case "sync.refresh_interval_minutes":
+		cfg.Sync.RefreshIntervalMinutes = intValue
 	}
 }
 

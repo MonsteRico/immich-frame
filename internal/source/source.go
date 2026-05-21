@@ -11,12 +11,16 @@ import (
 )
 
 type Candidate struct {
-	ID         string    `json:"id"`
-	SourcePath string    `json:"-"`
-	Title      string    `json:"title"`
-	SourceName string    `json:"sourceName"`
-	TakenAt    time.Time `json:"takenAt,omitempty"`
-	MediaType  string    `json:"mediaType"`
+	ID                string    `json:"id"`
+	SourcePath        string    `json:"-"`
+	RenditionIdentity string    `json:"renditionIdentity,omitempty"`
+	Title             string    `json:"title"`
+	SourceName        string    `json:"sourceName"`
+	TakenAt           time.Time `json:"takenAt,omitempty"`
+	MediaType         string    `json:"mediaType"`
+	Width             int       `json:"width,omitempty"`
+	Height            int       `json:"height,omitempty"`
+	Orientation       string    `json:"orientation,omitempty"`
 }
 
 type Provider interface {

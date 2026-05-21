@@ -25,13 +25,13 @@ const (
 type ErrorKind string
 
 const (
-	ErrorInvalidURL    ErrorKind = "invalid_url"
-	ErrorInvalidKey    ErrorKind = "invalid_key"
-	ErrorNetwork       ErrorKind = "network"
-	ErrorPermission    ErrorKind = "permission"
-	ErrorUnavailable   ErrorKind = "unavailable"
-	ErrorIncompatible  ErrorKind = "incompatible_response"
-	ErrorInvalidInput  ErrorKind = "invalid_input"
+	ErrorInvalidURL   ErrorKind = "invalid_url"
+	ErrorInvalidKey   ErrorKind = "invalid_key"
+	ErrorNetwork      ErrorKind = "network"
+	ErrorPermission   ErrorKind = "permission"
+	ErrorUnavailable  ErrorKind = "unavailable"
+	ErrorIncompatible ErrorKind = "incompatible_response"
+	ErrorInvalidInput ErrorKind = "invalid_input"
 )
 
 type APIError struct {
