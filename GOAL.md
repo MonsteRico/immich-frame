@@ -83,7 +83,7 @@ The local scaffold and mock frame loop exist. Before moving into the real Immich
   - [x] If keeping inline fallback, document that choice and ensure `build:embedded-ui` does not create broken embedded asset references.
 - [x] Run `pnpm typecheck`.
 - [x] Run `pnpm build`.
-- [ ] Run the local mock slideshow manually in a desktop browser if the Go toolchain is available.
+- [x] Run the local mock slideshow manually in a desktop browser if the Go toolchain is available.
 - [x] Record verification results and any remaining environment limitations in docs or commit notes.
 - [x] Commit fixes in meaningful slices, not as one broad phase commit.
 
@@ -97,7 +97,7 @@ The local scaffold and mock frame loop exist. Before moving into the real Immich
 - `pnpm build:embedded-ui` passed.
 - Local mock daemon was run with missing external dist paths to force embedded UI serving: `go run ./cmd/immich-frame serve -config config.dev.toml -dev-source dev/photos -data-dir .immich-frame-verify -frame-dist missing-frame-dist -setup-dist missing-setup-dist`.
 - HTTP smoke checks against the running daemon passed: `/frame` 200, embedded frame JS asset 200, embedded frame CSS asset 200, `/api/state` returned ready local-folder state, `/media/:assetID` returned 200, and `POST /api/playback/pause` returned paused state.
-- Desktop browser verification remains outstanding. Project Playwright is not installed, Chrome extension automation was unavailable, installed Chrome/Edge headless runs failed before rendering with GPU process fatal errors, and a single-process Chrome retry hung before producing DOM evidence in this environment.
+- Desktop browser verification passed on 2026-05-21 using the Codex in-app Browser plugin against `http://127.0.0.1:8787/frame`. The daemon was run with missing external dist paths to force embedded UI serving. Browser evidence showed title `Immich Frame`, visible mock photo `sample-dawn`, clock/photo-info overlays, playback controls, local image source `/media/a0007e962ab0bb36`, embedded asset URLs `/assets/index-DW__ochF.js` and `/assets/index-CiPW52pQ.css`, and no console warnings/errors. HTTP checks also confirmed `/api/state`, the embedded JS/CSS assets, and `/media/a0007e962ab0bb36` returned `200`.
 
 ## Stop Conditions
 
