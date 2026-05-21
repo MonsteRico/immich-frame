@@ -117,54 +117,63 @@ The local scaffold, mock frame loop, and Phase 1.5 validation are complete. The 
 
 ### Phase 2 Immich Adapter Checklist
 
-- [ ] Baseline verification before changes:
-  - [ ] Confirm branch is `master`.
-  - [ ] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
-  - [ ] Run `go test ./...`.
-  - [ ] Run `pnpm typecheck` and `pnpm build`.
-- [ ] Verify current Immich API behavior:
-  - [ ] Review official Immich docs/OpenAPI for required endpoints.
-  - [ ] Manually verify required behavior against Matthew's Immich instance when credentials/context are available.
-  - [ ] Record endpoint assumptions and version notes in docs or adapter comments.
-- [ ] Define the Immich adapter boundary in `internal/immich`:
-  - [ ] Connection/auth test method.
-  - [ ] Album listing method.
-  - [ ] Asset candidate listing for a selected album.
-  - [ ] Asset candidate listing for random library mode.
-  - [ ] Display-targeted rendition fetch method.
-  - [ ] Error normalization that hides low-level HTTP details from callers.
-- [ ] Implement Immich connection testing:
-  - [ ] Use the dedicated API key from secrets/config inputs.
-  - [ ] Return user-safe errors for invalid URL, invalid key, network failure, and incompatible response.
-  - [ ] Add mock HTTP unit tests.
-- [ ] Implement Immich album listing:
-  - [ ] Normalize album id, name, and item count when available.
-  - [ ] Keep setup/search UI needs in mind without implementing the full setup portal yet.
-  - [ ] Add mock HTTP unit tests.
-- [ ] Implement Immich asset candidate listing:
-  - [ ] Album source candidates.
-  - [ ] Random library candidates.
-  - [ ] Conservative default filters where the API supports them: photos only, exclude archived/hidden/trashed/videos.
-  - [ ] Avoid leaking raw Immich asset JSON outside `internal/immich`.
-  - [ ] Add mock HTTP unit tests.
-- [ ] Implement display-targeted rendition fetching:
-  - [ ] Prefer the best Immich-provided non-original rendition appropriate for the requested target.
-  - [ ] Preserve returned content type.
-  - [ ] Do not download originals by default.
-  - [ ] Add mock HTTP unit tests.
-- [ ] Normalize display metadata:
-  - [ ] Minimal asset id, media/rendition identity, taken date, source name, dimensions/orientation if available.
-  - [ ] Do not expose raw EXIF, GPS coordinates, file paths, people names, direct Immich URLs, or full Immich asset blobs to browser-facing code.
-  - [ ] Add unit tests for metadata normalization.
-- [ ] Integrate adapter with existing source/cache seams lightly:
-  - [ ] Preserve local folder source for development.
-  - [ ] Do not build full setup portal behavior yet unless needed for adapter verification.
-  - [ ] Keep playback/cache APIs source-agnostic.
-- [ ] Update docs:
-  - [ ] Record supported/tested Immich version assumptions.
-  - [ ] Record any manual verification steps.
-  - [ ] Update `GOAL.md` as checklist items are completed.
-- [ ] Commit and push after each coherent checklist feature or checklist item with subitems is completed.
+- [x] Baseline verification before changes:
+  - [x] Confirm branch is `master`.
+  - [x] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+  - [x] Run `go test ./...`.
+  - [x] Run `pnpm typecheck` and `pnpm build`.
+- [x] Verify current Immich API behavior:
+  - [x] Review official Immich docs/OpenAPI for required endpoints.
+  - [x] Manually verify required behavior against Matthew's Immich instance when credentials/context are available.
+  - [x] Record endpoint assumptions and version notes in docs or adapter comments.
+- [x] Define the Immich adapter boundary in `internal/immich`:
+  - [x] Connection/auth test method.
+  - [x] Album listing method.
+  - [x] Asset candidate listing for a selected album.
+  - [x] Asset candidate listing for random library mode.
+  - [x] Display-targeted rendition fetch method.
+  - [x] Error normalization that hides low-level HTTP details from callers.
+- [x] Implement Immich connection testing:
+  - [x] Use the dedicated API key from secrets/config inputs.
+  - [x] Return user-safe errors for invalid URL, invalid key, network failure, and incompatible response.
+  - [x] Add mock HTTP unit tests.
+- [x] Implement Immich album listing:
+  - [x] Normalize album id, name, and item count when available.
+  - [x] Keep setup/search UI needs in mind without implementing the full setup portal yet.
+  - [x] Add mock HTTP unit tests.
+- [x] Implement Immich asset candidate listing:
+  - [x] Album source candidates.
+  - [x] Random library candidates.
+  - [x] Conservative default filters where the API supports them: photos only, exclude archived/hidden/trashed/videos.
+  - [x] Avoid leaking raw Immich asset JSON outside `internal/immich`.
+  - [x] Add mock HTTP unit tests.
+- [x] Implement display-targeted rendition fetching:
+  - [x] Prefer the best Immich-provided non-original rendition appropriate for the requested target.
+  - [x] Preserve returned content type.
+  - [x] Do not download originals by default.
+  - [x] Add mock HTTP unit tests.
+- [x] Normalize display metadata:
+  - [x] Minimal asset id, media/rendition identity, taken date, source name, dimensions/orientation if available.
+  - [x] Do not expose raw EXIF, GPS coordinates, file paths, people names, direct Immich URLs, or full Immich asset blobs to browser-facing code.
+  - [x] Add unit tests for metadata normalization.
+- [x] Integrate adapter with existing source/cache seams lightly:
+  - [x] Preserve local folder source for development.
+  - [x] Do not build full setup portal behavior yet unless needed for adapter verification.
+  - [x] Keep playback/cache APIs source-agnostic.
+- [x] Update docs:
+  - [x] Record supported/tested Immich version assumptions.
+  - [x] Record any manual verification steps.
+  - [x] Update `GOAL.md` as checklist items are completed.
+- [x] Commit and push after each coherent checklist feature or checklist item with subitems is completed.
+
+### Phase 2 Verification Notes - 2026-05-21
+
+- Baseline before code changes passed on `master`: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
+- Branch was `master`; `origin` was `https://github.com/MonsteRico/immich-frame.git`.
+- Official Immich API docs/OpenAPI guidance were reviewed. Endpoint assumptions are recorded in `docs/immich-api.md`.
+- No Matthew-instance credentials/context were available in this session, so manual live Immich verification was not run. Adapter behavior is covered with mock HTTP unit tests only, per MVP scope.
+- Implemented `internal/immich` client methods for connection testing, album listing, album candidates, random candidates, preview rendition fetching, user-safe error normalization, and metadata normalization.
+- Integrated Immich candidates with the cache through a source-agnostic fetch path. Local folder source remains the default development loop.
 
 ## Stop Conditions
 

@@ -167,6 +167,9 @@ func TestFetchRenditionUsesThumbnailAndPreservesContentType(t *testing.T) {
 		if r.URL.Query().Get("format") != "WEBP" {
 			t.Fatalf("expected WEBP format, got %q", r.URL.Query().Get("format"))
 		}
+		if r.URL.Query().Get("size") != "preview" {
+			t.Fatalf("expected preview size, got %q", r.URL.Query().Get("size"))
+		}
 		w.Header().Set("Content-Type", "image/webp")
 		_, _ = w.Write([]byte("webp bytes"))
 	}))
@@ -181,7 +184,7 @@ func TestFetchRenditionUsesThumbnailAndPreservesContentType(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read body: %v", err)
 	}
-	if rendition.ContentType != "image/webp" || string(data) != "webp bytes" || rendition.Identity != "thumbnail-webp" {
+	if rendition.ContentType != "image/webp" || string(data) != "webp bytes" || rendition.Identity != "preview-webp" {
 		t.Fatalf("unexpected rendition: %+v body=%q", rendition, data)
 	}
 }

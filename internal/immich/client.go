@@ -212,6 +212,7 @@ func (c *Client) FetchRendition(ctx context.Context, assetID string, target Targ
 	}
 	q := req.URL.Query()
 	q.Set("format", format)
+	q.Set("size", "preview")
 	req.URL.RawQuery = q.Encode()
 	req.Header.Set("Accept", "application/octet-stream")
 	resp, err := c.httpClient.Do(req)
@@ -231,7 +232,7 @@ func (c *Client) FetchRendition(ctx context.Context, assetID string, target Targ
 	}
 	return Rendition{
 		AssetID:     assetID,
-		Identity:    "thumbnail-" + strings.ToLower(format),
+		Identity:    "preview-" + strings.ToLower(format),
 		ContentType: contentType,
 		Body:        resp.Body,
 	}, nil
@@ -309,7 +310,7 @@ func normalizeAsset(asset assetResponse, sourceName string) (AssetCandidate, boo
 	height := asset.ExifInfo.ExifImageHeight
 	return AssetCandidate{
 		ID:                asset.ID,
-		RenditionIdentity: "thumbnail-webp",
+		RenditionIdentity: "preview-webp",
 		Title:             title,
 		SourceName:        sourceName,
 		TakenAt:           takenAt,
