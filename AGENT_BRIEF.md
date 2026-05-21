@@ -43,7 +43,7 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 
 ## Current Phase
 
-**Phase 3.5: Setup Portal Hardening** is complete on `master`.
+**Phase 4: Pi Appliance** is the current goal on `master`.
 
 Phase 0, the first local Phase 1 slice, Phase 1.5 validation, Phase 2 Immich adapter work, Phase 3 setup portal, and Phase 3.5 setup hardening are complete on `master`.
 
@@ -70,7 +70,18 @@ Phase 3.5 closed the PM review gaps found on 2026-05-21:
 - setup/settings UI guards unavailable actions and explains required validation or missing fields.
 - overlay configuration docs match the generic envelope fields the backend currently reads/writes.
 
-The next planned phase is **Phase 4: Pi Appliance**.
+PM review accepted Phase 3.5 as complete. The next planned phase is **Phase 4: Pi Appliance**.
+
+Phase 4 should make the reference Raspberry Pi Zero 2 W boot directly into Immich Frame. Build the install/runtime layer around the existing daemon and UI:
+
+- idempotent Raspberry Pi install script.
+- `immich-frame` service user and filesystem permissions.
+- `/etc/immich-frame/config.toml` and `/var/lib/immich-frame` runtime data.
+- systemd service for `immich-frame serve`.
+- Chromium kiosk startup opening `http://127.0.0.1:8787/frame`.
+- `frame.local` mDNS through the chosen Raspberry Pi OS path.
+- appliance install/runbook docs.
+- clear physical Pi verification notes, especially if hardware verification remains pending.
 
 ## Git Commit Guidance
 
@@ -78,7 +89,7 @@ Until the MVP/base is complete, work directly on `master` and commit there. Do n
 
 Create meaningful commits throughout the work. Prefer commits at coherent feature or fix boundaries, not broad phase markers like `phase 3 done`.
 
-For Phase 3.5, generally commit and push after each completed checklist feature or checklist item with its subitems. Do not commit after every tiny edit, but do commit/push once a distinct feature is implemented, tested, and documented.
+For Phase 4, generally commit and push after each completed checklist feature or checklist item with its subitems. Do not commit after every tiny edit, but do commit/push once a distinct feature is implemented, tested, and documented.
 
 Good commit boundaries include:
 
@@ -102,6 +113,12 @@ Good commit boundaries include:
 - validation-required setup completion.
 - lightweight status API/settings surface.
 - setup UI guardrails.
+- Pi installer script.
+- service user and filesystem permissions.
+- systemd daemon service.
+- Chromium kiosk startup.
+- mDNS/frame.local setup.
+- appliance install/runbook docs.
 - setup UI screens.
 - focused bug fixes.
 - docs updates that record a changed decision or implemented behavior.
@@ -112,26 +129,27 @@ Avoid committing every tiny file edit. Also avoid waiting until an entire phase 
 
 Developer-facing docs must move with the code. When a feature changes how a human runs, configures, tests, or debugs the project, update the relevant docs in the same feature slice.
 
-For Phase 3.5, pay special attention to:
+For Phase 4, pay special attention to:
 
-- `docs/configuration.md` for config/state/secrets changes.
-- `docs/security.md` for setup/auth/session/media-access behavior.
+- `docs/hardware.md` for Raspberry Pi OS, kiosk, display-server, and mDNS behavior.
 - `docs/local-development.md` for setup portal verification steps.
 - `docs/developer-guide.md` for durable human workflow notes.
+- appliance install/runbook docs for human setup without AI help.
 - `GOAL.md` for checklist progress and handoff status.
 
 ## First Task Checklist
 
-- [x] Read `GOAL.md`, especially the Phase 3.5 checklist.
-- [x] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
-- [x] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
-- [x] Require successful Immich validation before setup can complete.
-- [x] Add or reconcile the lightweight status surface.
-- [x] Tighten setup/settings UI guardrails around validation and required fields.
-- [x] Reconcile overlay configuration docs with implemented behavior.
-- [x] Update developer-facing docs as setup commands, config, or verification steps change.
-- [x] Update `GOAL.md` as items are completed.
-- [x] Commit and push coherent slices as checklist features are completed.
+- [ ] Read `GOAL.md`, especially the Phase 4 checklist.
+- [ ] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+- [ ] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
+- [ ] Add an idempotent Raspberry Pi install script.
+- [ ] Add service user, filesystem permission, and runtime directory handling.
+- [ ] Add systemd daemon service for `immich-frame serve`.
+- [ ] Add Chromium kiosk startup opening `http://127.0.0.1:8787/frame`.
+- [ ] Configure or document `frame.local` mDNS.
+- [ ] Add/update appliance install and operation docs.
+- [ ] Update `GOAL.md` as items are completed.
+- [ ] Commit and push coherent slices as checklist features are completed.
 
 ## Do Not Build Yet
 

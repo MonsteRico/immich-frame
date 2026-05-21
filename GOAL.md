@@ -40,9 +40,9 @@ The MVP is done when all items below are complete on the reference Pi Zero 2 W h
 
 ## Current Session Goal
 
-Complete **Phase 3.5: Setup Portal Hardening**.
+Complete **Phase 4: Pi Appliance**.
 
-Phase 3.5 is complete. The local scaffold, mock frame loop, Phase 1.5 validation, Phase 2 Immich adapter, Phase 3 setup portal, and Phase 3.5 hardening pass are complete. The next major phase is Phase 4: Pi Appliance.
+Phase 3.5 is accepted as complete. The local scaffold, mock frame loop, Phase 1.5 validation, Phase 2 Immich adapter, Phase 3 setup portal, and Phase 3.5 hardening pass are complete. The next agent should make the reference Raspberry Pi Zero 2 W boot directly into Immich Frame.
 
 ### Phase 0 Done Checklist
 
@@ -314,6 +314,72 @@ Phase 3.5 is complete. The local scaffold, mock frame loop, Phase 1.5 validation
 - Overlay docs now match the backend's implemented generic envelope fields: `enabled`, `slot`, and `visibility`.
 - Final verification passed: `go test ./...`, `pnpm typecheck`, `pnpm build`, and `pnpm build:embedded-ui`.
 
+### Phase 3.5 PM Readiness Confirmation - 2026-05-21
+
+- Repo is clean on `master` at commit `c548d76 Harden setup validation and status`.
+- `go test ./...` passed.
+- `pnpm typecheck` passed.
+- `pnpm build` passed.
+- Phase 3.5 is accepted as complete. No Phase 3.5 fix phase is required before Pi appliance work.
+
+### Phase 4 Pi Appliance Checklist
+
+- [ ] Baseline verification before changes:
+  - [ ] Confirm branch is `master`.
+  - [ ] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+  - [ ] Run `go test ./...`.
+  - [ ] Run `pnpm typecheck`.
+  - [ ] Run `pnpm build`.
+- [ ] Add an idempotent Raspberry Pi install script:
+  - [ ] Target Raspberry Pi OS Lite on Raspberry Pi Zero 2 W.
+  - [ ] Install or verify required OS packages for Chromium kiosk and mDNS.
+  - [ ] Build or install the `immich-frame` binary.
+  - [ ] Create/update `/etc/immich-frame` and `/var/lib/immich-frame`.
+  - [ ] Preserve existing config/secrets/state/cache unless the user explicitly resets.
+  - [ ] Support repeated runs without duplicating users, services, or config.
+- [ ] Add service user and filesystem permissions:
+  - [ ] Create `immich-frame` system user/group when missing.
+  - [ ] Ensure `config.toml` is service-readable/writable as intended.
+  - [ ] Ensure `secrets.json` is owned by the service user and mode `0600`.
+  - [ ] Ensure cache/state directories are writable by the service user.
+- [ ] Add systemd daemon service:
+  - [ ] Start `immich-frame serve` on boot.
+  - [ ] Use `/etc/immich-frame/config.toml` and `/var/lib/immich-frame`.
+  - [ ] Restart on failure with a conservative delay.
+  - [ ] Log to journald without printing secrets.
+- [ ] Add Chromium kiosk startup:
+  - [ ] Configure a boot-time kiosk session that opens `http://127.0.0.1:8787/frame`.
+  - [ ] Keep browser command/flags configurable through an env file.
+  - [ ] Avoid tying daemon code to a specific display server.
+  - [ ] Document the chosen tested display-server path.
+- [ ] Configure `frame.local` mDNS:
+  - [ ] Install/configure Avahi or the chosen Raspberry Pi OS mDNS path.
+  - [ ] Ensure setup portal should be reachable as `http://frame.local:8787/setup` on same Wi-Fi.
+  - [ ] Keep IP fallback behavior documented.
+- [ ] Add appliance CLI/install docs:
+  - [ ] Document Pi flash assumptions and Wi-Fi-first setup.
+  - [ ] Document install, upgrade/re-run, status, logs, and reset flows.
+  - [ ] Document how to change kiosk browser flags or URL.
+  - [ ] Document what can be verified on desktop versus on the physical Pi.
+- [ ] Add tests/checks where practical:
+  - [ ] Keep repo/CI tests unit-only.
+  - [ ] Add script validation or dry-run checks if practical without needing a Pi.
+  - [ ] Run `go test ./...`.
+  - [ ] Run `pnpm typecheck`.
+  - [ ] Run `pnpm build`.
+  - [ ] Run `pnpm build:embedded-ui` if installer/release assets depend on embedded UI.
+- [ ] Record Pi verification status:
+  - [ ] If tested on the Pi Zero 2 W, record Raspberry Pi OS version, Chromium package/version if available, display path, and reboot result.
+  - [ ] If not tested on the Pi yet, clearly mark physical Pi verification as pending rather than implied complete.
+- [ ] Update docs:
+  - [ ] Update `README.md`.
+  - [ ] Update `AGENT_BRIEF.md`.
+  - [ ] Update `docs/hardware.md`.
+  - [ ] Update `docs/local-development.md` if install/build commands change.
+  - [ ] Add or update appliance install/runbook docs.
+  - [ ] Update `GOAL.md` with Phase 4 verification notes.
+- [ ] Commit and push after each coherent checklist feature or feature plus subitems is complete.
+
 ## Stop Conditions
 
 An agent can stop when:
@@ -348,7 +414,7 @@ Commit and push at coherent feature or fix boundaries rather than only at phase 
 
 Do not commit after every tiny edit. Do not wait until all of Phase 0 or Phase 1 is complete if several distinct working pieces can be committed separately.
 
-For Phase 3.5 specifically, generally commit and push after each completed checklist feature or checklist item with its subitems. Examples: validation-required setup completion, status API/settings surface, setup UI guardrails, overlay docs reconciliation, security fixes, and docs updates.
+For Phase 4 specifically, generally commit and push after each completed checklist feature or checklist item with its subitems. Examples: installer script, service user/permissions, daemon systemd unit, kiosk startup, mDNS setup, appliance docs, verification fixes, and docs updates.
 
 Before each commit:
 
