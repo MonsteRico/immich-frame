@@ -44,17 +44,17 @@ func DevPaths(root string) Paths {
 }
 
 type Config struct {
-	Device    DeviceConfig
-	Server    ServerConfig
-	Immich    ImmichConfig
-	Source    SourceConfig
-	Filters   FilterConfig
-	Display   DisplayConfig
-	Slideshow SlideshowConfig
-	Cache     CacheConfig
-	Sync      SyncConfig
-	Overlays  OverlayConfig
-	Weather   WeatherConfig
+	Device    DeviceConfig    `json:"device"`
+	Server    ServerConfig    `json:"server"`
+	Immich    ImmichConfig    `json:"immich"`
+	Source    SourceConfig    `json:"source"`
+	Filters   FilterConfig    `json:"filters"`
+	Display   DisplayConfig   `json:"display"`
+	Slideshow SlideshowConfig `json:"slideshow"`
+	Cache     CacheConfig     `json:"cache"`
+	Sync      SyncConfig      `json:"sync"`
+	Overlays  OverlayConfig   `json:"overlays"`
+	Weather   WeatherConfig   `json:"weather"`
 }
 
 type DeviceConfig struct {
@@ -156,6 +156,7 @@ type Secrets struct {
 
 type State struct {
 	SetupComplete  bool      `json:"setupComplete"`
+	SetupStatus    string    `json:"setupStatus,omitempty"`
 	SetupCode      string    `json:"setupCode,omitempty"`
 	CurrentAssetID string    `json:"currentAssetId,omitempty"`
 	LastSync       time.Time `json:"lastSync,omitempty"`
@@ -252,6 +253,112 @@ func Load(path string) (Config, error) {
 	return cfg, cfg.Validate()
 }
 
+func Save(path string, cfg Config) error {
+	if err := cfg.Validate(); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	data := []byte(cfg.TOML())
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, path)
+}
+
+func (c Config) TOML() string {
+	return fmt.Sprintf(`[device]
+name = %q
+timezone = %q
+
+[server]
+host = %q
+port = %d
+hostname = %q
+
+[immich]
+url = %q
+
+[source]
+mode = %q
+
+[source.album]
+id = %q
+shuffle = %t
+
+[source.random]
+shuffle = %t
+
+[source.local_folder]
+path = %q
+shuffle = %t
+
+[filters]
+photos_only = %t
+exclude_archived = %t
+exclude_hidden = %t
+exclude_trashed = %t
+exclude_videos = %t
+
+[display]
+orientation = %q
+width = %d
+height = %d
+fit = %q
+background = %q
+transition = %q
+transition_ms = %d
+
+[slideshow]
+interval_seconds = %d
+recent_history_limit = %d
+
+[cache]
+preset = %q
+max_size_mb = %d
+min_free_mb = %d
+target_items = %d
+prefetch_items = %d
+rendition = %q
+
+[sync]
+refresh_interval_minutes = %d
+
+[overlays.clock]
+enabled = %t
+slot = %q
+visibility = %q
+
+[overlays.photo_info]
+enabled = %t
+slot = %q
+visibility = %q
+
+[overlays.status]
+enabled = %t
+slot = %q
+visibility = %q
+`,
+		c.Device.Name, c.Device.Timezone,
+		c.Server.Host, c.Server.Port, c.Server.Hostname,
+		c.Immich.URL,
+		c.Source.Mode,
+		c.Source.Album.ID, c.Source.Album.Shuffle,
+		c.Source.Random.Shuffle,
+		c.Source.LocalFolder.Path, c.Source.LocalFolder.Shuffle,
+		c.Filters.PhotosOnly, c.Filters.ExcludeArchived, c.Filters.ExcludeHidden, c.Filters.ExcludeTrashed, c.Filters.ExcludeVideos,
+		c.Display.Orientation, c.Display.Width, c.Display.Height, c.Display.Fit, c.Display.Background, c.Display.Transition, c.Display.TransitionMS,
+		c.Slideshow.IntervalSeconds, c.Slideshow.RecentHistoryLimit,
+		c.Cache.Preset, c.Cache.MaxSizeMB, c.Cache.MinFreeMB, c.Cache.TargetItems, c.Cache.PrefetchItems, c.Cache.Rendition,
+		c.Sync.RefreshIntervalMinutes,
+		c.Overlays.Clock.Enabled, c.Overlays.Clock.Slot, c.Overlays.Clock.Visibility,
+		c.Overlays.PhotoInfo.Enabled, c.Overlays.PhotoInfo.Slot, c.Overlays.PhotoInfo.Visibility,
+		c.Overlays.Status.Enabled, c.Overlays.Status.Slot, c.Overlays.Status.Visibility,
+	)
+}
+
 func stripComment(line string) string {
 	if idx := strings.Index(line, "#"); idx >= 0 {
 		return strings.TrimSpace(line[:idx])
@@ -330,6 +437,24 @@ func assign(cfg *Config, table, key, value string) {
 		cfg.Cache.Rendition = stringValue
 	case "sync.refresh_interval_minutes":
 		cfg.Sync.RefreshIntervalMinutes = intValue
+	case "overlays.clock.enabled":
+		cfg.Overlays.Clock.Enabled = boolValue
+	case "overlays.clock.slot":
+		cfg.Overlays.Clock.Slot = stringValue
+	case "overlays.clock.visibility":
+		cfg.Overlays.Clock.Visibility = stringValue
+	case "overlays.photo_info.enabled":
+		cfg.Overlays.PhotoInfo.Enabled = boolValue
+	case "overlays.photo_info.slot":
+		cfg.Overlays.PhotoInfo.Slot = stringValue
+	case "overlays.photo_info.visibility":
+		cfg.Overlays.PhotoInfo.Visibility = stringValue
+	case "overlays.status.enabled":
+		cfg.Overlays.Status.Enabled = boolValue
+	case "overlays.status.slot":
+		cfg.Overlays.Status.Slot = stringValue
+	case "overlays.status.visibility":
+		cfg.Overlays.Status.Visibility = stringValue
 	}
 }
 

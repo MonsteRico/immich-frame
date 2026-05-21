@@ -102,6 +102,9 @@ internal/cache
 internal/config
   Config, secrets, state models and file IO.
 
+internal/auth
+  Local admin password hashing and in-memory setup/admin sessions.
+
 internal/immich
   Immich REST API adapter. Keep Immich endpoint details here.
 
@@ -111,11 +114,14 @@ internal/playback
 internal/source
   Source-neutral candidates, including local folder dev source.
 
+internal/setup
+  First-boot setup state, fixed setup code generation, and completion transitions.
+
 ui/frame
   Kiosk slideshow UI.
 
 ui/setup
-  Phone-first setup/settings UI.
+  Phone-first setup/settings UI. It claims the setup code, creates the admin password, validates Immich, chooses a source, and remains the settings portal after setup.
 
 ui/shared
   Shared frontend API/types.
@@ -158,3 +164,20 @@ Until the MVP/base is complete:
 
 Do not make one broad phase commit if several independently useful pieces are complete.
 
+## Setup Portal Notes
+
+The setup/settings API is intentionally browser-safe:
+
+- use `hasImmichApiKey` instead of returning the saved API key.
+- require setup/admin sessions for settings and Immich setup routes.
+- keep live Immich checks in mock HTTP unit tests for repo/CI.
+- preserve local folder development mode when running with `-dev-source`.
+
+After changing setup or settings UI code, run:
+
+```powershell
+go test ./...
+pnpm typecheck
+pnpm build
+pnpm build:embedded-ui
+```

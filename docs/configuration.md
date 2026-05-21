@@ -13,7 +13,7 @@
 
 `secrets.json` stores Immich API key and admin password hash. It must be permissioned `0600` and owned by the `immich-frame` service user.
 
-`state.json` stores runtime recovery state such as current asset, setup stage, last sync, and last errors.
+`state.json` stores runtime recovery state such as current asset, setup stage, first-boot setup code, last sync, and last errors.
 
 ## Permissions
 
@@ -122,11 +122,29 @@ refresh_minutes = 60
 }
 ```
 
-Admin password must be stored as a hash, not plain text. Use bcrypt for MVP unless a later implementation chooses Argon2id deliberately.
+Admin password must be stored as a hash, not plain text.
+
+Current MVP code uses PBKDF2-HMAC-SHA256 with a per-password salt because it is available from the Go standard library without adding a native/runtime dependency. A future hardening slice may move this to bcrypt or Argon2id.
 
 ## Setup Code
 
 First-boot setup code is generated once and remains fixed until setup completes. After setup completes, it is invalidated. Reset generates a new setup code.
+
+The setup code and setup status are persisted in `state.json`. The localhost kiosk `/frame` state may include the active setup code so the HDMI screen can display it. LAN callers can read setup status but do not receive the code from API state or SSE.
+
+## Settings API
+
+The setup/settings portal treats `config.toml` as the source of truth for non-secret settings and `secrets.json` as the source of truth for credentials.
+
+Implemented browser-facing behavior:
+
+- `GET /api/settings` returns sanitized config plus `hasImmichApiKey`.
+- `PUT /api/settings` writes non-secret settings to `config.toml`.
+- `immichApiKey` is replace-only. The raw saved key is never returned.
+- The server preserves service/network-only fields such as listen host and local development source path when settings are written from the portal.
+- Album mode stores one selected album id in `[source.album]`.
+- Random mode stores `source.mode = "random"`.
+- Display fit, slide interval, cache preset, and overlay enabled flags are editable from the portal.
 
 ## Reset Behavior
 

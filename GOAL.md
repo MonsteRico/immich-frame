@@ -195,69 +195,69 @@ The local scaffold, mock frame loop, Phase 1.5 validation, and Phase 2 Immich ad
 
 ### Phase 3 Setup Portal Checklist
 
-- [ ] Baseline verification before changes:
-  - [ ] Confirm branch is `master`.
-  - [ ] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
-  - [ ] Run `go test ./...`.
-  - [ ] Run `pnpm typecheck`.
-  - [ ] Run `pnpm build`.
-- [ ] Define setup state model and backend boundary:
-  - [ ] Represent unconfigured, setup-code-required, configured, and error/degraded states.
-  - [ ] Keep setup state compatible with future Wi-Fi AP/captive portal work without implementing that future path.
-  - [ ] Add unit tests for setup-state transitions.
-- [ ] Implement first-boot setup code flow:
-  - [ ] Generate a fixed setup code until setup completes.
-  - [ ] Persist setup code/state in `state.json`.
-  - [ ] Expose setup state to the HDMI `/frame` UI and setup portal.
-  - [ ] Invalidate setup code after setup completes.
-  - [ ] Add unit tests.
-- [ ] Implement local admin auth:
-  - [ ] Create admin password during setup.
-  - [ ] Store only a password hash in `secrets.json`.
-  - [ ] Add 30-minute admin sessions that renew on activity.
-  - [ ] Add login/logout routes.
-  - [ ] Add unit tests for password/session behavior.
-- [ ] Implement settings/config API:
-  - [ ] `GET /api/settings`.
-  - [ ] `PUT /api/settings`.
-  - [ ] Read/write `config.toml` as the source of truth for non-secret settings.
-  - [ ] Preserve the rule that Immich API key is replace-only and never revealed.
-  - [ ] Add unit tests for config write/validation behavior.
-- [ ] Implement Immich setup validation routes:
-  - [ ] `POST /api/immich/test` using the Phase 2 adapter.
-  - [ ] `GET /api/immich/albums` for authenticated/setup-authorized callers.
-  - [ ] Return user-safe errors for invalid URL, invalid key, network failure, permission failure, and incompatible response.
-  - [ ] Add mock HTTP unit tests.
-- [ ] Implement source/settings selection support:
-  - [ ] Album mode with one selected album.
-  - [ ] Random library mode.
-  - [ ] Searchable album picker data shape with name and item count when available.
-  - [ ] Slide interval, display fit, cache preset, and overlay settings needed by MVP.
-- [ ] Implement phone-first setup/settings UI:
-  - [ ] Setup-code claim screen.
-  - [ ] Admin password creation.
-  - [ ] Immich URL/API key entry.
-  - [ ] Clear warning for HTTP Immich URLs.
-  - [ ] Connection test feedback.
-  - [ ] Source selection with searchable album picker.
-  - [ ] Lightweight status page.
-  - [ ] Existing setup scaffold should evolve into ongoing settings, not a full admin dashboard.
-- [ ] Update `/frame` unconfigured behavior:
-  - [ ] Show polished HDMI setup screen with `frame.local:8787/setup`, IP fallback if available, setup code, and status.
-  - [ ] Do not require keyboard/touch on the frame.
-  - [ ] Preserve the existing local slideshow behavior when configured or when using local dev source.
-- [ ] Security checks:
-  - [ ] Browser never receives Immich API key.
-  - [ ] Settings UI never reveals saved Immich API key.
-  - [ ] LAN clients cannot access cached media/settings without proper setup/admin authorization.
-  - [ ] Localhost kiosk access remains appliance-friendly.
-- [ ] Documentation updates:
-  - [ ] Update `docs/configuration.md` for any config/state/secrets shape changes.
-  - [ ] Update `docs/security.md` for setup/auth/session behavior.
-  - [ ] Update `docs/local-development.md` with setup portal run/verification steps.
-  - [ ] Update `docs/developer-guide.md` if daily workflow changes.
-  - [ ] Update `GOAL.md` as checklist items are completed.
-- [ ] Commit and push after each coherent checklist feature or checklist item with subitems is completed.
+- [x] Baseline verification before changes:
+  - [x] Confirm branch is `master`.
+  - [x] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+  - [x] Run `go test ./...`.
+  - [x] Run `pnpm typecheck`.
+  - [x] Run `pnpm build`.
+- [x] Define setup state model and backend boundary:
+  - [x] Represent unconfigured, setup-code-required, configured, and error/degraded states.
+  - [x] Keep setup state compatible with future Wi-Fi AP/captive portal work without implementing that future path.
+  - [x] Add unit tests for setup-state transitions.
+- [x] Implement first-boot setup code flow:
+  - [x] Generate a fixed setup code until setup completes.
+  - [x] Persist setup code/state in `state.json`.
+  - [x] Expose setup state to the HDMI `/frame` UI and setup portal.
+  - [x] Invalidate setup code after setup completes.
+  - [x] Add unit tests.
+- [x] Implement local admin auth:
+  - [x] Create admin password during setup.
+  - [x] Store only a password hash in `secrets.json`.
+  - [x] Add 30-minute admin sessions that renew on activity.
+  - [x] Add login/logout routes.
+  - [x] Add unit tests for password/session behavior.
+- [x] Implement settings/config API:
+  - [x] `GET /api/settings`.
+  - [x] `PUT /api/settings`.
+  - [x] Read/write `config.toml` as the source of truth for non-secret settings.
+  - [x] Preserve the rule that Immich API key is replace-only and never revealed.
+  - [x] Add unit tests for config write/validation behavior.
+- [x] Implement Immich setup validation routes:
+  - [x] `POST /api/immich/test` using the Phase 2 adapter.
+  - [x] `GET /api/immich/albums` for authenticated/setup-authorized callers.
+  - [x] Return user-safe errors for invalid URL, invalid key, network failure, permission failure, and incompatible response.
+  - [x] Add mock HTTP unit tests.
+- [x] Implement source/settings selection support:
+  - [x] Album mode with one selected album.
+  - [x] Random library mode.
+  - [x] Searchable album picker data shape with name and item count when available.
+  - [x] Slide interval, display fit, cache preset, and overlay settings needed by MVP.
+- [x] Implement phone-first setup/settings UI:
+  - [x] Setup-code claim screen.
+  - [x] Admin password creation.
+  - [x] Immich URL/API key entry.
+  - [x] Clear warning for HTTP Immich URLs.
+  - [x] Connection test feedback.
+  - [x] Source selection with searchable album picker.
+  - [x] Lightweight status page.
+  - [x] Existing setup scaffold should evolve into ongoing settings, not a full admin dashboard.
+- [x] Update `/frame` unconfigured behavior:
+  - [x] Show polished HDMI setup screen with `frame.local:8787/setup`, IP fallback if available, setup code, and status.
+  - [x] Do not require keyboard/touch on the frame.
+  - [x] Preserve the existing local slideshow behavior when configured or when using local dev source.
+- [x] Security checks:
+  - [x] Browser never receives Immich API key.
+  - [x] Settings UI never reveals saved Immich API key.
+  - [x] LAN clients cannot access cached media/settings without proper setup/admin authorization.
+  - [x] Localhost kiosk access remains appliance-friendly.
+- [x] Documentation updates:
+  - [x] Update `docs/configuration.md` for any config/state/secrets shape changes.
+  - [x] Update `docs/security.md` for setup/auth/session behavior.
+  - [x] Update `docs/local-development.md` with setup portal run/verification steps.
+  - [x] Update `docs/developer-guide.md` if daily workflow changes.
+  - [x] Update `GOAL.md` as checklist items are completed.
+- [x] Commit and push after each coherent checklist feature or checklist item with subitems is completed.
 
 ## Stop Conditions
 

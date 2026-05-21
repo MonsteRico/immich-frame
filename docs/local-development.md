@@ -92,10 +92,14 @@ Expected `/frame` behavior:
 - The operational status overlay stays quiet while state is ready.
 - The current image URL is a local `/media/:assetID` URL, not an external URL.
 
-Expected `/setup` behavior at this stage:
+Expected `/setup` behavior:
 
-- The setup scaffold renders.
-- Full setup flow behavior is still future MVP work.
+- If `state.json` is unconfigured, the portal asks for the first-boot setup code shown by the frame.
+- After claiming the code, the portal creates a local admin password, accepts an Immich URL/API key, validates Immich, and lets you choose album or random-library mode.
+- After setup is complete, `/setup` becomes the ongoing settings page and requires the admin password.
+- The settings page never displays a saved Immich API key. Paste a new key only when replacing it.
+
+For local mock slideshow work, `-dev-source dev/photos` keeps `/frame` on the local folder source even if setup is incomplete.
 
 Stop the server with `Ctrl+C`.
 
@@ -131,6 +135,7 @@ Useful HTTP smoke checks:
 ```sh
 curl -i http://127.0.0.1:8787/frame
 curl -i http://127.0.0.1:8787/api/state
+curl -i http://127.0.0.1:8787/api/setup/state
 ```
 
 On PowerShell:
@@ -138,6 +143,7 @@ On PowerShell:
 ```powershell
 Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8787/frame
 Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8787/api/state
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8787/api/setup/state
 ```
 
 After the embedded smoke test, remove the temporary verification data:
@@ -187,6 +193,27 @@ Invoke-WebRequest -UseBasicParsing -Method Post http://127.0.0.1:8787/api/playba
 ```
 
 The response JSON should reflect the updated playback state.
+
+## Setup Portal Smoke Checks
+
+Use a temporary data directory when testing first boot repeatedly. To see the HDMI setup screen instead of the local mock slideshow, point `-config` at a temporary config whose `[source] mode` is `album` or `random`; `config.dev.toml` intentionally uses `local_folder` for the mock slideshow loop. One quick option is to copy `config.dev.toml` to `.setup-verify.toml` and change only `source.mode` to `album`.
+
+```powershell
+go run ./cmd/immich-frame serve -config .setup-verify.toml -data-dir .immich-frame-setup-verify -frame-dist ui/frame/dist -setup-dist ui/setup/dist
+```
+
+Open `http://127.0.0.1:8787/frame` and confirm the setup URL/code screen appears when setup is incomplete and the source is not `local_folder`.
+
+Open `http://127.0.0.1:8787/setup` and confirm:
+
+- the setup code claim screen renders.
+- wrong codes fail.
+- the code from the HDMI frame advances setup.
+- admin password creation requires at least 8 characters.
+- HTTP Immich URLs show a warning.
+- saved settings do not reveal the Immich API key.
+
+Mock HTTP unit tests cover setup/auth/settings/Immich validation behavior. Do not add live Immich integration tests to repo or CI for the MVP.
 
 ## Useful Local Commands
 

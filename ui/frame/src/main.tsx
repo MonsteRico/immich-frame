@@ -58,7 +58,7 @@ function App() {
       onMouseLeave={() => setControlsVisible(false)}
       onClick={() => setControlsVisible((visible) => !visible)}
     >
-      <SlideshowImage asset={current} next={next} />
+      <SlideshowImage asset={current} next={next} setup={state?.setup} />
       <OverlayLayer asset={current} status={statusText} />
       <Controls
         visible={controlsVisible}
@@ -71,9 +71,12 @@ function App() {
   );
 }
 
-function SlideshowImage({ asset, next }: { asset?: FrameAsset; next?: FrameAsset }) {
+function SlideshowImage({ asset, next, setup }: { asset?: FrameAsset; next?: FrameAsset; setup?: FrameState["setup"] }) {
   const background = asset?.mediaUrl ?? next?.mediaUrl;
   if (!asset) {
+    if (setup?.setupCodeRequired) {
+      return <SetupScreen setup={setup} />;
+    }
     return (
       <section className="empty-state">
         <h1>Immich Frame</h1>
@@ -85,6 +88,26 @@ function SlideshowImage({ asset, next }: { asset?: FrameAsset; next?: FrameAsset
     <section className="stage" aria-label={asset.title || "Current photo"}>
       <img className="backdrop" src={background} alt="" aria-hidden="true" />
       <img className="photo photo-current" key={asset.id} src={asset.mediaUrl} alt="" />
+    </section>
+  );
+}
+
+function SetupScreen({ setup }: { setup: FrameState["setup"] }) {
+  const ipURL = setup.ipAddress ? `http://${setup.ipAddress}:8787/setup` : "";
+  return (
+    <section className="setup-state">
+      <div className="setup-copy">
+        <p>First boot</p>
+        <h1>Set up Immich Frame</h1>
+        <div className="setup-routes">
+          <span>{setup.setupUrl}</span>
+          {ipURL ? <span>{ipURL}</span> : null}
+        </div>
+      </div>
+      <div className="setup-code" aria-label="Setup code">
+        <span>Setup code</span>
+        <strong>{setup.setupCode || "------"}</strong>
+      </div>
     </section>
   );
 }
@@ -101,7 +124,7 @@ function OverlayLayer({ asset, status }: { asset?: FrameAsset; status: string })
       {asset ? (
         <div className="overlay photo-info">
           <strong>{asset.title}</strong>
-          <span>{[takenAt, asset.sourceName].filter(Boolean).join(" · ")}</span>
+          <span>{[takenAt, asset.sourceName].filter(Boolean).join(" - ")}</span>
         </div>
       ) : null}
       {status ? <div className="overlay status">{status}</div> : null}

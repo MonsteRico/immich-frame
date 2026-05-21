@@ -34,6 +34,16 @@ After setup:
 - Admin sessions last about 30 minutes by default and renew on activity.
 - MVP does not include a remember-me session.
 
+Implemented route shape:
+
+- `GET /api/setup/state` returns setup status. It does not reveal the setup code to LAN callers.
+- `POST /api/setup/claim` accepts the setup code and creates a setup-scoped session.
+- `POST /api/setup/admin-password` stores only a password hash and creates an admin session.
+- `POST /api/auth/login` and `POST /api/auth/logout` manage admin sessions after setup.
+- `GET /api/settings` and `PUT /api/settings` require a setup or admin session.
+- `POST /api/immich/test` and `GET /api/immich/albums` require a setup or admin session.
+- `POST /api/setup/complete` invalidates the setup code once password, Immich credentials, and source selection are present.
+
 ## Localhost Trust Boundary
 
 The Pi's Chromium kiosk opens `http://127.0.0.1:8787/frame`.
@@ -41,6 +51,8 @@ The Pi's Chromium kiosk opens `http://127.0.0.1:8787/frame`.
 Requests from localhost may access the frame and cached media so the device can boot into slideshow without login.
 
 Requests from LAN clients must authenticate before accessing settings or photo media.
+
+LAN callers without an admin session cannot fetch `/media/:assetID`. The localhost kiosk may fetch cached media without login so the appliance can boot directly into the slideshow.
 
 ## Local HTTP
 
@@ -64,6 +76,8 @@ Protections:
 - Admin password hashed.
 - Browser does not expose credentials.
 - LAN photo access is authenticated.
+
+Password hashes currently use PBKDF2-HMAC-SHA256 with a random salt and high iteration count. This avoids storing plain text and keeps the MVP dependency set small; bcrypt or Argon2id remain future hardening options.
 
 Not planned:
 

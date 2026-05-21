@@ -11,10 +11,12 @@ import (
 	"time"
 
 	"github.com/MonsteRico/immich-frame/internal/api"
+	"github.com/MonsteRico/immich-frame/internal/auth"
 	"github.com/MonsteRico/immich-frame/internal/cache"
 	"github.com/MonsteRico/immich-frame/internal/config"
 	"github.com/MonsteRico/immich-frame/internal/immich"
 	"github.com/MonsteRico/immich-frame/internal/playback"
+	setupstate "github.com/MonsteRico/immich-frame/internal/setup"
 	"github.com/MonsteRico/immich-frame/internal/source"
 )
 
@@ -64,16 +66,26 @@ func New(opts Options) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	entries, err := seedCache(context.Background(), cfg, secrets, store)
+	setupManager := setupstate.NewManager(paths.StateFile)
+	state, err := setupManager.Ensure()
+	if err != nil {
+		return nil, err
+	}
+	entries, err := seedCache(context.Background(), cfg, secrets, state, store)
 	if err != nil {
 		return nil, err
 	}
 	queue := playback.NewQueue(entries)
 	server := &api.Server{
 		Config:    cfg,
+		Secrets:   secrets,
+		State:     state,
+		Paths:     paths,
 		Cache:     store,
 		Queue:     queue,
 		Hub:       api.NewHub(),
+		Setup:     setupManager,
+		Sessions:  auth.NewManager(30 * time.Minute),
 		FrameDist: opts.FrameDist,
 		SetupDist: opts.SetupDist,
 	}
@@ -130,8 +142,11 @@ func (a *App) runSlideshow(ctx context.Context) {
 	}
 }
 
-func seedCache(ctx context.Context, cfg config.Config, secrets config.Secrets, store *cache.Store) ([]cache.Entry, error) {
+func seedCache(ctx context.Context, cfg config.Config, secrets config.Secrets, state config.State, store *cache.Store) ([]cache.Entry, error) {
 	if cfg.Source.Mode == "album" || cfg.Source.Mode == "random" {
+		if !state.SetupComplete {
+			return store.List(), nil
+		}
 		return seedImmichCache(ctx, cfg, secrets, store)
 	}
 	provider := source.LocalFolderProvider{Root: cfg.Source.LocalFolder.Path}

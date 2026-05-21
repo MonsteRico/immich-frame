@@ -96,3 +96,28 @@ func TestValidateReportsInvalidBaseSettings(t *testing.T) {
 		}
 	}
 }
+
+func TestSaveRoundTripsNonSecretConfig(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.toml")
+	cfg := DefaultConfig()
+	cfg.Device.Name = "Hall Frame"
+	cfg.Immich.URL = "https://immich.example.com"
+	cfg.Source.Mode = "album"
+	cfg.Source.Album.ID = "album-1"
+	cfg.Display.Fit = "cover"
+	cfg.Slideshow.IntervalSeconds = 45
+
+	if err := Save(path, cfg); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loaded.Device.Name != cfg.Device.Name || loaded.Immich.URL != cfg.Immich.URL || loaded.Source.Album.ID != cfg.Source.Album.ID {
+		t.Fatalf("loaded config did not round trip: %+v", loaded)
+	}
+	if loaded.Display.Fit != "cover" || loaded.Slideshow.IntervalSeconds != 45 {
+		t.Fatalf("loaded settings did not round trip: %+v", loaded)
+	}
+}

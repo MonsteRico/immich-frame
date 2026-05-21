@@ -43,7 +43,7 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 
 ## Current Phase
 
-Continue with **Phase 3: Setup Portal**.
+**Phase 3: Setup Portal** is implemented on `master`.
 
 Phase 0, the first local Phase 1 slice, Phase 1.5 validation, and Phase 2 Immich adapter work are complete on `master`.
 
@@ -60,7 +60,9 @@ Current validated base:
 - Immich adapter exists behind `internal/immich` with mock HTTP tests.
 - Immich connection testing, album listing, album/random candidate listing, preview rendition fetching, and metadata normalization are implemented.
 
-Next goal: build the phone-first setup/settings portal flow and supporting backend routes, using the existing Immich adapter and preserving the local mock frame loop.
+Current validated base now includes the phone-first setup/settings portal flow and supporting backend routes, using the existing Immich adapter and preserving the local mock frame loop.
+
+Next likely goal: **Phase 4: Pi Appliance** from `docs/implementation-plan.md`, unless the user asks for Phase 3 fixes or additional validation.
 
 ## Git Commit Guidance
 
@@ -112,12 +114,12 @@ For Phase 3, pay special attention to:
 - [ ] Read `GOAL.md`, especially the Phase 3 checklist.
 - [ ] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
 - [ ] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
-- [ ] Implement setup backend state/auth/settings routes without exposing Immich secrets to browser-facing routes.
-- [ ] Implement the phone-first setup/settings UI against those routes.
-- [ ] Use mock/unit tests for setup/auth/settings behavior.
-- [ ] Update developer-facing docs as setup commands, config, or verification steps change.
-- [ ] Update `GOAL.md` as items are completed.
-- [ ] Commit and push coherent slices as checklist features are completed.
+- [x] Implement setup backend state/auth/settings routes without exposing Immich secrets to browser-facing routes.
+- [x] Implement the phone-first setup/settings UI against those routes.
+- [x] Use mock/unit tests for setup/auth/settings behavior.
+- [x] Update developer-facing docs as setup commands, config, or verification steps change.
+- [x] Update `GOAL.md` as items are completed.
+- [x] Commit and push coherent slices as checklist features are completed.
 
 ## Do Not Build Yet
 

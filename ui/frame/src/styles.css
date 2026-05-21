@@ -81,6 +81,65 @@ button {
   line-height: 1.55;
 }
 
+.setup-state {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  gap: 2rem;
+  padding: clamp(2rem, 6vw, 5rem);
+  background:
+    linear-gradient(135deg, rgb(0 0 0 / 20%), rgb(0 0 0 / 70%)),
+    #15140f;
+}
+
+.setup-copy {
+  max-width: 54rem;
+}
+
+.setup-copy p,
+.setup-code span {
+  margin: 0 0 0.75rem;
+  color: rgb(255 255 255 / 64%);
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 760;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.setup-copy h1 {
+  margin: 0;
+  font-size: clamp(3rem, 10vw, 8rem);
+  line-height: 0.94;
+  letter-spacing: 0;
+}
+
+.setup-routes {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 2rem;
+  color: rgb(255 255 255 / 82%);
+  font-size: clamp(1.2rem, 3vw, 2.2rem);
+  font-weight: 700;
+}
+
+.setup-code {
+  width: min(32rem, 100%);
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  background: rgb(255 255 255 / 8%);
+  box-shadow: 0 1.4rem 4rem rgb(0 0 0 / 32%);
+}
+
+.setup-code strong {
+  display: block;
+  color: #fff7cf;
+  font-size: clamp(3rem, 8vw, 6rem);
+  line-height: 0.95;
+  letter-spacing: 0.08em;
+}
+
 .overlays {
   position: fixed;
   inset: 0;
