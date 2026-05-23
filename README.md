@@ -6,7 +6,7 @@ A self-hosted digital picture frame for Immich libraries, designed for self-buil
 
 Phase 0, the local Phase 1 mock slideshow loop, Phase 1.5 validation, Phase 2 Immich adapter, Phase 3 setup portal, and Phase 3.5 setup hardening are complete.
 
-The next work is **Phase 4: Pi Appliance**, which makes the reference Raspberry Pi boot directly into the frame.
+The current work is **Phase 4: Pi Appliance**. Install/runtime assets are being prepared for the reference Raspberry Pi, but boot, reboot, kiosk display, and `frame.local` behavior remain pending until Matthew verifies them on physical Pi Zero 2 W hardware.
 
 Start here:
 
@@ -17,6 +17,7 @@ Start here:
 - `docs/development.md` for local development expectations.
 - `docs/developer-guide.md` for the human developer workflow and project map.
 - `docs/local-development.md` for desktop run, test, and manual verification steps.
+- `docs/runbooks/pi-appliance-install.md` for Raspberry Pi install and verification steps.
 
 ## Product Direction
 
@@ -87,6 +88,12 @@ Prepare embedded UI assets before a release Go build:
 
 ```sh
 pnpm build:embedded-ui
+```
+
+Validate Pi install assets without touching a Raspberry Pi:
+
+```sh
+./scripts/validate-pi-install-assets.sh
 ```
 
 Run the desktop mock slideshow:

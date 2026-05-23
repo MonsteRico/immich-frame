@@ -1,0 +1,20 @@
+[Unit]
+Description=Immich Frame daemon
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=immich-frame
+Group=immich-frame
+WorkingDirectory=/var/lib/immich-frame
+ExecStart=/usr/local/bin/immich-frame serve -config /etc/immich-frame/config.toml -data-dir /var/lib/immich-frame
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/etc/immich-frame /var/lib/immich-frame
+
+[Install]
+WantedBy=multi-user.target

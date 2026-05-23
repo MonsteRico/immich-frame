@@ -51,6 +51,16 @@ The default CI scope for the MVP base is:
 - Frontend TypeScript typecheck.
 - Frontend production build.
 
+## Validate Pi Install Assets
+
+Phase 4 installer and systemd/kiosk assets can be syntax-checked from a desktop shell with Bash:
+
+```sh
+./scripts/validate-pi-install-assets.sh
+```
+
+This checks shell syntax, validates `packaging/config/appliance-config.toml` through the CLI, runs `systemd-analyze verify` when available, and executes the installer in dry-run mode. It does not prove Chromium kiosk boot behavior; that remains a physical Pi verification gate.
+
 ## Verify Embedded Release UI Assets
 
 Release binaries embed the built Vite assets from `internal/api/static`.

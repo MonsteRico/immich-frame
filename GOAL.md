@@ -324,61 +324,77 @@ Phase 3.5 is accepted as complete. The local scaffold, mock frame loop, Phase 1.
 
 ### Phase 4 Pi Appliance Checklist
 
-- [ ] Baseline verification before changes:
-  - [ ] Confirm branch is `master`.
-  - [ ] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
-  - [ ] Run `go test ./...`.
-  - [ ] Run `pnpm typecheck`.
-  - [ ] Run `pnpm build`.
-- [ ] Add an idempotent Raspberry Pi install script:
-  - [ ] Target Raspberry Pi OS Lite on Raspberry Pi Zero 2 W.
-  - [ ] Install or verify required OS packages for Chromium kiosk and mDNS.
-  - [ ] Build or install the `immich-frame` binary.
-  - [ ] Create/update `/etc/immich-frame` and `/var/lib/immich-frame`.
-  - [ ] Preserve existing config/secrets/state/cache unless the user explicitly resets.
-  - [ ] Support repeated runs without duplicating users, services, or config.
-- [ ] Add service user and filesystem permissions:
-  - [ ] Create `immich-frame` system user/group when missing.
-  - [ ] Ensure `config.toml` is service-readable/writable as intended.
-  - [ ] Ensure `secrets.json` is owned by the service user and mode `0600`.
-  - [ ] Ensure cache/state directories are writable by the service user.
-- [ ] Add systemd daemon service:
-  - [ ] Start `immich-frame serve` on boot.
-  - [ ] Use `/etc/immich-frame/config.toml` and `/var/lib/immich-frame`.
-  - [ ] Restart on failure with a conservative delay.
-  - [ ] Log to journald without printing secrets.
-- [ ] Add Chromium kiosk startup:
-  - [ ] Configure a boot-time kiosk session that opens `http://127.0.0.1:8787/frame`.
-  - [ ] Keep browser command/flags configurable through an env file.
-  - [ ] Avoid tying daemon code to a specific display server.
-  - [ ] Document the chosen tested display-server path.
-- [ ] Configure `frame.local` mDNS:
-  - [ ] Install/configure Avahi or the chosen Raspberry Pi OS mDNS path.
-  - [ ] Ensure setup portal should be reachable as `http://frame.local:8787/setup` on same Wi-Fi.
-  - [ ] Keep IP fallback behavior documented.
-- [ ] Add appliance CLI/install docs:
-  - [ ] Document Pi flash assumptions and Wi-Fi-first setup.
-  - [ ] Document install, upgrade/re-run, status, logs, and reset flows.
-  - [ ] Document how to change kiosk browser flags or URL.
-  - [ ] Document what can be verified on desktop versus on the physical Pi.
-- [ ] Add tests/checks where practical:
-  - [ ] Keep repo/CI tests unit-only.
-  - [ ] Add script validation or dry-run checks if practical without needing a Pi.
-  - [ ] Run `go test ./...`.
-  - [ ] Run `pnpm typecheck`.
-  - [ ] Run `pnpm build`.
-  - [ ] Run `pnpm build:embedded-ui` if installer/release assets depend on embedded UI.
-- [ ] Record Pi verification status:
+- [x] Baseline verification before changes:
+  - [x] Confirm branch is `master`.
+  - [x] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+  - [x] Run `go test ./...`.
+  - [x] Run `pnpm typecheck`.
+  - [x] Run `pnpm build`.
+- [x] Add an idempotent Raspberry Pi install script:
+  - [x] Target Raspberry Pi OS Lite on Raspberry Pi Zero 2 W.
+  - [x] Install or verify required OS packages for Chromium kiosk and mDNS.
+  - [x] Build or install the `immich-frame` binary.
+  - [x] Create/update `/etc/immich-frame` and `/var/lib/immich-frame`.
+  - [x] Preserve existing config/secrets/state/cache unless the user explicitly resets.
+  - [x] Support repeated runs without duplicating users, services, or config.
+- [x] Add service user and filesystem permissions:
+  - [x] Create `immich-frame` system user/group when missing.
+  - [x] Ensure `config.toml` is service-readable/writable as intended.
+  - [x] Ensure `secrets.json` is owned by the service user and mode `0600`.
+  - [x] Ensure cache/state directories are writable by the service user.
+- [x] Add systemd daemon service:
+  - [x] Start `immich-frame serve` on boot.
+  - [x] Use `/etc/immich-frame/config.toml` and `/var/lib/immich-frame`.
+  - [x] Restart on failure with a conservative delay.
+  - [x] Log to journald without printing secrets.
+- [x] Add Chromium kiosk startup:
+  - [x] Configure a boot-time kiosk session that opens `http://127.0.0.1:8787/frame`.
+  - [x] Keep browser command/flags configurable through an env file.
+  - [x] Avoid tying daemon code to a specific display server.
+  - [x] Document the chosen tested display-server path.
+- [x] Configure `frame.local` mDNS:
+  - [x] Install/configure Avahi or the chosen Raspberry Pi OS mDNS path.
+  - [x] Ensure setup portal should be reachable as `http://frame.local:8787/setup` on same Wi-Fi.
+  - [x] Keep IP fallback behavior documented.
+- [x] Add appliance CLI/install docs:
+  - [x] Document Pi flash assumptions and Wi-Fi-first setup.
+  - [x] Document install, upgrade/re-run, status, logs, and reset flows.
+  - [x] Document how to change kiosk browser flags or URL.
+  - [x] Document what can be verified on desktop versus on the physical Pi.
+- [x] Add tests/checks where practical:
+  - [x] Keep repo/CI tests unit-only.
+  - [x] Add script validation or dry-run checks if practical without needing a Pi.
+  - [x] Run `go test ./...`.
+  - [x] Run `pnpm typecheck`.
+  - [x] Run `pnpm build`.
+  - [x] Run `pnpm build:embedded-ui` if installer/release assets depend on embedded UI.
+- [x] Record Pi verification status:
   - [ ] If tested on the Pi Zero 2 W, record Raspberry Pi OS version, Chromium package/version if available, display path, and reboot result.
-  - [ ] If not tested on the Pi yet, clearly mark physical Pi verification as pending rather than implied complete.
-- [ ] Update docs:
-  - [ ] Update `README.md`.
-  - [ ] Update `AGENT_BRIEF.md`.
-  - [ ] Update `docs/hardware.md`.
-  - [ ] Update `docs/local-development.md` if install/build commands change.
-  - [ ] Add or update appliance install/runbook docs.
-  - [ ] Update `GOAL.md` with Phase 4 verification notes.
+  - [x] If not tested on the Pi yet, clearly mark physical Pi verification as pending rather than implied complete.
+- [x] Update docs:
+  - [x] Update `README.md`.
+  - [x] Update `AGENT_BRIEF.md`.
+  - [x] Update `docs/hardware.md`.
+  - [x] Update `docs/local-development.md` if install/build commands change.
+  - [x] Add or update appliance install/runbook docs.
+  - [x] Update `GOAL.md` with Phase 4 verification notes.
 - [ ] Commit and push after each coherent checklist feature or feature plus subitems is complete.
+
+### Phase 4 Verification Notes - 2026-05-23
+
+- Baseline before code changes passed on `master`: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
+- `origin` was `https://github.com/MonsteRico/immich-frame.git`.
+- Added `install.sh` for Raspberry Pi OS Lite with idempotent package install, local build/install, service user/group creation, filesystem permissions, systemd unit installation, kiosk env/script installation, and Avahi enablement.
+- Added appliance default config at `packaging/config/appliance-config.toml` so first boot uses Immich setup mode rather than desktop local-folder mock mode.
+- Added systemd daemon unit for `immich-frame serve -config /etc/immich-frame/config.toml -data-dir /var/lib/immich-frame`.
+- Added Chromium kiosk startup through `startx`, Xorg, Openbox, and configurable `/etc/immich-frame/kiosk.env`.
+- Added Avahi mDNS setup through installer-managed `avahi-daemon.service`; physical same-Wi-Fi `frame.local` verification is pending.
+- Added `docs/runbooks/pi-appliance-install.md` with the exact hardware verification commands Matthew should run on the Pi.
+- Physical Pi boot, reboot, Chromium rendering, and `frame.local` behavior are not marked complete until Matthew runs the runbook on hardware and reports output.
+- `go run ./cmd/immich-frame config validate -config packaging/config/appliance-config.toml` passed.
+- `go test ./...` passed with a project-local `GOCACHE` after the default Windows Go build cache returned access denied.
+- `pnpm typecheck`, `pnpm build`, and `pnpm build:embedded-ui` passed.
+- Bash-based shell syntax/dry-run validation could not run in this Windows shell because `bash` resolves to WSL and no WSL distribution is installed; Matthew should run `./scripts/validate-pi-install-assets.sh` on the Pi or another Bash-equipped shell.
 
 ## Stop Conditions
 

@@ -1,0 +1,71 @@
+[device]
+name = "Immich Frame"
+timezone = "auto"
+
+[server]
+host = "0.0.0.0"
+port = 8787
+hostname = "frame.local"
+
+[immich]
+url = ""
+
+[source]
+mode = "random"
+
+[source.album]
+id = ""
+shuffle = true
+
+[source.random]
+shuffle = true
+
+[source.local_folder]
+path = ""
+shuffle = true
+
+[filters]
+photos_only = true
+exclude_archived = true
+exclude_hidden = true
+exclude_trashed = true
+exclude_videos = true
+
+[display]
+orientation = "auto"
+width = 0
+height = 0
+fit = "contain"
+background = "blur"
+transition = "crossfade"
+transition_ms = 800
+
+[slideshow]
+interval_seconds = 30
+recent_history_limit = 100
+
+[cache]
+preset = "balanced"
+max_size_mb = 2048
+min_free_mb = 1024
+target_items = 500
+prefetch_items = 20
+rendition = "auto"
+
+[sync]
+refresh_interval_minutes = 360
+
+[overlays.clock]
+enabled = true
+slot = "top-right"
+visibility = "always"
+
+[overlays.photo_info]
+enabled = true
+slot = "bottom-left"
+visibility = "on-photo-change"
+
+[overlays.status]
+enabled = true
+slot = "bottom-center"
+visibility = "when-degraded"

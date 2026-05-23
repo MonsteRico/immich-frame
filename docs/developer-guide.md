@@ -184,3 +184,23 @@ pnpm typecheck
 pnpm build
 pnpm build:embedded-ui
 ```
+
+## Phase 4 Appliance Assets
+
+The Raspberry Pi installer and runtime templates live in:
+
+```text
+install.sh
+packaging/config/appliance-config.toml
+packaging/systemd/
+packaging/kiosk/
+docs/runbooks/pi-appliance-install.md
+```
+
+Before committing installer changes, run when Bash is available:
+
+```powershell
+bash ./scripts/validate-pi-install-assets.sh
+```
+
+The validation script does not replace hardware testing. Do not mark boot, reboot, Chromium kiosk rendering, or `frame.local` complete until Matthew runs the runbook on the Pi Zero 2 W and reports confirming output.
