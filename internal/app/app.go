@@ -27,6 +27,8 @@ type Options struct {
 	DevSource  string
 	FrameDist  string
 	SetupDist  string
+	Logs       bool
+	LogWriter  io.Writer
 }
 
 type App struct {
@@ -41,6 +43,8 @@ type App struct {
 	refreshNow        chan struct{}
 	refreshMu         sync.Mutex
 	shownSinceRefresh int
+	logs              bool
+	logWriter         io.Writer
 }
 
 func New(opts Options) (*App, error) {
@@ -99,6 +103,11 @@ func New(opts Options) (*App, error) {
 	application := &App{
 		Config: cfg, Paths: paths, Secrets: secrets, State: state, Cache: store, Queue: queue, API: server,
 		refreshNow: make(chan struct{}, 1),
+		logs:       opts.Logs,
+		logWriter:  opts.LogWriter,
+	}
+	if application.logWriter == nil {
+		application.logWriter = os.Stdout
 	}
 	server.OnSetupComplete = application.RequestCacheRefresh
 	if err != nil {
@@ -118,6 +127,7 @@ func (a *App) Serve(ctx context.Context) error {
 	errCh := make(chan error, 1)
 	go func() {
 		fmt.Printf("immich-frame serving http://%s/frame\n", a.Config.Addr())
+		a.logf("serve start addr=%s source=%s cache_items=%d", a.Config.Addr(), a.Config.Source.Mode, len(a.Cache.List()))
 		errCh <- srv.ListenAndServe()
 	}()
 	select {
@@ -142,6 +152,7 @@ func (a *App) runCacheMaintenance(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-timer.C:
+			a.logf("cache refresh requested trigger=timer")
 			var ok bool
 			backoff, ok = a.runCacheRefreshAttempt(ctx, timer, backoff, 0)
 			if !ok {
@@ -156,6 +167,7 @@ func (a *App) runCacheMaintenance(ctx context.Context) {
 		case <-a.refreshNow:
 			cfg, _, _ := a.API.RuntimeInputs()
 			batchItems := cacheRefreshBatchItems(cfg.Cache)
+			a.logf("cache refresh requested trigger=playback_or_setup batch_items=%d", batchItems)
 			var ok bool
 			backoff, ok = a.runCacheRefreshAttempt(ctx, timer, backoff, batchItems)
 			if ok {
@@ -168,11 +180,13 @@ func (a *App) runCacheMaintenance(ctx context.Context) {
 func (a *App) runCacheRefreshAttempt(ctx context.Context, timer *time.Timer, backoff time.Duration, rotationBatchItems int) (time.Duration, bool) {
 	changed, err := a.refreshCache(ctx, rotationBatchItems)
 	if err != nil {
+		a.logf("cache refresh failed retry_in=%s", backoff)
 		a.setDegraded(err)
 		timer.Reset(backoff)
 		return nextRefreshBackoff(backoff), false
 	}
 	a.finishSuccessfulRefresh(changed)
+	a.logf("cache refresh succeeded changed=%t", changed)
 	return time.Minute, true
 }
 
@@ -182,7 +196,9 @@ func (a *App) RequestCacheRefresh() {
 	}
 	select {
 	case a.refreshNow <- struct{}{}:
+		a.logf("cache refresh queued")
 	default:
+		a.logf("cache refresh already queued")
 	}
 }
 
@@ -228,6 +244,7 @@ func (a *App) runSlideshow(ctx context.Context) {
 			if err == nil {
 				_ = a.Cache.MarkShown(assetID)
 				a.recordShownAndMaybeRequestRefresh()
+				a.logf("playback cache hit cache_items=%d", len(a.Cache.List()))
 				a.API.PublishState()
 			}
 		}
@@ -236,16 +253,20 @@ func (a *App) runSlideshow(ctx context.Context) {
 
 func (a *App) refreshCache(ctx context.Context, rotationBatchItems int) (bool, error) {
 	cfg, secrets, state := a.API.RuntimeInputs()
+	beforeCount := len(a.Cache.List())
 	if cfg.Source.Mode != "album" && cfg.Source.Mode != "random" {
 		before := len(a.Cache.List())
 		entries, err := seedCache(ctx, cfg, secrets, state, a.Cache)
 		if err != nil {
+			a.logf("cache seed failed source=%s cache_before=%d", cfg.Source.Mode, before)
 			return false, err
 		}
 		a.Queue.Refresh(entries)
+		a.logf("cache seed completed source=%s cache_before=%d cache_after=%d", cfg.Source.Mode, before, len(entries))
 		return before != len(entries), nil
 	}
 	if !state.SetupComplete {
+		a.logf("cache refresh skipped source=%s reason=setup_incomplete cache_items=%d", cfg.Source.Mode, beforeCount)
 		return false, nil
 	}
 	client, err := immich.NewClient(cfg.Immich.URL, secrets.ImmichAPIKey)
@@ -257,6 +278,7 @@ func (a *App) refreshCache(ctx context.Context, rotationBatchItems int) (bool, e
 		return false, err
 	}
 	sourceCandidates := sourceCandidates(candidates)
+	a.logf("cache refresh start source=%s cache_before=%d candidates=%d target_items=%d prefetch_items=%d rotation_batch_items=%d", cfg.Source.Mode, beforeCount, len(sourceCandidates), cfg.Cache.TargetItems, cfg.Cache.PrefetchItems, rotationBatchItems)
 	sourceIDs := map[string]struct{}{}
 	for _, candidate := range sourceCandidates {
 		sourceIDs[candidate.ID] = struct{}{}
@@ -267,11 +289,14 @@ func (a *App) refreshCache(ctx context.Context, rotationBatchItems int) (bool, e
 		}
 	}
 	protectedIDs := a.Queue.ProtectedIDs(cfg.Cache.PrefetchItems)
+	protectedCount := len(protectedIDs)
 	_, pruned, err := a.Cache.EvictSourceRemoved(sourceIDs, protectedIDs)
 	if err != nil {
 		return false, err
 	}
+	topOffFetched := 0
 	entries, toppedOff, err := a.Cache.TopOffFetched(ctx, sourceCandidates, cfg.Cache.TargetItems, func(ctx context.Context, candidate source.Candidate) (io.ReadCloser, string, error) {
+		topOffFetched++
 		rendition, err := client.FetchRendition(ctx, candidate.ID, immich.Target{
 			Width: cfg.Display.Width, Height: cfg.Display.Height, Format: cfg.Cache.Rendition,
 		})
@@ -284,12 +309,14 @@ func (a *App) refreshCache(ctx context.Context, rotationBatchItems int) (bool, e
 		return len(pruned) > 0 || toppedOff, err
 	}
 	rotated := false
+	rotationFetched := 0
 	if (cfg.Source.Mode == "album" || cfg.Source.Mode == "random") && rotationBatchItems > 0 {
 		entries, rotated, err = a.Cache.RotateFetched(ctx, sourceCandidates, cache.RotateOptions{
 			TargetItems:  cfg.Cache.TargetItems,
 			ProtectedIDs: protectedIDs,
 			BatchItems:   rotationBatchItems,
 		}, func(ctx context.Context, candidate source.Candidate) (io.ReadCloser, string, error) {
+			rotationFetched++
 			rendition, err := client.FetchRendition(ctx, candidate.ID, immich.Target{
 				Width: cfg.Display.Width, Height: cfg.Display.Height, Format: cfg.Cache.Rendition,
 			})
@@ -311,6 +338,7 @@ func (a *App) refreshCache(ctx context.Context, rotationBatchItems int) (bool, e
 		return len(pruned) > 0 || toppedOff, err
 	}
 	_ = entries
+	a.logf("cache refresh summary source=%s cache_before=%d cache_after=%d candidates=%d protected=%d pruned=%d topoff_fetched=%d rotated_fetched=%d evicted=%d", cfg.Source.Mode, beforeCount, len(a.Cache.List()), len(sourceCandidates), protectedCount, len(pruned), topOffFetched, rotationFetched, len(evicted))
 	return len(pruned) > 0 || toppedOff || rotated || len(evicted) > 0, nil
 }
 
@@ -325,9 +353,11 @@ func (a *App) recordShownAndMaybeRequestRefresh() {
 	}
 	a.refreshMu.Lock()
 	a.shownSinceRefresh++
-	shouldRefresh := a.shownSinceRefresh >= threshold
+	shownCount := a.shownSinceRefresh
+	shouldRefresh := shownCount >= threshold
 	a.refreshMu.Unlock()
 	if shouldRefresh {
+		a.logf("rolling cache threshold reached shown_since_refresh=%d threshold=%d", shownCount, threshold)
 		a.RequestCacheRefresh()
 	}
 }
@@ -336,6 +366,14 @@ func (a *App) resetShownSinceRefresh() {
 	a.refreshMu.Lock()
 	a.shownSinceRefresh = 0
 	a.refreshMu.Unlock()
+}
+
+func (a *App) logf(format string, args ...any) {
+	if !a.logs || a.logWriter == nil {
+		return
+	}
+	timestamp := time.Now().Format(time.RFC3339)
+	_, _ = fmt.Fprintf(a.logWriter, "%s "+format+"\n", append([]any{timestamp}, args...)...)
 }
 
 func cacheRefreshBatchItems(cfg config.CacheConfig) int {

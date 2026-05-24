@@ -100,6 +100,12 @@ Run the desktop mock slideshow:
 go run ./cmd/immich-frame serve -config config.dev.toml -dev-source dev/photos
 ```
 
+Add `--logs` to print cache/playback activity such as refresh triggers, candidate counts, cache before/after counts, fetched/rotated/evicted counts, and slideshow cache hits:
+
+```sh
+go run ./cmd/immich-frame serve -config config.dev.toml -dev-source dev/photos --logs
+```
+
 Then open:
 
 - `http://127.0.0.1:8787/frame`

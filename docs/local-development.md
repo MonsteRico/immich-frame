@@ -79,6 +79,14 @@ From the repository root:
 go run ./cmd/immich-frame serve -config config.dev.toml -dev-source dev/photos
 ```
 
+For runtime cache/playback diagnostics, add `--logs`:
+
+```sh
+go run ./cmd/immich-frame serve -config config.dev.toml -dev-source dev/photos --logs
+```
+
+Verbose logs include refresh trigger, source mode, candidate count, cache count before/after, protected count, fetched/rotated/evicted/pruned counts, rolling refresh threshold events, and slideshow cache hits. They avoid Immich API keys, direct Immich URLs, filenames, titles, raw response bodies, and other secret-heavy details.
+
 Open these URLs in a desktop browser:
 
 - `http://127.0.0.1:8787/frame`

@@ -54,6 +54,7 @@ func serve(args []string) error {
 	devSource := fs.String("dev-source", "", "local folder of mock photos")
 	frameDist := fs.String("frame-dist", filepath.FromSlash("ui/frame/dist"), "built frame UI directory")
 	setupDist := fs.String("setup-dist", filepath.FromSlash("ui/setup/dist"), "built setup UI directory")
+	logs := fs.Bool("logs", false, "log cache refresh and playback activity")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -63,6 +64,7 @@ func serve(args []string) error {
 		DevSource:  *devSource,
 		FrameDist:  *frameDist,
 		SetupDist:  *setupDist,
+		Logs:       *logs,
 	})
 	if err != nil {
 		return err

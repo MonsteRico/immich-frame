@@ -418,6 +418,11 @@ Post-Phase 5.5 requested and approved cache strategy change:
 - A rolling refresh can replace up to `cache.refresh_batch_items` shown, unprotected cache entries with new candidates while preserving current and near-upcoming playback entries.
 - Completing first setup with an Immich source requests immediate cache maintenance so an empty cache can begin fetching images and start playback without restarting the server.
 
+Post-Phase 5.5 logging addition:
+
+- `immich-frame serve --logs` enables opt-in operational logs for cache refresh and playback activity.
+- Logs should stay count/status focused and avoid Immich API keys, direct Immich URLs, filenames, titles, raw response bodies, and filesystem paths unless a future debug mode explicitly reconsiders that privacy tradeoff.
+
 - [x] Baseline verification before changes:
   - [x] Confirm branch is `master`.
   - [x] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.

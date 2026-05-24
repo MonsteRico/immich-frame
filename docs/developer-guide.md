@@ -54,6 +54,8 @@ For local frame work:
 go run ./cmd/immich-frame serve -config config.dev.toml -dev-source dev/photos
 ```
 
+Add `--logs` when you need cache/playback diagnostics from the daemon. This logs operational counts and refresh events without logging Immich keys, direct URLs, filenames, titles, or raw responses.
+
 Then open:
 
 ```text

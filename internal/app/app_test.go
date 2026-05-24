@@ -1,9 +1,11 @@
 package app
 
 import (
+	"bytes"
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -168,6 +170,22 @@ func TestDerivedCacheRefreshWindowUsesHalfTargetWithPrefetchFloor(t *testing.T) 
 	cfg = config.CacheConfig{TargetItems: 10, PrefetchItems: 8}
 	if got := cacheRefreshBatchItems(cfg); got != 8 {
 		t.Fatalf("cacheRefreshBatchItems() = %d, want 8", got)
+	}
+}
+
+func TestVerboseLogsAreOptIn(t *testing.T) {
+	var buf bytes.Buffer
+	application := &App{logs: true, logWriter: &buf}
+	application.logf("cache refresh summary cache_after=%d", 12)
+	if got := buf.String(); !strings.Contains(got, "cache refresh summary cache_after=12") {
+		t.Fatalf("log output = %q, want cache summary", got)
+	}
+
+	buf.Reset()
+	application.logs = false
+	application.logf("hidden")
+	if buf.Len() != 0 {
+		t.Fatalf("disabled logs wrote %q", buf.String())
 	}
 }
 

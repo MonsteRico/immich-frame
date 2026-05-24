@@ -85,6 +85,8 @@ Phase 5.5 completed:
 
 Post-Phase 5.5 product feedback requested and approved a stronger cache rotation strategy: the frame should progress through the broader album/library over time rather than looping the same warm cache. The app now uses playback-driven rolling cache refresh for album/random-library sources, with `cache.refresh_after_shown_items` triggering an immediate maintenance request and `cache.refresh_batch_items` controlling how many shown, unprotected entries can be swapped for new candidates. Completing setup with an Immich source also requests immediate cache maintenance so an empty first-run frame can fetch images without a daemon restart.
 
+`immich-frame serve --logs` enables opt-in cache/playback diagnostics. Keep these logs operational and count-focused: refresh triggers, source mode, candidate counts, cache before/after counts, protected/fetched/rotated/evicted/pruned counts, threshold events, and cache hits are useful. Do not log Immich API keys, direct authenticated URLs, filenames, titles, raw responses, or other secret-heavy details.
+
 The next planned work is Phase 6 renderer/hardware re-evaluation. Keep it future-only until explicitly started, and do not restart installer/systemd/kiosk work without a new renderer direction.
 
 ## Git Commit Guidance

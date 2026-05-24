@@ -49,6 +49,8 @@ Implemented route shape:
 
 Runtime refresh errors are recorded as user-safe status text only. They must not include the raw Immich API key, direct authenticated Immich URLs, filesystem paths, or raw Immich response bodies.
 
+`serve --logs` is an opt-in diagnostic mode for cache/playback activity. It should log operational counts and state transitions only, not Immich API keys, direct authenticated URLs, filenames, titles, raw response bodies, or filesystem paths.
+
 ## Localhost Trust Boundary
 
 The local browser frame opens `http://127.0.0.1:8787/frame`.
