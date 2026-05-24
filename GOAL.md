@@ -348,12 +348,12 @@ Phase 3.5 is complete. Phase 4 appliance installer work was reverted and hardwar
   - [x] Ensure `immich-frame status` reports setup/config/source/cache/last-error details without secrets.
   - [x] Ensure `reset` behavior is documented and privacy-preserving.
   - [x] Ensure `config validate` covers the settings needed by the browser MVP.
-- [ ] Re-verify browser MVP manually:
-  - [ ] Local mock source path still works.
-  - [ ] Setup portal flow still works with mocked/unit-tested Immich behavior.
-  - [ ] `/frame` slideshow, overlays, controls, and SSE state remain stable.
-  - [ ] Embedded UI serving still works after `pnpm build:embedded-ui`.
-- [ ] Update docs:
+- [x] Re-verify browser MVP manually:
+  - [x] Local mock source path still works.
+  - [x] Setup portal flow still works with mocked/unit-tested Immich behavior.
+  - [x] `/frame` slideshow, overlays, controls, and SSE state remain stable.
+  - [x] Embedded UI serving still works after `pnpm build:embedded-ui`.
+- [x] Update docs:
   - [x] Update `README.md`.
   - [x] Update `AGENT_BRIEF.md`.
   - [x] Update `docs/implementation-plan.md`.
@@ -391,6 +391,15 @@ Phase 3.5 is complete. Phase 4 appliance installer work was reverted and hardwar
 - `immich-frame reset` keeps clearing secrets and state by default, clears cached media unless `--keep-cache` is set, and can remove a config file when `--config` is explicitly provided.
 - `config validate` now checks browser MVP source requirements, Immich URL requirements for album/random modes, cache values, sync refresh interval, and overlay slots/visibility.
 - Focused unit tests cover secret-safe status output, reset removal behavior, and the expanded config validation surface.
+
+### Phase 5 Browser MVP Verification Notes - 2026-05-24
+
+- `pnpm build:embedded-ui` passed and synced the updated frame UI assets into `internal/api/static/frame`.
+- Embedded UI smoke verification ran the daemon with missing external dist paths: `go run ./cmd/immich-frame serve -config config.dev.toml -dev-source dev/photos -data-dir .immich-frame-embedded-verify -frame-dist missing-frame-dist -setup-dist missing-setup-dist`.
+- Browser verification passed in the Codex in-app Browser for `http://127.0.0.1:8787/frame`: title `Immich Frame`, visible local mock photo, clock/photo-info overlays, no status overlay while ready, no console warnings/errors, and embedded frame asset URLs `/assets/index-Djr5t2pk.js` and `/assets/index-2C9x_Gpy.css`.
+- HTTP smoke checks returned `200` for `/api/state`, the embedded frame JS asset, and the embedded frame CSS asset.
+- Browser verification passed for `http://127.0.0.1:8787/setup`: title `Immich Frame Setup`, setup code claim screen rendered from embedded setup assets, and no console warnings/errors. Setup/auth/settings/Immich validation behavior remains covered by mock HTTP unit tests; no real-Immich integration tests were added.
+- CLI smoke checks passed: `immich-frame version`, `config validate -config config.dev.toml`, and `status -config config.dev.toml -data-dir .immich-frame`.
 
 ## Stop Conditions
 
