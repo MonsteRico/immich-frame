@@ -290,9 +290,11 @@ Implemented rotation behavior:
 - `prefetch_items` defines near-upcoming playback entries that are protected from eviction.
 - The daemon periodically refreshes the Immich candidate pool for album and random-library sources.
 - The daemon tops off display-targeted renditions toward `target_items`, preferring never-cached candidates first.
-- Stable album sources larger than `target_items` also churn one unprotected cache slot per refresh once the cache is full. Rotation uses manifest history to prefer candidates that have never been cached, then candidates least recently shown/cached, so the initial album seed does not remain fixed forever.
+- Album and random-library sources use playback-driven rolling cache refresh. After `refresh_after_shown_items` photos have been shown, the app requests cache maintenance immediately and can swap up to `refresh_batch_items` shown, unprotected cached entries for new candidates.
+- Rotation uses manifest history to prefer candidates that have never been cached/shown, then candidates least recently shown/cached, so the initial cache seed does not remain fixed forever.
 - Eviction prefers cached assets that have left the selected source, then recently shown valid assets, while preserving current and near-upcoming playback entries.
 - Existing cached media remains playable during Immich/network outages while the daemon retries refresh with bounded backoff.
+- Completing first setup with an Immich source requests cache maintenance immediately so an empty frame can fetch initial images and start playback without waiting for a daemon restart or the next sync timer.
 
 ## Playback Model
 

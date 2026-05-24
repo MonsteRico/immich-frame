@@ -411,6 +411,13 @@ Phase 5.5 acceptance notes:
 - Cache maintenance publishes a recovered `ready` SSE state after a successful outage retry, even when cache contents did not change.
 - Phase 6 renderer/hardware work remains future-only; installer/systemd/kiosk work is still paused.
 
+Post-Phase 5.5 requested and approved cache strategy change:
+
+- The frame should progress through the broader selected album/library over time instead of looping the same warm cache and adding only one new image per timer refresh.
+- Album/random-library sources now use playback-driven rolling refresh: after `cache.refresh_after_shown_items` photos are shown, cache maintenance is requested immediately.
+- A rolling refresh can replace up to `cache.refresh_batch_items` shown, unprotected cache entries with new candidates while preserving current and near-upcoming playback entries.
+- Completing first setup with an Immich source requests immediate cache maintenance so an empty cache can begin fetching images and start playback without restarting the server.
+
 - [x] Baseline verification before changes:
   - [x] Confirm branch is `master`.
   - [x] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.

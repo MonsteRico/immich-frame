@@ -229,16 +229,17 @@ Unit tests cover the cache rotation rules that are hard to verify deterministica
 
 - top-off stops at `cache.target_items`.
 - uncached candidates are preferred when filling the cache.
-- a full stable-album cache can rotate in a new candidate without evicting current or near-upcoming playback entries.
-- rotation history prevents immediately re-caching the entry that was just evicted when never-cached album candidates remain.
+- playback-driven rolling refresh can rotate a batch of shown cache entries without evicting current or near-upcoming playback entries.
+- rotation history prevents immediately re-caching entries that were just evicted when never-cached album/random-library candidates remain.
 - stale source entries are evicted before valid fallback photos.
 - current and near-upcoming playback entries are protected by `cache.prefetch_items`.
 - queue refresh preserves the current photo when cache contents change.
 - recovered ready status is published after outage retry succeeds, even when the cache did not change.
+- setup completion requests immediate cache maintenance so an empty Immich-backed frame can fetch initial images without restarting the server.
 
 For manual browser checks, use local mock source to confirm `/frame` stays calm and playable while the daemon runs. Immich outage behavior should be tested with mocked/unit-tested adapter failures for MVP development, not live Immich CI tests.
 
-To make cache rotation visible during local Immich checks, set `[cache] preset = "extra-small"` or set `target_items = 10` in a temporary config. Keep this as a development/testing setting; production defaults remain `balanced`.
+To make cache rotation visible during local Immich checks, set `[cache] preset = "extra-small"` or use a temporary custom cache such as `target_items = 50`, `prefetch_items = 10`, `refresh_after_shown_items = 30`, and `refresh_batch_items = 30`. Keep tiny caches as development/testing settings; production defaults remain `balanced`.
 
 ## Useful Local Commands
 

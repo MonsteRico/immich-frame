@@ -41,6 +41,7 @@ type Server struct {
 	ImmichHTTPClient *http.Client
 	FrameDist        string
 	SetupDist        string
+	OnSetupComplete  func()
 }
 
 type FrameState struct {
@@ -326,6 +327,9 @@ func (s *Server) setupComplete(w http.ResponseWriter, r *http.Request) {
 	response := s.setupPublicState(false)
 	s.mu.Unlock()
 	s.PublishState()
+	if s.OnSetupComplete != nil {
+		s.OnSetupComplete()
+	}
 	writeJSON(w, response)
 }
 

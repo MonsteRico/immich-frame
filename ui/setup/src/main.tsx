@@ -350,10 +350,10 @@ function albumCount(album: ImmichAlbum) {
 }
 
 function presetCache(cache: AppConfig["cache"], preset: string): AppConfig["cache"] {
-  if (preset === "extra-small") return { ...cache, preset: "extra-small", maxSizeMb: 128, targetItems: 10, prefetchItems: 3 };
-  if (preset === "light") return { ...cache, preset: "light", maxSizeMb: 512, targetItems: 150, prefetchItems: 10 };
-  if (preset === "large") return { ...cache, preset: "large", maxSizeMb: 4096, targetItems: 1000, prefetchItems: 40 };
-  return { ...cache, preset: "balanced", maxSizeMb: 2048, targetItems: 500, prefetchItems: 20 };
+  if (preset === "extra-small") return { ...cache, preset: "extra-small", maxSizeMb: 128, targetItems: 10, prefetchItems: 3, refreshBatchItems: 5, refreshAfterShownItems: 5 };
+  if (preset === "light") return { ...cache, preset: "light", maxSizeMb: 512, targetItems: 150, prefetchItems: 10, refreshBatchItems: 75, refreshAfterShownItems: 75 };
+  if (preset === "large") return { ...cache, preset: "large", maxSizeMb: 4096, targetItems: 1000, prefetchItems: 40, refreshBatchItems: 500, refreshAfterShownItems: 500 };
+  return { ...cache, preset: "balanced", maxSizeMb: 2048, targetItems: 500, prefetchItems: 20, refreshBatchItems: 250, refreshAfterShownItems: 250 };
 }
 
 function validationKey(url: string, apiKey: string, hasSavedKey: boolean) {

@@ -83,6 +83,8 @@ Phase 5.5 completed:
 - documentation/status alignment so Phase 6 renderer/hardware re-evaluation remains future work only.
 - final verification with `go test ./...`, `pnpm typecheck`, `pnpm build`, and `pnpm build:embedded-ui`.
 
+Post-Phase 5.5 product feedback requested and approved a stronger cache rotation strategy: the frame should progress through the broader album/library over time rather than looping the same warm cache. The app now uses playback-driven rolling cache refresh for album/random-library sources, with `cache.refresh_after_shown_items` triggering an immediate maintenance request and `cache.refresh_batch_items` controlling how many shown, unprotected entries can be swapped for new candidates. Completing setup with an Immich source also requests immediate cache maintenance so an empty first-run frame can fetch images without a daemon restart.
+
 The next planned work is Phase 6 renderer/hardware re-evaluation. Keep it future-only until explicitly started, and do not restart installer/systemd/kiosk work without a new renderer direction.
 
 ## Git Commit Guidance

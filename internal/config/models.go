@@ -119,12 +119,14 @@ type SlideshowConfig struct {
 }
 
 type CacheConfig struct {
-	Preset        string `json:"preset"`
-	MaxSizeMB     int    `json:"maxSizeMb"`
-	MinFreeMB     int    `json:"minFreeMb"`
-	TargetItems   int    `json:"targetItems"`
-	PrefetchItems int    `json:"prefetchItems"`
-	Rendition     string `json:"rendition"`
+	Preset                 string `json:"preset"`
+	MaxSizeMB              int    `json:"maxSizeMb"`
+	MinFreeMB              int    `json:"minFreeMb"`
+	TargetItems            int    `json:"targetItems"`
+	PrefetchItems          int    `json:"prefetchItems"`
+	RefreshBatchItems      int    `json:"refreshBatchItems"`
+	RefreshAfterShownItems int    `json:"refreshAfterShownItems"`
+	Rendition              string `json:"rendition"`
 }
 
 type SyncConfig struct {
@@ -221,7 +223,8 @@ func DefaultConfig() Config {
 		},
 		Slideshow: SlideshowConfig{IntervalSeconds: 30, RecentHistoryLimit: 100},
 		Cache: CacheConfig{
-			Preset: "balanced", MaxSizeMB: 2048, MinFreeMB: 1024, TargetItems: 500, PrefetchItems: 20, Rendition: "auto",
+			Preset: "balanced", MaxSizeMB: 2048, MinFreeMB: 1024, TargetItems: 500, PrefetchItems: 20,
+			RefreshBatchItems: 250, RefreshAfterShownItems: 250, Rendition: "auto",
 		},
 		Sync: SyncConfig{RefreshIntervalMinutes: 360},
 		Overlays: OverlayConfig{
@@ -284,6 +287,12 @@ func (c Config) Validate() error {
 	}
 	if c.Cache.PrefetchItems > c.Cache.TargetItems {
 		issues = append(issues, "cache.prefetch_items must be less than or equal to cache.target_items")
+	}
+	if c.Cache.RefreshBatchItems < 0 {
+		issues = append(issues, "cache.refresh_batch_items must not be negative")
+	}
+	if c.Cache.RefreshAfterShownItems < 0 {
+		issues = append(issues, "cache.refresh_after_shown_items must not be negative")
 	}
 	switch c.Cache.Preset {
 	case "extra-small", "light", "balanced", "large", "custom":
@@ -417,6 +426,8 @@ max_size_mb = %d
 min_free_mb = %d
 target_items = %d
 prefetch_items = %d
+refresh_batch_items = %d
+refresh_after_shown_items = %d
 rendition = %q
 
 [sync]
@@ -447,7 +458,8 @@ visibility = %q
 		c.Filters.PhotosOnly, c.Filters.ExcludeArchived, c.Filters.ExcludeHidden, c.Filters.ExcludeTrashed, c.Filters.ExcludeVideos,
 		c.Display.Orientation, c.Display.Width, c.Display.Height, c.Display.Fit, c.Display.Background, c.Display.Transition, c.Display.TransitionMS,
 		c.Slideshow.IntervalSeconds, c.Slideshow.RecentHistoryLimit,
-		c.Cache.Preset, c.Cache.MaxSizeMB, c.Cache.MinFreeMB, c.Cache.TargetItems, c.Cache.PrefetchItems, c.Cache.Rendition,
+		c.Cache.Preset, c.Cache.MaxSizeMB, c.Cache.MinFreeMB, c.Cache.TargetItems, c.Cache.PrefetchItems,
+		c.Cache.RefreshBatchItems, c.Cache.RefreshAfterShownItems, c.Cache.Rendition,
 		c.Sync.RefreshIntervalMinutes,
 		c.Overlays.Clock.Enabled, c.Overlays.Clock.Slot, c.Overlays.Clock.Visibility,
 		c.Overlays.PhotoInfo.Enabled, c.Overlays.PhotoInfo.Slot, c.Overlays.PhotoInfo.Visibility,
@@ -530,6 +542,10 @@ func assign(cfg *Config, table, key, value string) {
 		cfg.Cache.TargetItems = intValue
 	case "cache.prefetch_items":
 		cfg.Cache.PrefetchItems = intValue
+	case "cache.refresh_batch_items":
+		cfg.Cache.RefreshBatchItems = intValue
+	case "cache.refresh_after_shown_items":
+		cfg.Cache.RefreshAfterShownItems = intValue
 	case "cache.rendition":
 		cfg.Cache.Rendition = stringValue
 	case "sync.refresh_interval_minutes":
@@ -561,18 +577,26 @@ func applyCachePreset(cache *CacheConfig, preset string) {
 		cache.MaxSizeMB = 128
 		cache.TargetItems = 10
 		cache.PrefetchItems = 3
+		cache.RefreshBatchItems = 5
+		cache.RefreshAfterShownItems = 5
 	case "light":
 		cache.MaxSizeMB = 512
 		cache.TargetItems = 150
 		cache.PrefetchItems = 10
+		cache.RefreshBatchItems = 75
+		cache.RefreshAfterShownItems = 75
 	case "balanced":
 		cache.MaxSizeMB = 2048
 		cache.TargetItems = 500
 		cache.PrefetchItems = 20
+		cache.RefreshBatchItems = 250
+		cache.RefreshAfterShownItems = 250
 	case "large":
 		cache.MaxSizeMB = 4096
 		cache.TargetItems = 1000
 		cache.PrefetchItems = 40
+		cache.RefreshBatchItems = 500
+		cache.RefreshAfterShownItems = 500
 	}
 }
 

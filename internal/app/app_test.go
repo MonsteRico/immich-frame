@@ -123,3 +123,54 @@ func TestSuccessfulRefreshPublishesRecoveredReadyStatusWithoutCacheChanges(t *te
 		t.Fatalf("saved recovery state = %+v, want cleared LastError and LastSync", saved)
 	}
 }
+
+func TestRecordShownRequestsRollingCacheRefreshAtThreshold(t *testing.T) {
+	root := t.TempDir()
+	store, err := cache.Open(filepath.Join(root, "cache"))
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	cfg := config.DefaultConfig()
+	cfg.Source.Mode = "album"
+	cfg.Cache.TargetItems = 50
+	cfg.Cache.PrefetchItems = 10
+	cfg.Cache.RefreshAfterShownItems = 3
+	server := &api.Server{
+		Config: cfg,
+		State:  config.State{SetupComplete: true},
+		Paths:  config.Paths{StateFile: filepath.Join(root, "state.json")},
+		Cache:  store,
+		Queue:  playback.NewQueue([]cache.Entry{entry("cached-one")}),
+		Hub:    api.NewHub(),
+	}
+	application := &App{Cache: store, Queue: server.Queue, API: server, refreshNow: make(chan struct{}, 1)}
+
+	application.recordShownAndMaybeRequestRefresh()
+	application.recordShownAndMaybeRequestRefresh()
+	select {
+	case <-application.refreshNow:
+		t.Fatal("refresh requested before threshold")
+	default:
+	}
+	application.recordShownAndMaybeRequestRefresh()
+	select {
+	case <-application.refreshNow:
+	case <-time.After(time.Second):
+		t.Fatal("refresh was not requested at threshold")
+	}
+}
+
+func TestDerivedCacheRefreshWindowUsesHalfTargetWithPrefetchFloor(t *testing.T) {
+	cfg := config.CacheConfig{TargetItems: 50, PrefetchItems: 10}
+	if got := cacheRefreshAfterShownItems(cfg); got != 25 {
+		t.Fatalf("cacheRefreshAfterShownItems() = %d, want 25", got)
+	}
+	cfg = config.CacheConfig{TargetItems: 10, PrefetchItems: 8}
+	if got := cacheRefreshBatchItems(cfg); got != 8 {
+		t.Fatalf("cacheRefreshBatchItems() = %d, want 8", got)
+	}
+}
+
+func entry(id string) cache.Entry {
+	return cache.Entry{AssetID: id, MediaType: "image/jpeg", Title: id, SourceName: "Immich"}
+}

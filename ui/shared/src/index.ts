@@ -88,6 +88,8 @@ export interface AppConfig {
     minFreeMb: number;
     targetItems: number;
     prefetchItems: number;
+    refreshBatchItems: number;
+    refreshAfterShownItems: number;
     rendition: string;
   };
   sync: { refreshIntervalMinutes: number };

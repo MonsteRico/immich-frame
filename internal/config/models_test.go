@@ -96,6 +96,9 @@ prefetch_items = 2
 	if cfg.Cache.TargetItems != 10 || cfg.Cache.MaxSizeMB != 128 {
 		t.Fatalf("extra-small preset values not applied: %+v", cfg.Cache)
 	}
+	if cfg.Cache.RefreshBatchItems != 5 || cfg.Cache.RefreshAfterShownItems != 5 {
+		t.Fatalf("extra-small rolling refresh values not applied: %+v", cfg.Cache)
+	}
 	if cfg.Cache.PrefetchItems != 2 {
 		t.Fatalf("explicit prefetch override = %d, want 2", cfg.Cache.PrefetchItems)
 	}
@@ -111,6 +114,8 @@ func TestValidateReportsInvalidBaseSettings(t *testing.T) {
 	cfg.Cache.TargetItems = 0
 	cfg.Cache.PrefetchItems = 10
 	cfg.Cache.Preset = "tiny"
+	cfg.Cache.RefreshBatchItems = -1
+	cfg.Cache.RefreshAfterShownItems = -1
 	cfg.Cache.Rendition = "original"
 	cfg.Sync.RefreshIntervalMinutes = 0
 	cfg.Overlays.Status.Slot = "somewhere"
@@ -129,6 +134,8 @@ func TestValidateReportsInvalidBaseSettings(t *testing.T) {
 		"cache.target_items",
 		"cache.prefetch_items",
 		"cache.preset",
+		"cache.refresh_batch_items",
+		"cache.refresh_after_shown_items",
 		"cache.rendition",
 		"sync.refresh_interval_minutes",
 		"overlays.status.slot",

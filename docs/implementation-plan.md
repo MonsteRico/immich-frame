@@ -168,6 +168,19 @@ Checklist:
 - [x] Align docs to show Phase 5.5 as the current fix pass until final verification is complete.
 - [x] Run final `go test ./...`, `pnpm typecheck`, `pnpm build`, and `pnpm build:embedded-ui` because setup UI assets changed.
 
+## Post-Phase 5.5: Rolling Cache Strategy Adjustment
+
+Goal: apply the approved product change that the frame should steadily progress through the wider album/library instead of gently adding one new cached image per timer refresh.
+
+Checklist:
+
+- [x] Add playback-driven rolling cache refresh after a configurable number of shown images.
+- [x] Add configurable rolling refresh batch size.
+- [x] Swap shown, non-protected cached entries for new album/random-library candidates.
+- [x] Preserve current and near-upcoming playback entries.
+- [x] Request immediate cache maintenance after first setup completes with an Immich source.
+- [x] Document that this strategy change was requested and approved after Phase 5.5.
+
 ## Phase 6: Renderer And Hardware Re-evaluation
 
 Goal: replace or supplement the browser renderer only after the browser MVP behavior is working.

@@ -206,6 +206,9 @@ func TestRotateFetchedUsesHistoryBeforeRecachingEvictedEntries(t *testing.T) {
 	if _, _, err := store.RotateFetched(context.Background(), candidates("one", "two", "three", "four", "five"), opts, fetch); err != nil {
 		t.Fatalf("RotateFetched() first error = %v", err)
 	}
+	if err := store.MarkShown("four"); err != nil {
+		t.Fatalf("MarkShown() error = %v", err)
+	}
 	if _, _, err := store.RotateFetched(context.Background(), candidates("one", "two", "three", "four", "five"), opts, fetch); err != nil {
 		t.Fatalf("RotateFetched() second error = %v", err)
 	}
@@ -214,6 +217,55 @@ func TestRotateFetchedUsesHistoryBeforeRecachingEvictedEntries(t *testing.T) {
 	}
 	if _, ok := store.Get("five"); !ok {
 		t.Fatal("second rotation did not bring in the remaining never-cached candidate")
+	}
+}
+
+func TestRotateFetchedCanSwapABatchOfShownEntries(t *testing.T) {
+	root := t.TempDir()
+	store, err := Open(filepath.Join(root, "cache"))
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	now := time.Now()
+	store.manifest.Entries = map[string]Entry{
+		"one":   {AssetID: "one", CachePath: filepath.Join(root, "one.jpg"), CachedAt: now.Add(-5 * time.Hour), LastShown: now.Add(-5 * time.Hour)},
+		"two":   {AssetID: "two", CachePath: filepath.Join(root, "two.jpg"), CachedAt: now.Add(-4 * time.Hour), LastShown: now.Add(-4 * time.Hour)},
+		"three": {AssetID: "three", CachePath: filepath.Join(root, "three.jpg"), CachedAt: now.Add(-3 * time.Hour), LastShown: now.Add(-3 * time.Hour)},
+		"four":  {AssetID: "four", CachePath: filepath.Join(root, "four.jpg"), CachedAt: now.Add(-2 * time.Hour)},
+		"five":  {AssetID: "five", CachePath: filepath.Join(root, "five.jpg"), CachedAt: now.Add(-time.Hour), LastShown: now},
+	}
+	for _, entry := range store.manifest.Entries {
+		store.recordHistoryLocked(entry)
+		writeFile(t, entry.CachePath, []byte(entry.AssetID))
+	}
+
+	var fetched []string
+	entries, changed, err := store.RotateFetched(context.Background(), candidates("one", "two", "three", "four", "five", "six", "seven", "eight"), RotateOptions{
+		TargetItems:  5,
+		ProtectedIDs: map[string]struct{}{"one": {}},
+		BatchItems:   3,
+	}, func(ctx context.Context, candidate source.Candidate) (io.ReadCloser, string, error) {
+		fetched = append(fetched, candidate.ID)
+		return io.NopCloser(strings.NewReader(candidate.ID)), "image/jpeg", nil
+	})
+	if err != nil {
+		t.Fatalf("RotateFetched() error = %v", err)
+	}
+	if !changed || len(entries) != 5 {
+		t.Fatalf("RotateFetched() changed=%t len=%d, want changed and 5 entries", changed, len(entries))
+	}
+	if strings.Join(fetched, ",") != "six,seven,eight" {
+		t.Fatalf("fetched = %v, want six,seven,eight", fetched)
+	}
+	for _, id := range []string{"one", "four", "six", "seven", "eight"} {
+		if _, ok := store.Get(id); !ok {
+			t.Fatalf("expected %q to remain cached", id)
+		}
+	}
+	for _, id := range []string{"two", "three", "five"} {
+		if _, ok := store.Get(id); ok {
+			t.Fatalf("expected shown entry %q to rotate out", id)
+		}
 	}
 }
 

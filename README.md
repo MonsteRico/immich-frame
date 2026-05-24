@@ -46,7 +46,7 @@ It is not primarily a hosted web app, Docker dashboard, or cloud service.
 - Setup completion requires a successful Immich connection test for the saved URL/API key.
 - Album and random-library modes.
 - Display-targeted local image cache.
-- Cache rotation that avoids looping one static cached seed forever.
+- Playback-driven rolling cache refresh that avoids looping one static cached seed forever.
 - Clock, photo info, and operational status overlays.
 - Hidden controls.
 - Reboot recovery.

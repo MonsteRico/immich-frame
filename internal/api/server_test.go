@@ -185,6 +185,10 @@ func TestSetupCompleteRequiresValidationForSavedImmichCredentials(t *testing.T) 
 	defer immichServer.Close()
 
 	server := newTestServer(t)
+	setupRefreshRequested := false
+	server.OnSetupComplete = func() {
+		setupRefreshRequested = true
+	}
 	cookie := setupAdminCookie(t, server)
 	cfg := config.DefaultConfig()
 	cfg.Immich.URL = immichServer.URL
@@ -215,6 +219,9 @@ func TestSetupCompleteRequiresValidationForSavedImmichCredentials(t *testing.T) 
 	server.Handler().ServeHTTP(rec, jsonRequest(http.MethodPost, "/api/setup/complete", map[string]string{}, cookie))
 	if rec.Code != http.StatusOK {
 		t.Fatalf("complete after validation = %d %s", rec.Code, rec.Body.String())
+	}
+	if !setupRefreshRequested {
+		t.Fatal("setup completion did not request immediate cache refresh")
 	}
 }
 

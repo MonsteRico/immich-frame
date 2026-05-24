@@ -78,6 +78,8 @@ max_size_mb = 2048
 min_free_mb = 1024
 target_items = 500
 prefetch_items = 20
+refresh_batch_items = 250
+refresh_after_shown_items = 250
 rendition = "auto" # auto | webp | jpeg
 
 [sync]
@@ -226,6 +228,12 @@ When a TOML file sets `cache.preset`, the daemon applies that preset as the star
 
 `cache.prefetch_items` protects the current photo and near-upcoming playback entries from eviction. This keeps the frame from deleting the next few items it is likely to show.
 
+`cache.refresh_after_shown_items` controls playback-driven cache churn. After this many album/random-library photos have been shown, the daemon requests an immediate cache maintenance pass instead of waiting for the normal sync timer.
+
+`cache.refresh_batch_items` controls how many shown, unprotected cached entries can be replaced during that playback-driven pass. The replacement candidates prefer photos that have never been cached/shown, then least-recently-shown history. If either value is `0`, the daemon derives a rolling window from roughly half of `target_items`, with `prefetch_items` as a lower bound.
+
+For example, a custom cache with `target_items = 50`, `prefetch_items = 10`, `refresh_after_shown_items = 30`, and `refresh_batch_items = 30` keeps about 50 photos warm, protects the current/near-upcoming queue, and swaps up to 30 already-shown photos for new candidates after about 30 slides.
+
 `sync.refresh_interval_minutes` controls the normal Immich candidate refresh interval. When Immich is unavailable, the daemon keeps playing from cache when possible and retries refresh with bounded backoff. The last user-safe refresh error is stored in `state.json` and exposed through status surfaces without secrets.
 
-Eviction favors assets that are no longer in the selected Immich source before removing valid fallback photos. If more valid photos still need to be removed, recently shown entries are less valuable than never-shown or least-recently-shown entries.
+Eviction favors assets that are no longer in the selected Immich source before removing valid fallback photos. Rolling cache refresh evicts only shown, non-protected entries, so never-shown cached photos remain available for playback.

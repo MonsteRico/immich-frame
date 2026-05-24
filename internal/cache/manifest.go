@@ -155,6 +155,7 @@ func (s *Store) TopOffFetched(ctx context.Context, candidates []source.Candidate
 type RotateOptions struct {
 	TargetItems  int
 	ProtectedIDs map[string]struct{}
+	BatchItems   int
 }
 
 func (s *Store) RotateFetched(ctx context.Context, candidates []source.Candidate, opts RotateOptions, fetch FetchFunc) ([]Entry, bool, error) {
@@ -168,17 +169,21 @@ func (s *Store) RotateFetched(ctx context.Context, candidates []source.Candidate
 		return s.listLocked(), false, nil
 	}
 
-	var replacement source.Candidate
-	foundReplacement := false
+	batchItems := opts.BatchItems
+	if batchItems <= 0 {
+		batchItems = 1
+	}
+	replacements := make([]source.Candidate, 0, batchItems)
 	for _, candidate := range s.prioritizedCandidatesLocked(candidates) {
 		if _, cached := s.manifest.Entries[candidate.ID]; cached {
 			continue
 		}
-		replacement = candidate
-		foundReplacement = true
-		break
+		replacements = append(replacements, candidate)
+		if len(replacements) >= batchItems {
+			break
+		}
 	}
-	if !foundReplacement {
+	if len(replacements) == 0 {
 		return s.listLocked(), false, nil
 	}
 
@@ -186,28 +191,40 @@ func (s *Store) RotateFetched(ctx context.Context, candidates []source.Candidate
 	for _, candidate := range candidates {
 		sourceIDs[candidate.ID] = struct{}{}
 	}
-	var victim Entry
-	foundVictim := false
+	victims := make([]Entry, 0, len(replacements))
 	for _, entry := range s.evictionCandidatesLocked(EvictOptions{SourceIDs: sourceIDs, ProtectedIDs: opts.ProtectedIDs}) {
 		if _, protected := opts.ProtectedIDs[entry.AssetID]; protected {
 			continue
 		}
-		victim = entry
-		foundVictim = true
-		break
+		if entry.LastShown.IsZero() {
+			continue
+		}
+		victims = append(victims, entry)
+		if len(victims) >= len(replacements) {
+			break
+		}
 	}
-	if !foundVictim {
+	if len(victims) == 0 {
 		return s.listLocked(), false, nil
 	}
 
-	entry, err := s.cacheFetched(ctx, replacement, fetch)
-	if err != nil {
-		return s.listLocked(), false, err
+	if len(replacements) > len(victims) {
+		replacements = replacements[:len(victims)]
 	}
-	delete(s.manifest.Entries, victim.AssetID)
-	_ = os.Remove(victim.CachePath)
-	s.manifest.Entries[entry.AssetID] = entry
-	s.recordHistoryLocked(entry)
+	for idx, replacement := range replacements {
+		entry, err := s.cacheFetched(ctx, replacement, fetch)
+		if err != nil {
+			if idx > 0 {
+				_ = s.saveLocked()
+			}
+			return s.listLocked(), idx > 0, err
+		}
+		victim := victims[idx]
+		delete(s.manifest.Entries, victim.AssetID)
+		_ = os.Remove(victim.CachePath)
+		s.manifest.Entries[entry.AssetID] = entry
+		s.recordHistoryLocked(entry)
+	}
 	if err := s.saveLocked(); err != nil {
 		return nil, true, err
 	}

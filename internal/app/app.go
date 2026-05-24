@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/MonsteRico/immich-frame/internal/api"
@@ -36,6 +37,10 @@ type App struct {
 	Cache   *cache.Store
 	Queue   *playback.Queue
 	API     *api.Server
+
+	refreshNow        chan struct{}
+	refreshMu         sync.Mutex
+	shownSinceRefresh int
 }
 
 func New(opts Options) (*App, error) {
@@ -91,7 +96,11 @@ func New(opts Options) (*App, error) {
 		FrameDist: opts.FrameDist,
 		SetupDist: opts.SetupDist,
 	}
-	application := &App{Config: cfg, Paths: paths, Secrets: secrets, State: state, Cache: store, Queue: queue, API: server}
+	application := &App{
+		Config: cfg, Paths: paths, Secrets: secrets, State: state, Cache: store, Queue: queue, API: server,
+		refreshNow: make(chan struct{}, 1),
+	}
+	server.OnSetupComplete = application.RequestCacheRefresh
 	if err != nil {
 		application.setDegraded(err)
 	}
@@ -133,22 +142,47 @@ func (a *App) runCacheMaintenance(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-timer.C:
-			changed, err := a.refreshCache(ctx)
-			if err != nil {
-				a.setDegraded(err)
-				timer.Reset(backoff)
-				backoff = nextRefreshBackoff(backoff)
+			var ok bool
+			backoff, ok = a.runCacheRefreshAttempt(ctx, timer, backoff, 0)
+			if !ok {
 				continue
 			}
-			backoff = time.Minute
-			a.finishSuccessfulRefresh(changed)
 			cfg, _, _ := a.API.RuntimeInputs()
 			interval := time.Duration(cfg.Sync.RefreshIntervalMinutes) * time.Minute
 			if interval <= 0 {
 				interval = 6 * time.Hour
 			}
 			timer.Reset(interval)
+		case <-a.refreshNow:
+			cfg, _, _ := a.API.RuntimeInputs()
+			batchItems := cacheRefreshBatchItems(cfg.Cache)
+			var ok bool
+			backoff, ok = a.runCacheRefreshAttempt(ctx, timer, backoff, batchItems)
+			if ok {
+				a.resetShownSinceRefresh()
+			}
 		}
+	}
+}
+
+func (a *App) runCacheRefreshAttempt(ctx context.Context, timer *time.Timer, backoff time.Duration, rotationBatchItems int) (time.Duration, bool) {
+	changed, err := a.refreshCache(ctx, rotationBatchItems)
+	if err != nil {
+		a.setDegraded(err)
+		timer.Reset(backoff)
+		return nextRefreshBackoff(backoff), false
+	}
+	a.finishSuccessfulRefresh(changed)
+	return time.Minute, true
+}
+
+func (a *App) RequestCacheRefresh() {
+	if a.refreshNow == nil {
+		return
+	}
+	select {
+	case a.refreshNow <- struct{}{}:
+	default:
 	}
 }
 
@@ -193,13 +227,14 @@ func (a *App) runSlideshow(ctx context.Context) {
 			assetID, err := a.Queue.Next()
 			if err == nil {
 				_ = a.Cache.MarkShown(assetID)
+				a.recordShownAndMaybeRequestRefresh()
 				a.API.PublishState()
 			}
 		}
 	}
 }
 
-func (a *App) refreshCache(ctx context.Context) (bool, error) {
+func (a *App) refreshCache(ctx context.Context, rotationBatchItems int) (bool, error) {
 	cfg, secrets, state := a.API.RuntimeInputs()
 	if cfg.Source.Mode != "album" && cfg.Source.Mode != "random" {
 		before := len(a.Cache.List())
@@ -217,7 +252,7 @@ func (a *App) refreshCache(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	candidates, err := immichCandidates(ctx, cfg, client)
+	candidates, err := immichCandidates(ctx, cfg, client, rotationBatchItems)
 	if err != nil {
 		return false, err
 	}
@@ -225,6 +260,11 @@ func (a *App) refreshCache(ctx context.Context) (bool, error) {
 	sourceIDs := map[string]struct{}{}
 	for _, candidate := range sourceCandidates {
 		sourceIDs[candidate.ID] = struct{}{}
+	}
+	if cfg.Source.Mode == "random" {
+		for _, entry := range a.Cache.List() {
+			sourceIDs[entry.AssetID] = struct{}{}
+		}
 	}
 	protectedIDs := a.Queue.ProtectedIDs(cfg.Cache.PrefetchItems)
 	_, pruned, err := a.Cache.EvictSourceRemoved(sourceIDs, protectedIDs)
@@ -244,10 +284,11 @@ func (a *App) refreshCache(ctx context.Context) (bool, error) {
 		return len(pruned) > 0 || toppedOff, err
 	}
 	rotated := false
-	if cfg.Source.Mode == "album" {
+	if (cfg.Source.Mode == "album" || cfg.Source.Mode == "random") && rotationBatchItems > 0 {
 		entries, rotated, err = a.Cache.RotateFetched(ctx, sourceCandidates, cache.RotateOptions{
 			TargetItems:  cfg.Cache.TargetItems,
 			ProtectedIDs: protectedIDs,
+			BatchItems:   rotationBatchItems,
 		}, func(ctx context.Context, candidate source.Candidate) (io.ReadCloser, string, error) {
 			rendition, err := client.FetchRendition(ctx, candidate.ID, immich.Target{
 				Width: cfg.Display.Width, Height: cfg.Display.Height, Format: cfg.Cache.Rendition,
@@ -273,12 +314,64 @@ func (a *App) refreshCache(ctx context.Context) (bool, error) {
 	return len(pruned) > 0 || toppedOff || rotated || len(evicted) > 0, nil
 }
 
-func immichCandidates(ctx context.Context, cfg config.Config, client *immich.Client) ([]immich.AssetCandidate, error) {
+func (a *App) recordShownAndMaybeRequestRefresh() {
+	cfg, _, state := a.API.RuntimeInputs()
+	if !state.SetupComplete || (cfg.Source.Mode != "album" && cfg.Source.Mode != "random") {
+		return
+	}
+	threshold := cacheRefreshAfterShownItems(cfg.Cache)
+	if threshold <= 0 {
+		return
+	}
+	a.refreshMu.Lock()
+	a.shownSinceRefresh++
+	shouldRefresh := a.shownSinceRefresh >= threshold
+	a.refreshMu.Unlock()
+	if shouldRefresh {
+		a.RequestCacheRefresh()
+	}
+}
+
+func (a *App) resetShownSinceRefresh() {
+	a.refreshMu.Lock()
+	a.shownSinceRefresh = 0
+	a.refreshMu.Unlock()
+}
+
+func cacheRefreshBatchItems(cfg config.CacheConfig) int {
+	if cfg.RefreshBatchItems > 0 {
+		return cfg.RefreshBatchItems
+	}
+	return derivedCacheRefreshWindow(cfg)
+}
+
+func cacheRefreshAfterShownItems(cfg config.CacheConfig) int {
+	if cfg.RefreshAfterShownItems > 0 {
+		return cfg.RefreshAfterShownItems
+	}
+	return derivedCacheRefreshWindow(cfg)
+}
+
+func derivedCacheRefreshWindow(cfg config.CacheConfig) int {
+	target := cfg.TargetItems / 2
+	if target <= 0 {
+		target = 1
+	}
+	if cfg.PrefetchItems > 0 && target < cfg.PrefetchItems {
+		target = cfg.PrefetchItems
+	}
+	return target
+}
+
+func immichCandidates(ctx context.Context, cfg config.Config, client *immich.Client, extraCandidates int) ([]immich.AssetCandidate, error) {
 	switch cfg.Source.Mode {
 	case "album":
 		return client.ListAlbumCandidates(ctx, cfg.Source.Album.ID)
 	case "random":
 		limit := cfg.Cache.TargetItems
+		if extraCandidates > 0 {
+			limit += extraCandidates
+		}
 		if limit <= 0 {
 			limit = cfg.Cache.PrefetchItems
 		}
