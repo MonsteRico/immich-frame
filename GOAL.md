@@ -389,6 +389,7 @@ Phase 3.5 is accepted as complete. The local scaffold, mock frame loop, Phase 1.
 - Added systemd daemon unit for `immich-frame serve -config /etc/immich-frame/config.toml -data-dir /var/lib/immich-frame`.
 - Added Chromium kiosk startup through `startx`, Xorg, Openbox, and configurable `/etc/immich-frame/kiosk.env`.
 - Added Avahi mDNS setup through installer-managed `avahi-daemon.service`; physical same-Wi-Fi `frame.local` verification is pending.
+- Installer now avoids requiring global pnpm by using existing `pnpm`, Corepack, or `npm exec pnpm@11`.
 - Added `docs/runbooks/pi-appliance-install.md` with the exact hardware verification commands Matthew should run on the Pi.
 - Physical Pi boot, reboot, Chromium rendering, and `frame.local` behavior are not marked complete until Matthew runs the runbook on hardware and reports output.
 - `go run ./cmd/immich-frame config validate -config packaging/config/appliance-config.toml` passed.

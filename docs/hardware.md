@@ -108,6 +108,10 @@ systemd service -> startx -> Xorg -> openbox -> Chromium kiosk
 Required packages are installed by `install.sh`:
 
 ```text
+git
+golang-go
+nodejs
+npm
 xserver-xorg
 xinit
 openbox
