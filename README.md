@@ -6,11 +6,11 @@ A local digital picture frame app for Immich libraries, designed to become the s
 
 Phase 0, the local Phase 1 mock slideshow loop, Phase 1.5 validation, Phase 2 Immich adapter, Phase 3 setup portal, and Phase 3.5 setup hardening are complete.
 
-**Phase 5.5: Browser MVP Acceptance Fix Pass** is complete on `master`.
+**Phase 6: Renderer Replacement Spike** is the current planned work on `master`.
 
 Phase 5 browser MVP polish was reported complete, and Phase 5.5 closed PM verification gaps: stable album cache churn when full, an extra-small local testing cache preset, recovered ready-status publication after outages, and final status/doc alignment.
 
-The Raspberry Pi Chromium kiosk direction is paused. The browser MVP should be finished first so future hardware work can focus on replacing the renderer instead of rebuilding setup, cache, source, and Immich integration behavior.
+Matthew verified the daemon/cache/setup path against a personal Immich instance. The Raspberry Pi Chromium kiosk direction is paused: Chromium showed enough performance and outage-recovery risk that the next phase should choose/prototype a lighter renderer while reusing the daemon, cache, source, and Immich integration behavior.
 
 Start here:
 
@@ -24,22 +24,22 @@ Start here:
 
 ## Product Direction
 
-Immich Frame runs locally, connects outbound to a user's Immich server, caches display-appropriate photo renditions locally, and currently renders a fullscreen browser slideshow with subtle overlays.
+Immich Frame runs locally, connects outbound to a user's Immich server, caches display-appropriate photo renditions locally, and currently includes a fullscreen browser reference slideshow with subtle overlays.
 
 It is not primarily a hosted web app, Docker dashboard, or cloud service.
 
 ## Current Target
 
-- Local browser MVP.
+- Local frame MVP.
 - Go daemon.
-- Preact/Vite frame and setup UIs.
+- Preact/Vite reference frame UI and setup UI.
 - Embedded browser assets for release-style serving.
-- Future lightweight renderer/hardware path after browser MVP behavior is solid.
+- Lightweight renderer/hardware path after Phase 6 selects a direction.
 
 ## MVP Scope
 
 - Local Go daemon.
-- Preact frame UI and setup UI.
+- Preact reference frame UI and setup UI.
 - pnpm frontend tooling.
 - Same-Wi-Fi setup portal.
 - Dedicated Immich API key per frame.
@@ -58,7 +58,6 @@ It is not primarily a hosted web app, Docker dashboard, or cloud service.
 - Weather provider.
 - Favorites and on-this-day modes.
 - GPIO buttons.
-- Native renderer.
 - Video playback.
 - Flashable image.
 - Auto-updates.

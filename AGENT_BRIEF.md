@@ -6,24 +6,25 @@ This is the entry point for future coding agents. Read this file first, then fol
 
 Build **Immich Frame**, a local digital picture frame app that can eventually power self-built HDMI frames.
 
-The frame runs local software, connects outbound to a user's Immich server, caches display-appropriate photo renditions locally, and currently renders a fullscreen browser slideshow with subtle overlays.
+The frame runs local software, connects outbound to a user's Immich server, caches display-appropriate photo renditions locally, and currently has a fullscreen browser reference renderer with subtle overlays.
 
 This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 
 ## Current Reference Platform
 
-- Local desktop/browser development.
+- Local desktop/browser development for daemon/setup/reference UI work.
 - Go daemon.
-- Preact/Vite browser renderer.
+- Preact/Vite browser reference renderer.
 - Same-machine or same-LAN setup portal.
-- Future frame hardware remains important, but hardware/appliance setup is paused until the browser MVP behavior is solid.
+- Future frame hardware remains important, but hardware/appliance setup is paused until a lighter renderer direction is chosen.
 
 ## Non-Negotiable Decisions
 
-- Current runtime target is the local browser MVP.
+- Current product target is a local frame MVP that can run on Pi Zero 2 W-class hardware.
+- The browser frame UI is now a development/reference renderer, not the assumed final appliance runtime.
 - Raspberry Pi appliance/install work is paused.
 - Core daemon is Go.
-- Frontend uses Preact + Vite, with separate frame and setup bundles.
+- Frontend uses Preact + Vite, with separate frame and setup bundles for the reference frame UI and setup portal.
 - Frontend tooling uses the active Node/pnpm from the PowerShell environment.
 - Matthew's PowerShell profile initializes fnm, so `node -v` and `pnpm -v` should resolve directly in agent shells.
 - Styling uses plain CSS/CSS modules, not Tailwind or a component library.
@@ -40,11 +41,11 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 - Videos are out of MVP.
 - Weather is near-future, not MVP.
 - Docker/LAN/server-hosted modes are out of scope.
-- Future hardware work should evaluate a lighter renderer instead of assuming Chromium kiosk on Pi Zero 2 W.
+- Phase 6 should evaluate a lighter renderer instead of assuming Chromium kiosk on Pi Zero 2 W.
 
 ## Current Phase
 
-**Phase 5.5: Browser MVP Acceptance Fix Pass** is complete on `master`.
+**Phase 6: Renderer Replacement Spike** is the current goal on `master`.
 
 Phase 0, the first local Phase 1 slice, Phase 1.5 validation, Phase 2 Immich adapter work, Phase 3 setup portal, and Phase 3.5 setup hardening are complete on `master`.
 
@@ -87,7 +88,11 @@ Post-Phase 5.5 product feedback requested and approved a stronger cache rotation
 
 `immich-frame serve --logs` enables opt-in cache/playback diagnostics. Keep these logs operational and count-focused: refresh triggers, source mode, candidate counts, cache before/after counts, protected/fetched/rotated/evicted/pruned counts, threshold events, and cache hits are useful. Do not log Immich API keys, direct authenticated URLs, filenames, titles, raw responses, or other secret-heavy details.
 
-The next planned work is Phase 6 renderer/hardware re-evaluation. Keep it future-only until explicitly started, and do not restart installer/systemd/kiosk work without a new renderer direction.
+Matthew verified Phase 5.5 against a personal Immich instance/API key. Random mode rotates, `extra-small` cache rotation is visible, restart/reboot simulation resumes without setup, and embedded release-style serving works.
+
+Known reference-renderer limitation: during a network outage, the daemon appears to continue cache-first playback and reconnects correctly, but the Chromium tab does not keep the visual slideshow moving and does not resume cleanly after reconnect. Do not make the next phase a deep Chromium/SSE/browser hardening pass. Treat this as evidence that the appliance renderer should be replaced.
+
+Phase 6 should choose and prototype a lighter renderer while preserving the existing daemon, setup portal, Immich adapter, cache, playback, settings, and docs foundation. Do not restart installer/systemd/kiosk work until the renderer direction is selected.
 
 ## Git Commit Guidance
 
@@ -95,7 +100,7 @@ Until the MVP/base is complete, work directly on `master` and commit there. Do n
 
 Create meaningful commits throughout the work. Prefer commits at coherent feature or fix boundaries, not broad phase markers like `phase 3 done`.
 
-For Phase 5.5, generally commit and push after each coherent fix slice. Do not commit after every tiny edit, but do commit/push once a distinct fix is implemented, tested, and documented.
+For Phase 6, generally commit and push after each coherent decision, prototype, or documentation slice. Do not commit after every tiny edit, but do commit/push once a distinct piece is implemented, tested, and documented.
 
 Good commit boundaries include:
 
@@ -134,32 +139,31 @@ Avoid committing every tiny file edit. Also avoid waiting until an entire phase 
 
 Developer-facing docs must move with the code. When a feature changes how a human runs, configures, tests, or debugs the project, update the relevant docs in the same feature slice.
 
-For Phase 5.5, pay special attention to:
+For Phase 6, pay special attention to:
 
-- `docs/architecture.md` for cache/playback/source behavior.
-- `docs/configuration.md` for cache, sync, status, and reset settings.
+- `docs/architecture.md` for renderer boundaries and daemon-owned behavior.
+- `docs/implementation-plan.md` for renderer option evaluation and phase status.
 - `docs/security.md` for secret-safe status/reset/media behavior.
-- `docs/local-development.md` for browser MVP verification steps.
+- `docs/local-development.md` for local renderer spike verification steps.
 - `docs/developer-guide.md` for durable human workflow notes.
 - `docs/future.md` for renderer/hardware follow-up notes.
 - `GOAL.md` for checklist progress and handoff status.
 
 ## First Task Checklist
 
-- [ ] Read `GOAL.md`, especially the Phase 5.5 checklist.
+- [ ] Read `GOAL.md`, especially the Phase 6 checklist.
 - [ ] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+- [ ] Review the current `immich-config.dev.toml` diff before touching config files; Matthew may have local testing settings there.
 - [ ] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
-- [x] Implement cache rotation and eviction.
-- [x] Add full-cache stable album churn and focused unit tests.
-- [x] Add the `extra-small` cache preset for local rotation testing.
-- [x] Ensure recovered ready status is published after outage retry succeeds.
-- [x] Implement outage retry/backoff.
-- [x] Tighten degraded/offline frame UI states.
-- [x] Harden CLI status/reset/config validation behavior.
-- [x] Re-verify browser MVP behavior.
-- [x] Update developer-facing docs as behavior changes.
-- [x] Update `GOAL.md` as items are completed.
-- [x] Commit and push coherent slices as checklist features are completed.
+- [ ] Define the renderer contract between daemon state/media and presentation.
+- [ ] Evaluate lightweight renderer options for Pi Zero 2 W-class hardware.
+- [ ] Recommend one primary renderer path and one fallback path.
+- [ ] Build a narrow proof of concept for the recommended path.
+- [ ] Prove or document how the new renderer keeps cached photos visible through state/media refresh failures.
+- [ ] Add unit/fixture tests for renderer contract logic where practical.
+- [ ] Update developer-facing docs as behavior changes.
+- [ ] Update `GOAL.md` as items are completed.
+- [ ] Commit and push coherent slices as checklist features are completed.
 
 ## Do Not Build Yet
 
@@ -168,7 +172,6 @@ For Phase 5.5, pay special attention to:
 - [ ] Favorites mode.
 - [ ] On-this-day mode.
 - [ ] GPIO buttons or IR remote.
-- [ ] Native renderer or other lightweight renderer.
 - [ ] Video playback.
 - [ ] Flashable OS image.
 - [ ] Auto-updater.

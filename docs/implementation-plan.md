@@ -122,13 +122,13 @@ Checklist:
 
 Goal was to make the reference Pi Zero 2 W boot directly into the frame.
 
-Status: reverted/paused. The Chromium kiosk path looks too heavy for the Pi Zero 2 W, and hardware setup work is premature before the browser MVP behavior is complete.
+Status: reverted/paused. The Chromium kiosk path looks too heavy for the Pi Zero 2 W, and hardware setup work is premature until Phase 6 chooses a lighter renderer direction.
 
 Checklist:
 
 - [x] Remove installer/systemd/kiosk assets from the active codebase.
 - [x] Pause Raspberry Pi Chromium kiosk work.
-- [ ] Revisit hardware after Phase 5 with a lighter rendering strategy.
+- [ ] Revisit hardware after Phase 6 chooses a lighter rendering strategy.
 
 ## Phase 5: Browser MVP Polish And Hardening
 
@@ -183,12 +183,27 @@ Checklist:
 
 ## Phase 6: Renderer And Hardware Re-evaluation
 
-Goal: replace or supplement the browser renderer only after the browser MVP behavior is working.
+Goal: choose and prototype the appliance renderer after the browser/reference MVP proved the daemon, setup, Immich adapter, cache, and playback system.
+
+Context:
+
+- Phase 5.5 is complete.
+- Matthew verified the app with a personal Immich instance/API key.
+- Random mode rotates, `extra-small` cache rotation is visible, restart/reboot simulation resumes without setup, and embedded release-style browser serving works.
+- During a network outage, the daemon appears to keep cache-first playback and reconnect correctly, but the Chromium tab does not keep the visual slideshow moving or resume cleanly after reconnect.
+- Because Chromium kiosk is likely too heavy or fragile for Pi Zero 2 W-class hardware, do not make the next phase a browser outage-hardening phase.
 
 Checklist:
 
 - [ ] Define renderer boundary between daemon state/media APIs and presentation layer.
-- [ ] Evaluate lightweight renderer options for Pi Zero 2 W-class hardware.
+- [ ] Decide whether the appliance renderer consumes `/api/state` and `/media/:assetID`, a local-only renderer API, direct cache file paths, or another narrow contract.
+- [ ] Prefer a resilient polling or hybrid update loop over SSE-only rendering.
+- [ ] Evaluate at least three lightweight renderer options for Pi Zero 2 W-class hardware.
+- [ ] Score renderer options on footprint, image quality, overlay feasibility, packaging complexity, Go integration, and testability without hardware.
+- [ ] Recommend one primary renderer path and one fallback path.
+- [ ] Build a narrow proof of concept for the recommended path.
+- [ ] Show at least one cached/local image and one simple overlay in the proof of concept.
+- [ ] Keep the current image visible if state/media refresh fails.
 - [ ] Reuse existing daemon, setup portal, Immich adapter, cache, playback, and settings behavior.
 - [ ] Avoid restarting installer/systemd work until a renderer direction is chosen.
 - [ ] Re-plan hardware install steps around the chosen renderer.
@@ -200,7 +215,6 @@ Checklist:
 - [ ] Favorites source.
 - [ ] On-this-day source.
 - [ ] GPIO/remote input.
-- [ ] Native renderer or other lightweight renderer.
 - [ ] Video playback.
 - [ ] Flashable image.
 - [ ] Auto-updates.

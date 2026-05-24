@@ -7,13 +7,13 @@ Immich Frame runs locally on a frame device.
 ```text
 Raspberry Pi Zero 2 W
   -> immich-frame Go daemon
-  -> embedded static Preact UI
-  -> Chromium kiosk at localhost
+  -> browser setup/settings portal
+  -> Phase 6 appliance renderer
   -> outbound HTTPS to Immich
   -> local display-sized image cache
 ```
 
-The browser is a renderer, not the owner of app state. The daemon owns configuration, secrets, Immich access, cache, playback, and state updates.
+The renderer is not the owner of app state. The daemon owns configuration, secrets, Immich access, cache, playback, and state updates. The current Preact `/frame` UI remains as a browser reference renderer during Phase 6.
 
 ## Main Components
 
@@ -162,7 +162,9 @@ clock text updates locally every minute
 
 ## Renderer
 
-Primary renderer is Chromium kiosk with static Preact UI.
+The current `/frame` Preact UI is the browser reference renderer. It is useful for desktop development, embedded UI verification, and setup-adjacent testing, but it is no longer assumed to be the final appliance renderer for Pi Zero 2 W-class hardware.
+
+Phase 6 should choose and prototype a lighter appliance renderer that reuses daemon-owned state, cache, media, playback, setup, and Immich behavior.
 
 Rules:
 
@@ -176,6 +178,15 @@ Rules:
 - Do not use Tailwind or a component library for MVP.
 - Use minimal inline SVG icons for controls where helpful.
 - Do not use a full icon library for MVP.
+
+Appliance renderer rules:
+
+- Treat the daemon as the source of truth for playback state and cached media.
+- Prefer a resilient polling or hybrid update loop over SSE-only rendering.
+- Keep the current cached image visible if daemon state, network, or media refresh temporarily fails.
+- Recover by fetching a fresh state snapshot after reconnect.
+- Do not receive Immich API keys, direct Immich URLs, raw Immich responses, or high-sensitivity metadata.
+- Preserve the browser setup/settings portal unless a later phase finds a concrete reason to replace it.
 
 ## Visual Direction
 

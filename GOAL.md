@@ -4,43 +4,45 @@ This document defines when an agent can stop working and what counts as done.
 
 ## Long-Term Product Goal
 
-Immich Frame is complete enough for the browser MVP when it can run as a reliable local browser-based digital picture frame connected to Immich.
+Immich Frame is complete enough for the local frame MVP when it can run as a reliable digital picture frame connected to Immich, using a renderer that is practical for Pi Zero 2 W-class hardware.
 
-The browser MVP should show a polished setup screen if unconfigured, accept setup from a same-machine or same-LAN browser session, cache display-appropriate Immich photos, rotate cached photos without looping a static seed forever, and run a fullscreen slideshow with subtle overlays.
+The current browser renderer and setup portal proved the daemon, setup, Immich adapter, cache, playback, and embedded UI foundation. The browser frame should now be treated as a development/reference renderer, not necessarily the final appliance runtime.
 
-Hardware/appliance setup is intentionally paused until the browser MVP behavior is solid. The Raspberry Pi Zero 2 W Chromium kiosk experiment showed enough performance risk that the next hardware phase should first evaluate a lighter rendering engine and reuse the browser MVP daemon/cache/setup behavior.
+Hardware/appliance setup is intentionally paused until the renderer direction is chosen. The Raspberry Pi Zero 2 W Chromium kiosk experiment showed enough performance and outage-recovery risk that the next phase should evaluate a lighter rendering engine and reuse the existing daemon/cache/setup behavior.
 
 ## MVP Definition Of Done
 
-The browser MVP is done when all items below are complete in local/browser development:
+The local frame MVP is done when all items below are complete:
 
-- [ ] Unconfigured HDMI screen shows setup instructions, `frame.local:8787`, IP fallback, and first-boot setup code.
-- [ ] Setup portal accepts setup code.
-- [ ] User can create local admin password.
-- [ ] Setup portal accepts Immich URL and dedicated Immich API key.
-- [ ] Daemon validates Immich connection.
-- [ ] User can choose one album or random library mode.
-- [ ] Daemon caches first display-targeted photo renditions locally.
-- [ ] Cache rotation refreshes candidates, tops off target cache, and avoids cycling one static cache forever.
-- [ ] Slideshow starts as soon as first few cached images are ready.
-- [ ] Hidden controls work: previous, pause/play, next, info toggle.
-- [ ] Clock overlay works.
-- [ ] Photo info overlay works with minimal metadata.
-- [ ] Operational status overlay appears only for degraded/error states.
-- [ ] Reboot resumes slideshow without manual intervention.
-- [ ] Immich/network outage continues from cache when possible.
-- [ ] Empty cache plus unavailable Immich shows a calm retry/error state.
-- [ ] Settings portal remains available after setup and requires admin auth.
-- [ ] `immich-frame status`, `reset`, `config validate`, and `version` work.
-- [ ] Unit tests pass.
-- [ ] Frontend typecheck/build passes.
-- [ ] Docs match implemented behavior.
+- [x] Unconfigured HDMI/browser reference screen shows setup instructions, `frame.local:8787`, IP fallback, and first-boot setup code.
+- [x] Setup portal accepts setup code.
+- [x] User can create local admin password.
+- [x] Setup portal accepts Immich URL and dedicated Immich API key.
+- [x] Daemon validates Immich connection.
+- [x] User can choose one album or random library mode.
+- [x] Daemon caches first display-targeted photo renditions locally.
+- [x] Cache rotation refreshes candidates, tops off target cache, and avoids cycling one static cache forever.
+- [x] Random mode continues rotating against a personal Immich instance.
+- [x] Extra-small cache preset makes rotations visible during testing.
+- [x] Restart/reboot simulation resumes configured frame without setup.
+- [x] Embedded release-style browser serving works.
+- [x] Settings portal remains available after setup and requires admin auth.
+- [x] `immich-frame status`, `reset`, `config validate`, `version`, and `serve --logs` work.
+- [x] Unit tests pass.
+- [x] Frontend typecheck/build passes.
+- [x] Docs match implemented behavior through Phase 5.5.
+- [ ] Replacement renderer direction is chosen for Pi Zero 2 W-class hardware.
+- [ ] Replacement renderer displays cached slideshow from daemon state/media.
+- [ ] Replacement renderer supports clock/photo info/degraded status overlays or explicitly scopes the MVP overlay subset.
+- [ ] Replacement renderer continues showing cached photos through Immich/network outage.
+- [ ] Replacement renderer recovers cleanly after network reconnect and shows/clears degraded state when daemon state changes.
+- [ ] LAN media/settings security is verified from another device, or explicitly deferred with rationale.
 
 ## Current Session Goal
 
-Complete **Phase 5.5: Browser MVP Acceptance Fix Pass**. Phase 5.5 implementation and verification are complete as of 2026-05-24; final handoff state is committed on `master`.
+Complete **Phase 6: Renderer Replacement Spike**.
 
-Phase 5 was reported complete, but PM verification found acceptance gaps around stable album cache rotation, local testing presets, outage recovery status publication, and stale status docs. This is a focused fix pass on `master`, not a new feature phase. Phase 4 appliance installer work remains reverted and hardware setup is paused.
+Phase 5.5 is complete on `master`. Matthew verified a personal Immich instance/API key, random-mode rotation, extra-small cache rotation visibility, restart/reboot resume, and embedded release-style serving. A network outage showed the daemon continues cache/playback/reconnect behavior correctly, but the Chromium tab does not visually recover. Because Chromium kiosk is already suspect on Pi Zero 2 W-class hardware, do not spend the next phase deeply hardening the browser renderer. Treat the browser frame as a reference/development renderer and use Phase 6 to choose and prototype a lighter appliance renderer that reuses the existing daemon/cache/setup system.
 
 ### Phase 0 Done Checklist
 
@@ -315,8 +317,8 @@ Phase 5 was reported complete, but PM verification found acceptance gaps around 
 ### Phase 4 Appliance Work Reverted - 2026-05-23
 
 - Raspberry Pi/Chromium kiosk work was intentionally reverted after hardware exploration showed likely performance risk on the Pi Zero 2 W.
-- Hardware install scripts, packaging assets, and Pi appliance docs are not part of the current browser MVP path.
-- Future hardware work should start after the browser MVP acceptance pass and should evaluate a lighter renderer rather than assuming Chromium kiosk is the final target.
+- Hardware install scripts, packaging assets, and Pi appliance docs are not part of the current renderer spike.
+- Future hardware work should start after Phase 6 chooses a lighter renderer rather than assuming Chromium kiosk is the final target.
 
 ### Phase 5 Browser MVP Polish And Hardening Checklist
 
@@ -455,16 +457,71 @@ Post-Phase 5.5 logging addition:
   - [x] Run `pnpm build:embedded-ui` because setup UI assets changed.
 - [x] Commit and push coherent fix slices to `master`.
 
+### Phase 5.5 / Browser Reference Verification Notes - 2026-05-24
+
+- Matthew tested against a personal Immich instance with a real API key.
+- Random mode continues rotating.
+- The `extra-small` cache preset makes cache rotations visible.
+- Restart/reboot simulation works: the frame resumes without repeating setup.
+- Embedded release-style serving works.
+- Longer soak testing is intentionally deferred for now.
+- LAN security from another device is not yet verified and should remain a future verification item.
+- Network outage behavior exposed a renderer limitation: the daemon appears to continue cache-first playback and reconnects correctly for the next Immich request, but the Chromium tab does not keep the visual slideshow moving and does not resume cleanly after reconnect.
+- Because the browser renderer is likely not the final Pi Zero 2 W appliance runtime, this Chromium outage gap should be documented as a reference-renderer limitation rather than becoming the next deep browser-hardening phase.
+
+### Phase 6 Renderer Replacement Spike Checklist
+
+Goal: choose and prototype the appliance renderer direction while preserving the existing daemon, setup portal, Immich adapter, cache, playback, settings, and docs foundation.
+
+- [ ] Baseline verification before changes:
+  - [ ] Confirm branch is `master`.
+  - [ ] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+  - [ ] Review the current `immich-config.dev.toml` diff before touching config files; Matthew may have local testing settings there.
+  - [ ] Run `go test ./...`.
+  - [ ] Run `pnpm typecheck`.
+  - [ ] Run `pnpm build`.
+- [ ] Define the renderer contract:
+  - [ ] Document the minimal daemon APIs/state a renderer needs: current asset, next asset if useful, status/message, overlay config, media path, playback interval, and any display target information.
+  - [ ] Decide whether the renderer should consume `/api/state`, `/media/:assetID`, direct local cache file paths exposed by a renderer-only API, or another local-only contract.
+  - [ ] Prefer a pull/polling or resilient hybrid model over SSE-only behavior for the appliance renderer.
+  - [ ] Preserve the setup portal as browser-based unless there is a concrete reason to change it.
+- [ ] Evaluate renderer options for Pi Zero 2 W-class hardware:
+  - [ ] Compare at least three options such as SDL2/Go, SDL2/Rust, framebuffer/image viewer process, Qt/QML, lightweight WebKit, or another credible local renderer.
+  - [ ] Score options on memory/CPU footprint, image scaling quality, crossfade/overlay feasibility, packaging complexity, Go integration, testability without hardware, and Pi availability.
+  - [ ] Recommend one primary path and one fallback path.
+  - [ ] Record rejected options and why.
+- [ ] Build a narrow proof of concept for the recommended renderer:
+  - [ ] Keep the proof of concept behind a clearly named command, package, or `experiments/` path.
+  - [ ] Display a cached/local image fullscreen from daemon-compatible state or a documented fixture.
+  - [ ] Render at least one simple overlay, such as clock or status text, enough to prove overlays are feasible.
+  - [ ] Use a resilient update loop that keeps the current image visible when state/media refresh fails.
+  - [ ] Avoid restarting installer/systemd/kiosk work in this phase.
+- [ ] Add testable seams:
+  - [ ] Unit-test renderer contract parsing/state adaptation where practical.
+  - [ ] Add fixture-driven tests for outage/reconnect state handling if a full renderer cannot run in CI.
+  - [ ] Keep tests unit/mock only; no real-Immich integration tests in repo/CI.
+- [ ] Update docs:
+  - [ ] Update `docs/architecture.md` with browser-as-reference and new renderer boundary.
+  - [ ] Update `docs/implementation-plan.md` with the Phase 6 decision/prototype outcome.
+  - [ ] Update `docs/future.md` and hardware notes with what remains after the spike.
+  - [ ] Update `AGENT_BRIEF.md` and `GOAL.md` as work progresses.
+- [ ] Final verification:
+  - [ ] Run `go test ./...`.
+  - [ ] Run `pnpm typecheck`.
+  - [ ] Run `pnpm build`.
+  - [ ] Run any renderer-specific unit/build checks introduced by the phase.
+- [ ] Commit and push coherent slices to `master`.
+
 ## Stop Conditions
 
 An agent can stop when:
 
-- [x] The requested phase checklist is complete.
-- [x] Tests/builds for touched areas pass, or failures are clearly documented.
-- [x] Docs are updated for any changed behavior or decision.
-- [x] Work has been committed in meaningful increments.
-- [x] No required dev servers, long-running commands, or install sessions are left running.
-- [x] Remaining work is captured in a clear checklist.
+- [ ] The requested phase checklist is complete.
+- [ ] Tests/builds for touched areas pass, or failures are clearly documented.
+- [ ] Docs are updated for any changed behavior or decision.
+- [ ] Work has been committed in meaningful increments.
+- [ ] No required dev servers, long-running commands, or install sessions are left running.
+- [ ] Remaining work is captured in a clear checklist.
 
 ## Commit Expectations
 
@@ -489,7 +546,7 @@ Commit and push at coherent feature or fix boundaries rather than only at phase 
 
 Do not commit after every tiny edit. Do not wait until all of Phase 0 or Phase 1 is complete if several distinct working pieces can be committed separately.
 
-For Phase 5.5, generally commit and push after each completed coherent fix slice or final documentation/verification slice. Examples: album cache rotation, cache preset support, outage recovery publication, and docs/checklist updates.
+For Phase 6, generally commit and push after each coherent decision, prototype, or documentation slice. Examples: renderer contract docs, renderer option evaluation, proof-of-concept scaffold, outage-resilient renderer state loop, and final phase handoff docs.
 
 Before each commit:
 
@@ -509,7 +566,6 @@ Before each commit:
 - [ ] People/location/date smart rules.
 - [ ] Video playback.
 - [ ] GPIO buttons, IR remotes, or Bluetooth remote integration.
-- [ ] Native framebuffer/SDL renderer or other lightweight renderer.
 - [ ] Raspberry Pi install/systemd/kiosk setup.
 - [ ] Flashable custom OS image.
 - [ ] Automatic updates.
