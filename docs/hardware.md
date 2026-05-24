@@ -110,8 +110,6 @@ Required packages are installed by `install.sh`:
 ```text
 git
 golang-go
-nodejs
-npm
 xserver-xorg
 xinit
 openbox
@@ -122,6 +120,8 @@ x11-xserver-utils
 dbus-x11
 fonts-dejavu-core
 ```
+
+Node.js and pnpm are prerequisites for building the embedded UI on the Pi and are not installed by `install.sh`.
 
 Physical Pi verification of this display path is pending.
 
