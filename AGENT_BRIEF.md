@@ -94,6 +94,15 @@ Known reference-renderer limitation: during a network outage, the daemon appears
 
 Phase 6 should choose and prototype a lighter renderer while preserving the existing daemon, setup portal, Immich adapter, cache, playback, settings, and docs foundation. Do not restart installer/systemd/kiosk work until the renderer direction is selected.
 
+Phase 6 current decision state:
+
+- The renderer contract is now documented as a daemon-owned snapshot/presentation boundary.
+- The browser `/frame` path remains the reference/development renderer.
+- The appliance renderer should use resilient polling or hybrid polling plus event wake-ups, not SSE-only state.
+- Recommended primary path before prototype discussion: Go + SDL2 native renderer.
+- Recommended fallback path before prototype discussion: pre-composited framebuffer/image-viewer renderer.
+- Proof-of-concept work has not started yet; discuss the renderer paths before continuing.
+
 ## Git Commit Guidance
 
 Until the MVP/base is complete, work directly on `master` and commit there. Do not create feature branches for ordinary implementation slices unless the user explicitly asks for one.
@@ -152,12 +161,12 @@ For Phase 6, pay special attention to:
 ## First Task Checklist
 
 - [ ] Read `GOAL.md`, especially the Phase 6 checklist.
-- [ ] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
-- [ ] Review the current `immich-config.dev.toml` diff before touching config files; Matthew may have local testing settings there.
-- [ ] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
-- [ ] Define the renderer contract between daemon state/media and presentation.
-- [ ] Evaluate lightweight renderer options for Pi Zero 2 W-class hardware.
-- [ ] Recommend one primary renderer path and one fallback path.
+- [x] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+- [x] Review the current `immich-config.dev.toml` diff before touching config files; Matthew may have local testing settings there.
+- [x] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
+- [x] Define the renderer contract between daemon state/media and presentation.
+- [x] Evaluate lightweight renderer options for Pi Zero 2 W-class hardware.
+- [x] Recommend one primary renderer path and one fallback path.
 - [ ] Build a narrow proof of concept for the recommended path.
 - [ ] Prove or document how the new renderer keeps cached photos visible through state/media refresh failures.
 - [ ] Add unit/fixture tests for renderer contract logic where practical.

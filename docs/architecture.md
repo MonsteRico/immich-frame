@@ -166,6 +166,42 @@ The current `/frame` Preact UI is the browser reference renderer. It is useful f
 
 Phase 6 should choose and prototype a lighter appliance renderer that reuses daemon-owned state, cache, media, playback, setup, and Immich behavior.
 
+### Appliance Renderer Contract
+
+The appliance renderer is a presentation process. It should not own Immich access, cache policy, playback ordering, settings writes, setup state, or secret handling.
+
+Minimum renderer input:
+
+- `status`: daemon state such as `setup`, `loading`, `ready`, `degraded`, or `error`, plus a user-safe message when useful.
+- `current`: the current display asset id, local media URL or renderer-local file reference, sanitized photo metadata, and rendition dimensions/content type when known.
+- `next`: optional near-upcoming asset id/media reference for preloading and crossfade.
+- `playback`: interval seconds, paused/running state, and display fit.
+- `overlays`: generic overlay enablement, slot, and visibility for clock, photo info, and operational status.
+- `display`: target width, height, device scale if known, and orientation.
+
+Recommended transport for the appliance renderer:
+
+```text
+renderer boot
+  -> GET /api/renderer/state snapshot
+  -> load current media
+  -> keep last successfully decoded image as the visible frame
+  -> poll /api/renderer/state on a short cadence
+  -> optionally subscribe to /api/events as a wake-up hint
+  -> on state/media failure, keep the current image and retry with backoff
+  -> on recovery, fetch a fresh state snapshot before replacing the visible image
+```
+
+The existing `/api/state` and `/media/:assetID` remain the browser reference contract. The appliance renderer should start from a narrow local-only contract shaped for native rendering instead of inheriting browser/SSE assumptions. A future `/api/renderer/state` can be served only to localhost and can expose either media URLs or renderer-local cache file references. Direct cache file paths should be allowed only for the local renderer process and must not become a LAN/browser API.
+
+Required resilience behavior:
+
+- Never clear the visible image merely because a state request, SSE stream, local media load, or Immich refresh fails.
+- Treat SSE as optional notification, not as the only source of truth.
+- Replace the visible image only after the new media has been fetched or opened and decoded successfully.
+- Keep degraded/error status overlays quiet and user-safe.
+- Recover by snapshot polling, so renderer state converges even if an event was missed.
+
 Rules:
 
 - Keep `/frame` bundle lean.

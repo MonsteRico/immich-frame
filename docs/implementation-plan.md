@@ -195,18 +195,71 @@ Context:
 
 Checklist:
 
-- [ ] Define renderer boundary between daemon state/media APIs and presentation layer.
-- [ ] Decide whether the appliance renderer consumes `/api/state` and `/media/:assetID`, a local-only renderer API, direct cache file paths, or another narrow contract.
-- [ ] Prefer a resilient polling or hybrid update loop over SSE-only rendering.
-- [ ] Evaluate at least three lightweight renderer options for Pi Zero 2 W-class hardware.
-- [ ] Score renderer options on footprint, image quality, overlay feasibility, packaging complexity, Go integration, and testability without hardware.
-- [ ] Recommend one primary renderer path and one fallback path.
+- [x] Define renderer boundary between daemon state/media APIs and presentation layer.
+- [x] Decide whether the appliance renderer consumes `/api/state` and `/media/:assetID`, a local-only renderer API, direct cache file paths, or another narrow contract.
+- [x] Prefer a resilient polling or hybrid update loop over SSE-only rendering.
+- [x] Evaluate at least three lightweight renderer options for Pi Zero 2 W-class hardware.
+- [x] Score renderer options on footprint, image quality, overlay feasibility, packaging complexity, Go integration, and testability without hardware.
+- [x] Recommend one primary renderer path and one fallback path.
 - [ ] Build a narrow proof of concept for the recommended path.
 - [ ] Show at least one cached/local image and one simple overlay in the proof of concept.
 - [ ] Keep the current image visible if state/media refresh fails.
 - [ ] Reuse existing daemon, setup portal, Immich adapter, cache, playback, and settings behavior.
 - [ ] Avoid restarting installer/systemd work until a renderer direction is chosen.
 - [ ] Re-plan hardware install steps around the chosen renderer.
+
+### Phase 6 Renderer Contract Decision
+
+The appliance renderer should be a presentation client for daemon-owned state. It should not call Immich, manage cache refresh, choose playback order, write setup/settings, or receive secrets. The browser `/frame` path remains useful as a development renderer, but the appliance renderer should start from a narrow local-only contract rather than inheriting the browser's SSE-first behavior.
+
+Contract decision:
+
+- Keep setup/settings browser-based.
+- Keep `/api/state`, `/api/events`, and `/media/:assetID` for the browser reference renderer.
+- Add a future local-only renderer snapshot endpoint, tentatively `GET /api/renderer/state`, for native renderers.
+- Shape the snapshot around current media, optional next media, status/message, overlay config, playback interval/paused state, display fit, and display target.
+- Prefer snapshot polling with optional event wake-ups. SSE may reduce latency, but missed events must not be fatal.
+- Allow direct local cache file references only on a renderer-local API or process boundary. Do not expose cache paths to LAN/browser callers.
+- Require the renderer to keep the last successfully decoded image visible when state or media refresh fails.
+
+### Phase 6 Renderer Option Evaluation
+
+External reference points reviewed during the spike:
+
+- `go-sdl2` wraps SDL2 for Go, requires the C SDL2 installation, and documents that first builds can take several minutes on weaker machines such as Raspberry Pi.
+- Rust SDL2 offers current Cargo integration and optional image/ttf/gfx features, but would add a second implementation language.
+- Qt for Embedded Linux can run fullscreen without X11/Wayland through EGLFS/LinuxFB, but Qt's own docs warn that high-resolution Qt Quick/OpenGL paths can need at least 128 MB of GPU memory.
+- WPE WebKit is designed for embedded, low-consumption devices and Raspberry Pi-class backends, but it remains a web engine and keeps much of the browser-runtime complexity Phase 6 is trying to avoid.
+- Framebuffer image viewers such as `fbi` are available on Raspberry Pi OS-family systems and are very light, but they are process-oriented image display tools rather than app UI renderers.
+
+Score scale: 1 is poor, 5 is strong for this project.
+
+| Option | Footprint | Image quality | Overlays/crossfade | Packaging | Go integration | Windows/WSL testability | Pi availability | Total | Notes |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Go + SDL2 renderer | 4 | 4 | 4 | 3 | 5 | 3 | 4 | 27 | Best fit for a first native prototype: same repo/language, direct polling loop, good enough image/text primitives. Main risk is cgo/SDL2 setup on Windows and target images. |
+| Rust + SDL2 helper | 4 | 4 | 4 | 3 | 2 | 4 | 4 | 25 | Similar runtime profile with a stronger Rust desktop story, but adds Cargo, FFI/process protocol, and a second production language. |
+| Framebuffer/image-viewer process (`fbi`/similar) | 5 | 3 | 1 | 4 | 3 | 1 | 4 | 21 | Very light fallback for showing photos on weak boards. Poor native overlay/crossfade story unless daemon pre-composites images. |
+| Qt/QML or Qt Widgets | 2 | 5 | 5 | 2 | 2 | 4 | 3 | 23 | Capable visuals and overlays, but heavier packaging/runtime than the product needs for Pi Zero 2 W-class hardware. |
+| WPE WebKit/lightweight browser | 2 | 4 | 5 | 2 | 2 | 3 | 3 | 21 | Lighter than Chromium in embedded contexts but still a web renderer with browser recovery and packaging concerns. |
+
+Recommended primary path:
+
+- Prototype a Go + SDL2 appliance renderer behind a clearly named experimental command/package.
+- Keep renderer logic split so state adaptation, outage behavior, and image-selection decisions are unit-testable without SDL.
+- Consume a fixture first, then the future local-only renderer snapshot contract.
+- Render one fullscreen cached image and one text overlay.
+- Implement the core loop as "snapshot, decode next, then swap"; on any state/media failure, keep showing the last decoded image.
+
+Recommended fallback path:
+
+- If Go + SDL2 proves too painful on the target or Windows development machine, fall back to an ultra-light framebuffer/image-viewer path where the daemon or a small helper pre-composites the selected photo plus minimal status/clock text into a display-sized image and an external viewer displays it.
+- This fallback intentionally scopes down transitions and rich overlays. It preserves the most important appliance behavior: keep showing cached photos through network/daemon refresh trouble on very weak hardware.
+
+Rejected for the first proof of concept:
+
+- Qt/QML: excellent UI capability, but too much runtime and packaging weight for the current question.
+- WPE/WebKit: credible embedded web path, but it keeps the project in a browser-engine failure mode before proving a truly lighter renderer.
+- Deep Chromium hardening: explicitly out of scope for Phase 6 because the browser renderer is now a reference/development renderer.
 
 ## MVP Exclusions
 

@@ -2,7 +2,7 @@
 
 ## Hardware Status
 
-Hardware/appliance setup is paused while the browser MVP is finished.
+Hardware/appliance setup is paused while Phase 6 chooses and prototypes the renderer direction.
 
 The previous Raspberry Pi Zero 2 W + Chromium kiosk direction is no longer the active implementation path. Keep this document as hardware context, but do not add new installer/systemd/kiosk work until the browser MVP is reliable and a lighter renderer direction is chosen.
 
@@ -14,7 +14,7 @@ The intended physical frame class is still:
 - Raspberry Pi OS Lite.
 - HDMI display.
 - Wi-Fi.
-- Lightweight renderer to be chosen after browser MVP polish.
+- Lightweight renderer to be chosen by the Phase 6 spike.
 - No touch required.
 - No keyboard required after setup.
 
@@ -89,6 +89,19 @@ KIOSK_URL=http://127.0.0.1:8787/frame
 KIOSK_FLAGS="--kiosk --noerrdialogs --disable-infobars"
 ```
 
+## Phase 6 Renderer Direction
+
+Current recommendation before proof-of-concept work:
+
+- Primary path: a Go + SDL2 native appliance renderer that consumes daemon-owned state and cached media through a narrow local renderer contract.
+- Fallback path: an ultra-light framebuffer/image-viewer process where the daemon or helper pre-composites the selected photo plus minimal overlay text into a display-sized image.
+
+The primary path is preferred because it keeps implementation in Go, avoids a web engine, supports fullscreen image scaling and simple overlays, and can keep the "decode next image before swap" outage behavior inside a deterministic renderer loop.
+
+The fallback path is intentionally smaller. It may sacrifice crossfade and richer overlays, but it gives very weak boards a credible way to keep showing cached photos if SDL packaging or drivers are not acceptable on the target.
+
+Do not add installer, systemd, autostart, kiosk, or OS-image work until the renderer proof of concept has been discussed and accepted.
+
 ## Display Server
 
 Document one tested Raspberry Pi OS Lite path. Keep display-server specifics isolated in installer/systemd files.
@@ -108,4 +121,4 @@ Not MVP:
 - Brightness/dimming.
 - HDMI CEC.
 - Motion sensor wake.
-- Native renderer for weaker boards.
+- Renderer packaging for weaker boards after the Phase 6 proof of concept is accepted.

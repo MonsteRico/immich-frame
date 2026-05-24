@@ -474,22 +474,22 @@ Post-Phase 5.5 logging addition:
 Goal: choose and prototype the appliance renderer direction while preserving the existing daemon, setup portal, Immich adapter, cache, playback, settings, and docs foundation.
 
 - [ ] Baseline verification before changes:
-  - [ ] Confirm branch is `master`.
-  - [ ] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
-  - [ ] Review the current `immich-config.dev.toml` diff before touching config files; Matthew may have local testing settings there.
-  - [ ] Run `go test ./...`.
-  - [ ] Run `pnpm typecheck`.
-  - [ ] Run `pnpm build`.
-- [ ] Define the renderer contract:
-  - [ ] Document the minimal daemon APIs/state a renderer needs: current asset, next asset if useful, status/message, overlay config, media path, playback interval, and any display target information.
-  - [ ] Decide whether the renderer should consume `/api/state`, `/media/:assetID`, direct local cache file paths exposed by a renderer-only API, or another local-only contract.
-  - [ ] Prefer a pull/polling or resilient hybrid model over SSE-only behavior for the appliance renderer.
-  - [ ] Preserve the setup portal as browser-based unless there is a concrete reason to change it.
-- [ ] Evaluate renderer options for Pi Zero 2 W-class hardware:
-  - [ ] Compare at least three options such as SDL2/Go, SDL2/Rust, framebuffer/image viewer process, Qt/QML, lightweight WebKit, or another credible local renderer.
-  - [ ] Score options on memory/CPU footprint, image scaling quality, crossfade/overlay feasibility, packaging complexity, Go integration, testability without hardware, and Pi availability.
-  - [ ] Recommend one primary path and one fallback path.
-  - [ ] Record rejected options and why.
+  - [x] Confirm branch is `master`.
+  - [x] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+  - [x] Review the current `immich-config.dev.toml` diff before touching config files; Matthew may have local testing settings there.
+  - [x] Run `go test ./...`.
+  - [x] Run `pnpm typecheck`.
+  - [x] Run `pnpm build`.
+- [x] Define the renderer contract:
+  - [x] Document the minimal daemon APIs/state a renderer needs: current asset, next asset if useful, status/message, overlay config, media path, playback interval, and any display target information.
+  - [x] Decide whether the renderer should consume `/api/state`, `/media/:assetID`, direct local cache file paths exposed by a renderer-only API, or another local-only contract.
+  - [x] Prefer a pull/polling or resilient hybrid model over SSE-only behavior for the appliance renderer.
+  - [x] Preserve the setup portal as browser-based unless there is a concrete reason to change it.
+- [x] Evaluate renderer options for Pi Zero 2 W-class hardware:
+  - [x] Compare at least three options such as SDL2/Go, SDL2/Rust, framebuffer/image viewer process, Qt/QML, lightweight WebKit, or another credible local renderer.
+  - [x] Score options on memory/CPU footprint, image scaling quality, crossfade/overlay feasibility, packaging complexity, Go integration, testability without hardware, and Pi availability.
+  - [x] Recommend one primary path and one fallback path.
+  - [x] Record rejected options and why.
 - [ ] Build a narrow proof of concept for the recommended renderer:
   - [ ] Keep the proof of concept behind a clearly named command, package, or `experiments/` path.
   - [ ] Display a cached/local image fullscreen from daemon-compatible state or a documented fixture.
@@ -511,6 +511,20 @@ Goal: choose and prototype the appliance renderer direction while preserving the
   - [ ] Run `pnpm build`.
   - [ ] Run any renderer-specific unit/build checks introduced by the phase.
 - [ ] Commit and push coherent slices to `master`.
+
+### Phase 6 Contract And Option Notes - 2026-05-24
+
+- Baseline passed on `master`: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
+- `origin` is `https://github.com/MonsteRico/immich-frame.git`.
+- Existing local `immich-config.dev.toml` changes are Matthew's test settings: `extra-small` cache, smaller cache sizes, lower prefetch, and one-minute sync refresh. They were reviewed and not edited.
+- The appliance renderer contract is documented as a daemon-owned local snapshot/presentation boundary.
+- The current browser `/frame` renderer remains the reference/development renderer using `/api/state`, `/api/events`, and `/media/:assetID`.
+- The appliance renderer should use a local-only snapshot endpoint, tentatively `GET /api/renderer/state`, with optional event wake-ups rather than SSE-only behavior.
+- The renderer must keep the last successfully decoded image visible when state or media refresh fails.
+- Evaluated Go + SDL2, Rust + SDL2, framebuffer/image-viewer process, Qt/QML, and WPE/WebKit.
+- Recommended primary path: Go + SDL2 native renderer.
+- Recommended fallback path: pre-composited framebuffer/image-viewer renderer for very weak hardware or SDL packaging failures.
+- Proof-of-concept work is intentionally paused until the path is discussed.
 
 ## Stop Conditions
 
