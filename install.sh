@@ -66,10 +66,6 @@ install_packages() {
     ca-certificates \
     dbus-x11 \
     fonts-dejavu-core \
-    git \
-    golang-go \
-    nodejs \
-    npm \
     openbox \
     snapd \
     unclutter \
@@ -89,18 +85,7 @@ build_binary() {
     log "Skipping local build; expecting an existing immich-frame binary at $BIN_PATH"
     return 0
   fi
-  if command -v pnpm >/dev/null 2>&1; then
-    run pnpm build:embedded-ui
-  elif command -v corepack >/dev/null 2>&1; then
-    run corepack enable
-    run corepack prepare pnpm@11 --activate
-    run corepack pnpm build:embedded-ui
-  elif command -v npm >/dev/null 2>&1; then
-    run npm exec --yes pnpm@11 -- build:embedded-ui
-  else
-    log "error: pnpm is not available and neither corepack nor npm could provide it"
-    exit 1
-  fi
+  run pnpm build:embedded-ui
   run go build -trimpath -ldflags "-s -w" -o ".dist/immich-frame" ./cmd/immich-frame
   run install -D -m 0755 ".dist/immich-frame" "$BIN_PATH"
 }

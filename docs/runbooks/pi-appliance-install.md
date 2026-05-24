@@ -11,8 +11,7 @@ Physical Pi verification is pending until Matthew runs these commands on the har
 - Wi-Fi was configured before first boot, for example with cloud-init or the Ubuntu Raspberry Pi image setup flow.
 - The Pi and setup phone/laptop are on the same Wi-Fi.
 - The repository is available on the Pi.
-- The installer can install Ubuntu-packaged Go, Node.js, npm, and runtime packages.
-- A global pnpm install is not required. The installer uses existing `pnpm`, Corepack, or `npm exec pnpm@11`.
+- Go, Node.js, and pnpm are available if building on the Pi.
 
 ## Install
 
@@ -21,8 +20,6 @@ From the repository root on the Pi:
 ```sh
 sudo ./install.sh
 ```
-
-Do not run `pnpm setup` on the Pi for this install path. On fresh Ubuntu Server images that command can fail while trying to install pnpm globally. Let `install.sh` use Corepack or the one-shot npm fallback instead.
 
 The installer is designed to be idempotent. Re-running it should:
 
