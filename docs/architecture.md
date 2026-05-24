@@ -179,7 +179,7 @@ Minimum renderer input:
 - `overlays`: generic overlay enablement, slot, and visibility for clock, photo info, and operational status.
 - `display`: target width, height, device scale if known, and orientation.
 
-Recommended transport for the appliance renderer:
+Implemented prototype transport for the appliance renderer:
 
 ```text
 renderer boot
@@ -192,7 +192,7 @@ renderer boot
   -> on recovery, fetch a fresh state snapshot before replacing the visible image
 ```
 
-The existing `/api/state` and `/media/:assetID` remain the browser reference contract. The appliance renderer should start from a narrow local-only contract shaped for native rendering instead of inheriting browser/SSE assumptions. A future `/api/renderer/state` can be served only to localhost and can expose either media URLs or renderer-local cache file references. Direct cache file paths should be allowed only for the local renderer process and must not become a LAN/browser API.
+The existing `/api/state` and `/media/:assetID` remain the browser reference contract. The appliance renderer starts from `GET /api/renderer/state`, a narrow local-only snapshot contract shaped for native rendering instead of inheriting browser/SSE assumptions. It is served only to localhost and may expose renderer-local cache file references. Direct cache file paths are allowed only for this local renderer process boundary and must not become a LAN/browser API.
 
 Required resilience behavior:
 
@@ -201,6 +201,12 @@ Required resilience behavior:
 - Replace the visible image only after the new media has been fetched or opened and decoded successfully.
 - Keep degraded/error status overlays quiet and user-safe.
 - Recover by snapshot polling, so renderer state converges even if an event was missed.
+
+Phase 6 proof-of-concept surface:
+
+- `internal/renderer` defines the snapshot contract, frame-retention loop, and fixture preview rendering.
+- `GET /api/renderer/state` adapts current daemon playback/config/cache state into the renderer snapshot.
+- `immich-frame renderer-poc` renders a local cached/fixture image plus simple status/clock overlay into a PNG using the same contract and image fit rules. The SDL display shell is still the intended primary renderer path, but SDL-specific packaging is intentionally left for the next hardware slice after the contract and outage loop are proven.
 
 Rules:
 

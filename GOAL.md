@@ -490,16 +490,16 @@ Goal: choose and prototype the appliance renderer direction while preserving the
   - [x] Score options on memory/CPU footprint, image scaling quality, crossfade/overlay feasibility, packaging complexity, Go integration, testability without hardware, and Pi availability.
   - [x] Recommend one primary path and one fallback path.
   - [x] Record rejected options and why.
-- [ ] Build a narrow proof of concept for the recommended renderer:
-  - [ ] Keep the proof of concept behind a clearly named command, package, or `experiments/` path.
-  - [ ] Display a cached/local image fullscreen from daemon-compatible state or a documented fixture.
-  - [ ] Render at least one simple overlay, such as clock or status text, enough to prove overlays are feasible.
-  - [ ] Use a resilient update loop that keeps the current image visible when state/media refresh fails.
-  - [ ] Avoid restarting installer/systemd/kiosk work in this phase.
-- [ ] Add testable seams:
-  - [ ] Unit-test renderer contract parsing/state adaptation where practical.
-  - [ ] Add fixture-driven tests for outage/reconnect state handling if a full renderer cannot run in CI.
-  - [ ] Keep tests unit/mock only; no real-Immich integration tests in repo/CI.
+- [x] Build a narrow proof of concept for the recommended renderer:
+  - [x] Keep the proof of concept behind a clearly named command, package, or `experiments/` path.
+  - [x] Render a display-sized cached/local image from daemon-compatible state or a documented fixture.
+  - [x] Render at least one simple overlay, such as clock or status text, enough to prove overlays are feasible.
+  - [x] Use a resilient update loop that keeps the current image visible when state/media refresh fails.
+  - [x] Avoid restarting installer/systemd/kiosk work in this phase.
+- [x] Add testable seams:
+  - [x] Unit-test renderer contract parsing/state adaptation where practical.
+  - [x] Add fixture-driven tests for outage/reconnect state handling if a full renderer cannot run in CI.
+  - [x] Keep tests unit/mock only; no real-Immich integration tests in repo/CI.
 - [ ] Update docs:
   - [ ] Update `docs/architecture.md` with browser-as-reference and new renderer boundary.
   - [ ] Update `docs/implementation-plan.md` with the Phase 6 decision/prototype outcome.
@@ -525,6 +525,16 @@ Goal: choose and prototype the appliance renderer direction while preserving the
 - Recommended primary path: Go + SDL2 native renderer.
 - Recommended fallback path: pre-composited framebuffer/image-viewer renderer for very weak hardware or SDL packaging failures.
 - Proof-of-concept work is intentionally paused until the path is discussed.
+
+### Phase 6 Proof-Of-Concept Notes - 2026-05-24
+
+- Added `internal/renderer` with the local renderer snapshot contract, frame-retention loop, and PNG preview renderer.
+- Added local-only `GET /api/renderer/state`, which adapts daemon playback/config/cache state for the appliance renderer and rejects non-loopback callers.
+- The renderer snapshot can include local cache file paths only across the loopback renderer boundary; `/api/state` remains the browser reference contract.
+- Added `immich-frame renderer-poc`, a Windows-friendly fixture/prototype command that renders a cached/local image through the renderer contract into a PNG preview with a status/clock overlay.
+- Added tests for renderer state adaptation, local-only renderer API behavior, preview generation, and keeping the previously decoded image visible when snapshot fetch or media decode fails.
+- No installer, systemd, autostart, kiosk, or OS-image work was restarted.
+- The remaining hardware-facing work is to put an SDL display shell around the tested renderer contract/loop and then verify SDL packaging/runtime behavior on target hardware.
 
 ## Stop Conditions
 

@@ -101,7 +101,8 @@ Phase 6 current decision state:
 - The appliance renderer should use resilient polling or hybrid polling plus event wake-ups, not SSE-only state.
 - Recommended primary path before prototype discussion: Go + SDL2 native renderer.
 - Recommended fallback path before prototype discussion: pre-composited framebuffer/image-viewer renderer.
-- Proof-of-concept work has not started yet; discuss the renderer paths before continuing.
+- Proof-of-concept foundation exists in `internal/renderer`, `GET /api/renderer/state`, and `immich-frame renderer-poc`.
+- The SDL display shell is still the remaining primary-path hardware renderer work; do not restart installer/systemd/kiosk work.
 
 ## Git Commit Guidance
 
@@ -167,9 +168,9 @@ For Phase 6, pay special attention to:
 - [x] Define the renderer contract between daemon state/media and presentation.
 - [x] Evaluate lightweight renderer options for Pi Zero 2 W-class hardware.
 - [x] Recommend one primary renderer path and one fallback path.
-- [ ] Build a narrow proof of concept for the recommended path.
-- [ ] Prove or document how the new renderer keeps cached photos visible through state/media refresh failures.
-- [ ] Add unit/fixture tests for renderer contract logic where practical.
+- [x] Build a narrow proof of concept for the recommended path.
+- [x] Prove or document how the new renderer keeps cached photos visible through state/media refresh failures.
+- [x] Add unit/fixture tests for renderer contract logic where practical.
 - [ ] Update developer-facing docs as behavior changes.
 - [ ] Update `GOAL.md` as items are completed.
 - [ ] Commit and push coherent slices as checklist features are completed.

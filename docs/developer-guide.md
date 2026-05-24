@@ -113,6 +113,9 @@ internal/immich
 internal/playback
   Slideshow queue, playback state, queue refresh, and near-upcoming eviction protection.
 
+internal/renderer
+  Phase 6 appliance renderer contract, retained-visible-frame loop, and fixture preview renderer.
+
 internal/source
   Source-neutral candidates, including local folder dev source.
 
@@ -128,6 +131,18 @@ ui/setup
 ui/shared
   Shared frontend API/types.
 ```
+
+## Renderer Prototype Notes
+
+During Phase 6, `/frame` remains the browser reference renderer. The appliance renderer contract lives in `internal/renderer`, and the daemon exposes `GET /api/renderer/state` for loopback renderer clients only.
+
+Use this command to produce a local proof-of-concept preview without installing SDL:
+
+```powershell
+go run ./cmd/immich-frame renderer-poc -image dev/photos/indy.jpg -out .immich-frame/renderer-poc.png -width 800 -height 480
+```
+
+The command verifies the contract, image fitting, and simple overlay composition on Windows. The tested renderer loop keeps the previous decoded image visible when a later snapshot fetch or media decode fails. The remaining hardware-specific step is an SDL display shell around this package.
 
 ## Immich Development Notes
 

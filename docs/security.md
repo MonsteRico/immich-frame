@@ -46,6 +46,7 @@ Implemented route shape:
 - `GET /api/status` requires a setup or admin session and returns setup/configuration status, Immich validation status, source mode, cache count, and last error without raw secrets.
 - `POST /api/immich/test` and `GET /api/immich/albums` require a setup or admin session.
 - `POST /api/setup/complete` invalidates the setup code only after admin password, saved Immich credentials, successful validation for those credentials, and source selection are present.
+- `GET /api/renderer/state` is local-only for the appliance renderer. It rejects non-loopback callers because it may include renderer-local cache file paths.
 
 Runtime refresh errors are recorded as user-safe status text only. They must not include the raw Immich API key, direct authenticated Immich URLs, filesystem paths, or raw Immich response bodies.
 
@@ -60,6 +61,8 @@ Requests from localhost may access the frame and cached media so the device can 
 Requests from LAN clients must authenticate before accessing settings or photo media.
 
 LAN callers without an admin session cannot fetch `/media/:assetID`. The localhost kiosk may fetch cached media without login so the appliance can boot directly into the slideshow.
+
+The appliance renderer snapshot endpoint is stricter than `/media/:assetID`: it is loopback-only and not session-enabled for LAN callers. This keeps local cache file paths inside the frame device boundary while still allowing a native renderer process to avoid browser/media-route assumptions.
 
 Cache eviction preserves the current and near-upcoming playback entries before removing stale or over-target assets. Factory reset remains the privacy boundary for intentionally clearing cached photos.
 
@@ -129,3 +132,5 @@ Avoid sending by default:
 - direct Immich URLs.
 
 Richer metadata can be added later only through explicit overlay settings.
+
+The local appliance renderer may receive cache file paths from `GET /api/renderer/state`. That is an intentional localhost-only renderer contract and must not be exposed through browser/LAN APIs.

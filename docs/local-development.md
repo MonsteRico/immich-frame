@@ -116,6 +116,31 @@ For local mock slideshow work, `-dev-source dev/photos` keeps `/frame` on the lo
 
 Stop the server with `Ctrl+C`.
 
+## Renderer Prototype Checks
+
+The browser `/frame` UI is the reference/development renderer. The Phase 6 appliance renderer prototype uses a local-only snapshot contract and a fixture preview command before hardware-specific SDL packaging is added.
+
+With the daemon running, inspect the local renderer snapshot:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8787/api/renderer/state
+```
+
+The response should include status, current/next media when available, playback settings, overlay config, display target, and local cache path details for the renderer. This endpoint is loopback-only; LAN callers should not be able to use it.
+
+Render a Windows-friendly proof-of-concept preview from a local/cached image:
+
+```powershell
+go run ./cmd/immich-frame renderer-poc -image dev/photos/indy.jpg -out .immich-frame/renderer-poc.png -width 800 -height 480
+```
+
+Expected result:
+
+- `.immich-frame/renderer-poc.png` is created.
+- The image is scaled according to the renderer contract fit mode.
+- A simple status/clock overlay is composited into the output.
+- The command uses `internal/renderer`, the same package that owns the retained-visible-frame update loop tested by `go test ./...`.
+
 ## Verify Embedded Assets Locally
 
 To prove the server is using embedded Vite assets instead of external dist
@@ -148,6 +173,7 @@ Useful HTTP smoke checks:
 ```sh
 curl -i http://127.0.0.1:8787/frame
 curl -i http://127.0.0.1:8787/api/state
+curl -i http://127.0.0.1:8787/api/renderer/state
 curl -i http://127.0.0.1:8787/api/setup/state
 ```
 
@@ -156,6 +182,7 @@ On PowerShell:
 ```powershell
 Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8787/frame
 Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8787/api/state
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8787/api/renderer/state
 Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8787/api/setup/state
 ```
 
@@ -261,6 +288,12 @@ Print version:
 
 ```sh
 go run ./cmd/immich-frame version
+```
+
+Render the appliance renderer proof-of-concept preview:
+
+```sh
+go run ./cmd/immich-frame renderer-poc -image dev/photos/indy.jpg -out .immich-frame/renderer-poc.png -width 800 -height 480
 ```
 
 Inspect runtime state when using a custom data directory:

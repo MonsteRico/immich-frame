@@ -46,6 +46,7 @@ Overlay contribution model remains source-level reviewed contributions, compiled
 - Hardware setup is paused until Phase 6 chooses a renderer direction.
 - The Pi Zero 2 W Chromium kiosk path appears likely to struggle and showed reference-renderer outage recovery issues.
 - Phase 6 is currently recommending a Go + SDL2 appliance renderer as the primary path and a pre-composited framebuffer/image-viewer path as the fallback, pending proof-of-concept discussion.
+- The first Phase 6 prototype foundation is local-only renderer state plus a retained-frame loop and PNG fixture preview; the SDL display shell and hardware packaging remain future hardware work.
 - Future install/systemd work should reuse the daemon, Immich adapter, setup portal, cache, playback, and settings behavior rather than rebuilding the whole app.
 - GPIO buttons.
 - IR remote.

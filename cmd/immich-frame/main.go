@@ -4,6 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"image"
+	"image/png"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -13,6 +15,11 @@ import (
 	"github.com/MonsteRico/immich-frame/internal/app"
 	"github.com/MonsteRico/immich-frame/internal/cache"
 	"github.com/MonsteRico/immich-frame/internal/config"
+	"github.com/MonsteRico/immich-frame/internal/renderer"
+
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 )
 
 const version = "0.1.0-dev"
@@ -35,6 +42,8 @@ func run(args []string) error {
 		return status(args[1:])
 	case "reset":
 		return reset(args[1:])
+	case "renderer-poc":
+		return rendererPOC(args[1:])
 	case "config":
 		return configCommand(args[1:])
 	case "version":
@@ -72,6 +81,61 @@ func serve(args []string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	return application.Serve(ctx)
+}
+
+func rendererPOC(args []string) error {
+	fs := flag.NewFlagSet("renderer-poc", flag.ExitOnError)
+	imagePath := fs.String("image", filepath.FromSlash("dev/photos/indy.jpg"), "cached/local image to render")
+	outPath := fs.String("out", filepath.FromSlash(".immich-frame/renderer-poc.png"), "PNG preview output path")
+	width := fs.Int("width", 800, "preview width")
+	height := fs.Int("height", 480, "preview height")
+	status := fs.String("status", "ready", "renderer status overlay")
+	fit := fs.String("fit", "contain", "image fit: contain or cover")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	src, err := decodeImage(*imagePath)
+	if err != nil {
+		return err
+	}
+	snapshot := renderer.Snapshot{
+		Status: *status,
+		Current: &renderer.Asset{
+			ID:        filepath.Base(*imagePath),
+			LocalPath: *imagePath,
+		},
+		Playback:  renderer.Playback{Fit: *fit},
+		Display:   renderer.Display{Width: *width, Height: *height, Orientation: "auto"},
+		Setup:     renderer.Setup{Configured: true},
+		UpdatedAt: time.Now(),
+	}
+	preview := renderer.RenderPreview(snapshot, src, time.Now())
+	if err := os.MkdirAll(filepath.Dir(*outPath), 0o755); err != nil {
+		return err
+	}
+	file, err := os.Create(*outPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if err := png.Encode(file, preview); err != nil {
+		return err
+	}
+	fmt.Printf("renderer proof-of-concept preview written to %s\n", *outPath)
+	return nil
+}
+
+func decodeImage(path string) (image.Image, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return nil, err
+	}
+	return img, nil
 }
 
 func status(args []string) error {
@@ -174,6 +238,7 @@ func configCommand(args []string) error {
 func usage() error {
 	fmt.Println(`immich-frame commands:
   serve             run the local frame daemon
+  renderer-poc      render a fixture through the appliance renderer prototype
   status            print runtime status without secrets
   reset             clear secrets, state, and cache unless --keep-cache is set
   config validate   validate config.toml

@@ -2,6 +2,9 @@ package main
 
 import (
 	"bytes"
+	"image"
+	"image/color"
+	"image/png"
 	"os"
 	"path/filepath"
 	"strings"
@@ -104,6 +107,49 @@ func TestResetRemovesPrivateStateAndOptionalConfig(t *testing.T) {
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
 			t.Fatalf("%s still exists or stat error = %v", path, err)
 		}
+	}
+}
+
+func TestRendererPOCWritesPreview(t *testing.T) {
+	root := t.TempDir()
+	sourcePath := filepath.Join(root, "source.png")
+	outPath := filepath.Join(root, "preview.png")
+	img := image.NewRGBA(image.Rect(0, 0, 4, 4))
+	for y := 0; y < 4; y++ {
+		for x := 0; x < 4; x++ {
+			img.Set(x, y, color.RGBA{R: 200, G: 80, B: 20, A: 255})
+		}
+	}
+	file, err := os.Create(sourcePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := png.Encode(file, img); err != nil {
+		t.Fatal(err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	output := captureStdout(t, func() {
+		if err := run([]string{"renderer-poc", "-image", sourcePath, "-out", outPath, "-width", "64", "-height", "48"}); err != nil {
+			t.Fatalf("renderer-poc error = %v", err)
+		}
+	})
+	if !strings.Contains(output, "renderer proof-of-concept preview written") {
+		t.Fatalf("unexpected renderer-poc output: %q", output)
+	}
+	preview, err := os.Open(outPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer preview.Close()
+	decoded, err := png.Decode(preview)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if decoded.Bounds().Dx() != 64 || decoded.Bounds().Dy() != 48 {
+		t.Fatalf("preview bounds = %v, want 64x48", decoded.Bounds())
 	}
 }
 

@@ -284,6 +284,80 @@ func TestStatusResponseIncludesSafeSetupImmichAndCacheState(t *testing.T) {
 	}
 }
 
+func TestRendererStateIsLocalOnlyAndIncludesCachePath(t *testing.T) {
+	server := newTestServer(t)
+	sourcePath := filepath.Join(t.TempDir(), "photo.jpg")
+	if err := os.WriteFile(sourcePath, []byte("photo"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := server.Cache.Ensure([]source.Candidate{{
+		ID:         "asset-1",
+		SourcePath: sourcePath,
+		MediaType:  "image/jpeg",
+		Title:      "Porch",
+		SourceName: "Family",
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	server.State.SetupComplete = true
+	server.Queue.Replace(entries)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/renderer/state", nil)
+	req.RemoteAddr = "192.168.1.10:1234"
+	rec := httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("LAN renderer state status = %d, want 403", rec.Code)
+	}
+
+	req = httptest.NewRequest(http.MethodGet, "/api/renderer/state", nil)
+	req.RemoteAddr = "127.0.0.1:1234"
+	rec = httptest.NewRecorder()
+	server.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("loopback renderer state status = %d body=%s", rec.Code, rec.Body.String())
+	}
+	if strings.Contains(rec.Body.String(), "raw-secret-key") || strings.Contains(rec.Body.String(), "apiKey") {
+		t.Fatalf("renderer state leaked secret-shaped data: %s", rec.Body.String())
+	}
+	var body struct {
+		Status  string `json:"status"`
+		Current struct {
+			ID          string `json:"id"`
+			LocalPath   string `json:"localPath"`
+			ContentType string `json:"contentType"`
+			MediaURL    string `json:"mediaUrl"`
+		} `json:"current"`
+		Playback struct {
+			IntervalSeconds int    `json:"intervalSeconds"`
+			Fit             string `json:"fit"`
+		} `json:"playback"`
+		Display struct {
+			Width  int `json:"width"`
+			Height int `json:"height"`
+		} `json:"display"`
+		Setup struct {
+			Configured bool `json:"configured"`
+		} `json:"setup"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if body.Status != "ready" || body.Current.ID != "asset-1" || body.Current.MediaURL != "/media/asset-1" {
+		t.Fatalf("unexpected renderer state body: %+v", body)
+	}
+	if body.Current.LocalPath == "" || body.Current.ContentType != "image/jpeg" {
+		t.Fatalf("renderer state missing local cache details: %+v", body.Current)
+	}
+	if body.Playback.IntervalSeconds != server.Config.Slideshow.IntervalSeconds || body.Playback.Fit != server.Config.Display.Fit {
+		t.Fatalf("renderer state missing playback settings: %+v", body.Playback)
+	}
+	if body.Display.Width != 1920 || body.Display.Height != 1080 || !body.Setup.Configured {
+		t.Fatalf("renderer state missing display/setup details: %+v", body)
+	}
+}
+
 func TestCleanAssetPathRejectsTraversal(t *testing.T) {
 	for _, tc := range []struct {
 		name string

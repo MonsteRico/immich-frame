@@ -21,6 +21,7 @@ import (
 	"github.com/MonsteRico/immich-frame/internal/config"
 	"github.com/MonsteRico/immich-frame/internal/immich"
 	"github.com/MonsteRico/immich-frame/internal/playback"
+	"github.com/MonsteRico/immich-frame/internal/renderer"
 	setupstate "github.com/MonsteRico/immich-frame/internal/setup"
 )
 
@@ -68,6 +69,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/setup", s.setup)
 	mux.HandleFunc("/assets/", s.assets)
 	mux.HandleFunc("/api/state", s.state)
+	mux.HandleFunc("/api/renderer/state", s.rendererState)
 	mux.HandleFunc("/api/events", s.events)
 	mux.HandleFunc("/api/display", s.display)
 	mux.HandleFunc("/api/setup/state", s.setupState)
@@ -144,6 +146,38 @@ func (s *Server) assets(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) state(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, sanitizeFrameState(s.snapshot(), isLoopbackRequest(r)))
+}
+
+func (s *Server) rendererState(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if !isLoopbackRequest(r) {
+		http.Error(w, "renderer state is local-only", http.StatusForbidden)
+		return
+	}
+	s.mu.Lock()
+	cfg := s.Config
+	overlays := s.Config.Overlays
+	setupConfigured := s.State.SetupComplete
+	s.mu.Unlock()
+	var playbackState playback.State
+	if s.Queue != nil {
+		playbackState = s.Queue.State()
+	}
+	writeJSON(w, renderer.FromFrameState(playbackState, cfg, overlays, setupConfigured, s.rendererCacheLookup))
+}
+
+func (s *Server) rendererCacheLookup(assetID string) (string, string, bool) {
+	if s.Cache == nil {
+		return "", "", false
+	}
+	entry, ok := s.Cache.Get(assetID)
+	if !ok {
+		return "", "", false
+	}
+	return entry.CachePath, entry.MediaType, true
 }
 
 func (s *Server) events(w http.ResponseWriter, r *http.Request) {

@@ -201,9 +201,9 @@ Checklist:
 - [x] Evaluate at least three lightweight renderer options for Pi Zero 2 W-class hardware.
 - [x] Score renderer options on footprint, image quality, overlay feasibility, packaging complexity, Go integration, and testability without hardware.
 - [x] Recommend one primary renderer path and one fallback path.
-- [ ] Build a narrow proof of concept for the recommended path.
-- [ ] Show at least one cached/local image and one simple overlay in the proof of concept.
-- [ ] Keep the current image visible if state/media refresh fails.
+- [x] Build a narrow proof of concept for the recommended path.
+- [x] Show at least one cached/local image and one simple overlay in the proof of concept.
+- [x] Keep the current image visible if state/media refresh fails.
 - [ ] Reuse existing daemon, setup portal, Immich adapter, cache, playback, and settings behavior.
 - [ ] Avoid restarting installer/systemd work until a renderer direction is chosen.
 - [ ] Re-plan hardware install steps around the chosen renderer.
@@ -247,7 +247,7 @@ Recommended primary path:
 - Prototype a Go + SDL2 appliance renderer behind a clearly named experimental command/package.
 - Keep renderer logic split so state adaptation, outage behavior, and image-selection decisions are unit-testable without SDL.
 - Consume a fixture first, then the future local-only renderer snapshot contract.
-- Render one fullscreen cached image and one text overlay.
+- Render one display-sized cached image and one text overlay, with the SDL shell responsible for taking that loop fullscreen on target hardware.
 - Implement the core loop as "snapshot, decode next, then swap"; on any state/media failure, keep showing the last decoded image.
 
 Recommended fallback path:
@@ -260,6 +260,20 @@ Rejected for the first proof of concept:
 - Qt/QML: excellent UI capability, but too much runtime and packaging weight for the current question.
 - WPE/WebKit: credible embedded web path, but it keeps the project in a browser-engine failure mode before proving a truly lighter renderer.
 - Deep Chromium hardening: explicitly out of scope for Phase 6 because the browser renderer is now a reference/development renderer.
+
+### Phase 6 Proof-Of-Concept Slice
+
+Implemented proof-of-concept surface:
+
+- `internal/renderer` contains the local renderer snapshot contract and a small retained-frame loop.
+- `GET /api/renderer/state` is local-only and adapts daemon playback/config/cache state into renderer input. It can include local cache file paths for the renderer process, but rejects non-loopback callers.
+- `immich-frame renderer-poc` renders a cached/local image through the renderer contract into a PNG preview with a simple status/clock overlay. This keeps the contract and image fit behavior testable on Windows without requiring SDL to be installed.
+- Unit tests prove renderer snapshot adaptation, local-only API behavior, preview generation, and the outage invariant that a previously decoded image remains visible when a later state fetch or media decode fails.
+
+Remaining after this slice:
+
+- Add the SDL display shell around `internal/renderer` after confirming the contract/loop behavior is acceptable.
+- Re-plan Pi install/systemd/autostart around the chosen renderer only after SDL packaging and target-device behavior are tested.
 
 ## MVP Exclusions
 

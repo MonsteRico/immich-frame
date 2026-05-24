@@ -100,6 +100,12 @@ The primary path is preferred because it keeps implementation in Go, avoids a we
 
 The fallback path is intentionally smaller. It may sacrifice crossfade and richer overlays, but it gives very weak boards a credible way to keep showing cached photos if SDL packaging or drivers are not acceptable on the target.
 
+Implemented so far:
+
+- `internal/renderer` owns the renderer snapshot contract and retained-visible-frame loop.
+- `GET /api/renderer/state` gives a local-only renderer process daemon state and cache media details.
+- `immich-frame renderer-poc` renders a local/cached image plus a status/clock overlay to a PNG preview for Windows-friendly verification.
+
 Do not add installer, systemd, autostart, kiosk, or OS-image work until the renderer proof of concept has been discussed and accepted.
 
 ## Display Server
