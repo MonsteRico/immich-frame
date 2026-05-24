@@ -34,7 +34,8 @@ button {
 }
 
 .stage,
-.empty-state {
+.empty-state,
+.offline-state {
   position: absolute;
   inset: 0;
   display: grid;
@@ -79,6 +80,48 @@ button {
   margin: 0;
   color: rgb(255 255 255 / 72%);
   line-height: 1.55;
+}
+
+.offline-state {
+  padding: clamp(1.5rem, 5vw, 4rem);
+  background: #050506;
+}
+
+.offline-copy {
+  display: grid;
+  gap: 0.75rem;
+  width: min(38rem, 100%);
+  padding-left: clamp(1rem, 4vw, 2.5rem);
+  border-left: 1px solid rgb(255 255 255 / 22%);
+}
+
+.offline-copy p {
+  margin: 0;
+  color: rgb(255 255 255 / 58%);
+  font-size: 0.92rem;
+  font-weight: 760;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.offline-copy h1 {
+  margin: 0;
+  font-size: clamp(2.15rem, 7vw, 5.5rem);
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.offline-copy span,
+.offline-copy strong {
+  max-width: 31rem;
+  color: rgb(255 255 255 / 70%);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.5;
+}
+
+.offline-copy strong {
+  color: rgb(255 255 255 / 86%);
+  font-weight: 650;
 }
 
 .setup-state {

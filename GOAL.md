@@ -340,10 +340,10 @@ Phase 3.5 is complete. Phase 4 appliance installer work was reverted and hardwar
   - [x] Retry Immich refresh with bounded backoff.
   - [x] Preserve useful last-error details for status surfaces without noisy bright failures.
   - [x] Add focused unit tests.
-- [ ] Tighten degraded/offline UI states:
-  - [ ] Show operational status overlay only when degraded/error conditions exist.
-  - [ ] Keep the current photo visible when the next fetch fails.
-  - [ ] Show calm empty-cache plus unavailable-Immich state when no cached media can play.
+- [x] Tighten degraded/offline UI states:
+  - [x] Show operational status overlay only when degraded/error conditions exist.
+  - [x] Keep the current photo visible when the next fetch fails.
+  - [x] Show calm empty-cache plus unavailable-Immich state when no cached media can play.
 - [ ] Finish reset/status CLI behavior:
   - [ ] Ensure `immich-frame status` reports setup/config/source/cache/last-error details without secrets.
   - [ ] Ensure `reset` behavior is documented and privacy-preserving.
@@ -376,6 +376,14 @@ Phase 3.5 is complete. Phase 4 appliance installer work was reverted and hardwar
 - Runtime refresh failures set calm degraded/error queue messages and persist a user-safe last error for status surfaces.
 - Focused unit tests cover top-off, source-aware eviction/pruning, protected playback entries, bounded backoff, degraded cache-first status, and queue refresh preserving the current photo.
 - Verification after this slice passed: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
+
+### Phase 5 Degraded Frame UI Slice Notes - 2026-05-24
+
+- The frame UI now shows backend operational status text only for degraded/error states, plus local fetch/command errors.
+- Configured frames with no playable cached media and an Immich outage now show a calm offline screen with the setup URL instead of local-development photo instructions.
+- The current photo remains the primary view during degraded cached playback; outage status appears as the subtle operational overlay.
+- Verification after code changes passed: `pnpm typecheck` and `pnpm build`.
+- Browser rendering verification passed in the Codex in-app Browser against `http://127.0.0.1:8787/frame` for configured empty-cache outage state and local mock slideshow state. Evidence showed the offline screen without duplicate status overlay, no console warnings/errors, the mock slideshow with photo overlays, and ArrowRight advancing playback from one cached local photo to the next.
 
 ## Stop Conditions
 

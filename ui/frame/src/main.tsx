@@ -49,7 +49,8 @@ function App() {
 
   const current = state?.current;
   const next = state?.next;
-  const statusText = error || state?.message || "";
+  const operationalStatus = isOperationalStatus(state?.status) ? state?.message : "";
+  const statusText = error || (current ? operationalStatus : "") || "";
 
   return (
     <main
@@ -58,24 +59,45 @@ function App() {
       onMouseLeave={() => setControlsVisible(false)}
       onClick={() => setControlsVisible((visible) => !visible)}
     >
-      <SlideshowImage asset={current} next={next} setup={state?.setup} />
+      <SlideshowImage asset={current} next={next} setup={state?.setup} status={state?.status} message={state?.message} />
       <OverlayLayer asset={current} status={statusText} />
-      <Controls
-        visible={controlsVisible}
-        paused={state?.paused ?? false}
-        onPrevious={() => void handleCommand("previous")}
-        onNext={() => void handleCommand("next")}
-        onTogglePause={() => void handleCommand(state?.paused ? "resume" : "pause")}
-      />
+      {current ? (
+        <Controls
+          visible={controlsVisible}
+          paused={state?.paused ?? false}
+          onPrevious={() => void handleCommand("previous")}
+          onNext={() => void handleCommand("next")}
+          onTogglePause={() => void handleCommand(state?.paused ? "resume" : "pause")}
+        />
+      ) : null}
     </main>
   );
 }
 
-function SlideshowImage({ asset, next, setup }: { asset?: FrameAsset; next?: FrameAsset; setup?: FrameState["setup"] }) {
+function isOperationalStatus(status?: string) {
+  return status === "degraded" || status === "error";
+}
+
+function SlideshowImage({
+  asset,
+  next,
+  setup,
+  status,
+  message
+}: {
+  asset?: FrameAsset;
+  next?: FrameAsset;
+  setup?: FrameState["setup"];
+  status?: string;
+  message?: string;
+}) {
   const background = asset?.mediaUrl ?? next?.mediaUrl;
   if (!asset) {
     if (setup?.setupCodeRequired) {
       return <SetupScreen setup={setup} />;
+    }
+    if (setup?.configured && isOperationalStatus(status)) {
+      return <OfflineScreen message={message} setupUrl={setup.setupUrl} />;
     }
     return (
       <section className="empty-state">
@@ -88,6 +110,19 @@ function SlideshowImage({ asset, next, setup }: { asset?: FrameAsset; next?: Fra
     <section className="stage" aria-label={asset.title || "Current photo"}>
       <img className="backdrop" src={background} alt="" aria-hidden="true" />
       <img className="photo photo-current" key={asset.id} src={asset.mediaUrl} alt="" />
+    </section>
+  );
+}
+
+function OfflineScreen({ message, setupUrl }: { message?: string; setupUrl: string }) {
+  return (
+    <section className="offline-state">
+      <div className="offline-copy">
+        <p>Offline</p>
+        <h1>No cached photos yet</h1>
+        <span>{message || "Immich is unavailable. The frame will keep retrying in the background."}</span>
+        <strong>{setupUrl}</strong>
+      </div>
     </section>
   );
 }

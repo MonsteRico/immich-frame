@@ -92,6 +92,7 @@ Expected `/frame` behavior:
 - The operational status overlay stays quiet while state is ready.
 - The current image URL is a local `/media/:assetID` URL, not an external URL.
 - Background cache maintenance may refresh the queue when local or Immich cache contents change.
+- A configured frame with no cached media and an unavailable Immich source shows the offline/no cached photos screen rather than the local development placeholder.
 
 Expected `/setup` behavior:
 

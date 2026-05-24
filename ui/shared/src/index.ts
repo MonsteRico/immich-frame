@@ -45,7 +45,7 @@ export interface FrameAsset {
 export interface FrameState {
   configured: boolean;
   paused: boolean;
-  status: "ready" | "empty" | "degraded" | string;
+  status: "ready" | "empty" | "degraded" | "error" | string;
   message?: string;
   current?: FrameAsset;
   next?: FrameAsset;

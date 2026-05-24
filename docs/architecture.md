@@ -188,6 +188,8 @@ The frame UI should be restrained and photo-first:
 - no dashboard-heavy layout.
 - no decorative chrome competing with photos.
 - no theme system in MVP.
+- status messaging stays quiet unless the daemon reports a degraded/error condition or the frame UI has a local runtime error.
+- configured empty-cache outages use a calm offline screen instead of development placeholder text.
 
 ## Setup UI
 
