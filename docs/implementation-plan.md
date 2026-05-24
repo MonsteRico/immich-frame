@@ -136,15 +136,15 @@ Goal: make the browser-based MVP reliable enough to use daily before swapping or
 
 Checklist:
 
-- [ ] Implement cache rotation and eviction policy:
-  - [ ] Refresh Immich candidate pools periodically.
-  - [ ] Top off cached display-targeted renditions toward `target_items`.
-  - [ ] Maintain a near-term prefetch buffer from `prefetch_items`.
-  - [ ] Prefer never-shown and least-recently-shown candidates.
-  - [ ] Evict entries that left the source before evicting valid offline fallback photos.
-  - [ ] Avoid evicting current and near-upcoming playback entries.
-  - [ ] Refresh playback queue when cache contents change so the frame does not loop one static seed forever.
-- [ ] Implement outage retry/backoff.
+- [x] Implement cache rotation and eviction policy:
+  - [x] Refresh Immich candidate pools periodically.
+  - [x] Top off cached display-targeted renditions toward `target_items`.
+  - [x] Maintain a near-term prefetch buffer from `prefetch_items`.
+  - [x] Prefer never-shown and least-recently-shown candidates.
+  - [x] Evict entries that left the source before evicting valid offline fallback photos.
+  - [x] Avoid evicting current and near-upcoming playback entries.
+  - [x] Refresh playback queue when cache contents change so the frame does not loop one static seed forever.
+- [x] Implement outage retry/backoff.
 - [ ] Implement subtle degraded status overlay.
 - [ ] Implement reset flows.
 - [ ] Implement CLI status details.

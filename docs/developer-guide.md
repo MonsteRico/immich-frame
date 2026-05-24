@@ -94,10 +94,10 @@ internal/api
   HTTP routes, SSE, static UI serving, media route.
 
 internal/app
-  Application wiring and source/cache/playback startup.
+  Application wiring, source/cache/playback startup, and background cache maintenance.
 
 internal/cache
-  Cache manifest and local/fetched media storage.
+  Cache manifest, local/fetched media storage, top-off, and eviction policy.
 
 internal/config
   Config, secrets, state models and file IO.
@@ -109,7 +109,7 @@ internal/immich
   Immich REST API adapter. Keep Immich endpoint details here.
 
 internal/playback
-  Slideshow queue and playback state.
+  Slideshow queue, playback state, queue refresh, and near-upcoming eviction protection.
 
 internal/source
   Source-neutral candidates, including local folder dev source.
@@ -171,6 +171,7 @@ The setup/settings API is intentionally browser-safe:
 - use `hasImmichApiKey` instead of returning the saved API key.
 - require setup/admin sessions for settings and Immich setup routes.
 - treat `/api/status` as setup/admin-only; it reports validation state, source mode, cache count, and last error without raw secrets.
+- keep cache maintenance daemon-owned. The browser renders local `/media/:assetID` URLs and status text while Go owns Immich refresh, top-off, eviction, retry/backoff, and queue refresh.
 - require a successful Immich validation for the saved URL/API key before setup completion, including random-library mode.
 - clear stale validation when the saved URL or API key changes.
 - keep live Immich checks in mock HTTP unit tests for repo/CI.

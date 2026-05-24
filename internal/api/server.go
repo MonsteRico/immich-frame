@@ -92,6 +92,22 @@ func (s *Server) PublishState() {
 	s.Hub.Publish(s.snapshot())
 }
 
+func (s *Server) RecordSyncStatus(lastError string, syncedAt time.Time) {
+	s.mu.Lock()
+	s.State.LastError = lastError
+	if !syncedAt.IsZero() {
+		s.State.LastSync = syncedAt
+	}
+	_ = config.SaveState(s.Paths.StateFile, s.State)
+	s.mu.Unlock()
+}
+
+func (s *Server) RuntimeInputs() (config.Config, config.Secrets, config.State) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.Config, s.Secrets, s.State
+}
+
 func (s *Server) snapshot() FrameState {
 	s.mu.Lock()
 	defer s.mu.Unlock()

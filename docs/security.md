@@ -47,6 +47,8 @@ Implemented route shape:
 - `POST /api/immich/test` and `GET /api/immich/albums` require a setup or admin session.
 - `POST /api/setup/complete` invalidates the setup code only after admin password, saved Immich credentials, successful validation for those credentials, and source selection are present.
 
+Runtime refresh errors are recorded as user-safe status text only. They must not include the raw Immich API key, direct authenticated Immich URLs, filesystem paths, or raw Immich response bodies.
+
 ## Localhost Trust Boundary
 
 The Pi's Chromium kiosk opens `http://127.0.0.1:8787/frame`.
@@ -56,6 +58,8 @@ Requests from localhost may access the frame and cached media so the device can 
 Requests from LAN clients must authenticate before accessing settings or photo media.
 
 LAN callers without an admin session cannot fetch `/media/:assetID`. The localhost kiosk may fetch cached media without login so the appliance can boot directly into the slideshow.
+
+Cache eviction preserves the current and near-upcoming playback entries before removing stale or over-target assets. Factory reset remains the privacy boundary for intentionally clearing cached photos.
 
 ## Local HTTP
 

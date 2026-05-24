@@ -72,6 +72,33 @@ func TestQueueEmptyStateAndCommands(t *testing.T) {
 	}
 }
 
+func TestQueueRefreshPreservesCurrentAndProtectsUpcoming(t *testing.T) {
+	queue := NewQueue([]cache.Entry{
+		entry("asset-one"),
+		entry("asset-two"),
+		entry("asset-three"),
+	})
+	if _, err := queue.Next(); err != nil {
+		t.Fatalf("Next() error = %v", err)
+	}
+	queue.Refresh([]cache.Entry{
+		entry("asset-four"),
+		entry("asset-two"),
+		entry("asset-five"),
+	})
+	state := queue.State()
+	if state.Current == nil || state.Current.ID != "asset-two" {
+		t.Fatalf("current after refresh = %+v, want asset-two", state.Current)
+	}
+	protected := queue.ProtectedIDs(1)
+	if _, ok := protected["asset-two"]; !ok {
+		t.Fatal("current asset not protected")
+	}
+	if _, ok := protected["asset-five"]; !ok {
+		t.Fatal("next asset not protected")
+	}
+}
+
 func entry(id string) cache.Entry {
 	return cache.Entry{
 		AssetID:    id,

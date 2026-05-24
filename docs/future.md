@@ -69,6 +69,8 @@ Video is not important for MVP. Future optional behaviors could include:
 
 MVP uses the best Immich-provided non-original rendition appropriate for display target.
 
+The browser MVP now keeps cache rotation and outage handling inside the daemon, so a future lightweight renderer should only need to consume current/next local media URLs and status state instead of reimplementing Immich refresh or cache policy.
+
 Future options:
 
 - Higher-quality rendition selection for 4K displays.

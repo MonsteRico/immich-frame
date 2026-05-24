@@ -278,22 +278,17 @@ prefetch_items = 20
 
 Use one JSON manifest with atomic write/rename.
 
-Current implementation status:
+Implemented rotation behavior:
 
 - The cache manifest tracks `LastShown`.
 - Cached media is listed with unshown and least-recently-shown entries first.
-- The playback queue is seeded from the cache at startup.
-- Full cache churn, background top-off, and eviction are not complete yet.
-
-Planned cache rotation behavior:
-
-- Treat `target_items` as the desired warm cache size, not a fixed forever playlist.
-- Treat `prefetch_items` as the near-term buffer that should be kept ahead of playback.
-- Periodically refresh the Immich candidate pool for the selected source.
-- Add new display-targeted renditions in the background when the cache is below target, when source membership changes, or when many cached items have been shown recently.
-- Prefer adding never-cached and least-recently-shown candidates.
-- Evict cached entries when over size/count limits, preferring entries that are no longer in the source, then oldest/least valuable entries while avoiding the current and near-upcoming queue.
-- Preserve enough cached media to keep the frame useful during Immich/network outages.
+- The playback queue is seeded from the cache at startup and refreshed when cache contents change.
+- `target_items` is the desired warm cache size, not a fixed forever playlist.
+- `prefetch_items` defines near-upcoming playback entries that are protected from eviction.
+- The daemon periodically refreshes the Immich candidate pool for album and random-library sources.
+- The daemon tops off display-targeted renditions toward `target_items`, preferring never-cached candidates first.
+- Eviction prefers cached assets that have left the selected source, then recently shown valid assets, while preserving current and near-upcoming playback entries.
+- Existing cached media remains playable during Immich/network outages while the daemon retries refresh with bounded backoff.
 
 ## Playback Model
 
@@ -314,6 +309,7 @@ Behavior:
 - Avoid recent repeats.
 - Prefer least-recently-shown candidates.
 - Rebuild or refresh the queue as the cache changes so playback does not loop one static seed forever.
+- Keep the current photo stable when a background Immich refresh or rendition fetch fails.
 - No strict full-library cycle guarantee.
 - Resume current/last cached photo after reboot if possible.
 - Previous history does not need to survive reboot.

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/MonsteRico/immich-frame/internal/source"
@@ -40,6 +41,7 @@ type Manifest struct {
 type Store struct {
 	Dir          string
 	ManifestPath string
+	mu           sync.Mutex
 	manifest     Manifest
 }
 
@@ -71,6 +73,8 @@ func Open(dir string) (*Store, error) {
 }
 
 func (s *Store) Ensure(candidates []source.Candidate) ([]Entry, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	for _, candidate := range candidates {
 		if _, ok := s.manifest.Entries[candidate.ID]; ok {
 			continue
@@ -81,13 +85,15 @@ func (s *Store) Ensure(candidates []source.Candidate) ([]Entry, error) {
 		}
 		s.manifest.Entries[entry.AssetID] = entry
 	}
-	if err := s.Save(); err != nil {
+	if err := s.saveLocked(); err != nil {
 		return nil, err
 	}
-	return s.List(), nil
+	return s.listLocked(), nil
 }
 
 func (s *Store) EnsureFetched(ctx context.Context, candidates []source.Candidate, fetch FetchFunc) ([]Entry, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	for _, candidate := range candidates {
 		if _, ok := s.manifest.Entries[candidate.ID]; ok {
 			continue
@@ -98,28 +104,130 @@ func (s *Store) EnsureFetched(ctx context.Context, candidates []source.Candidate
 		}
 		s.manifest.Entries[entry.AssetID] = entry
 	}
-	if err := s.Save(); err != nil {
+	if err := s.saveLocked(); err != nil {
 		return nil, err
 	}
-	return s.List(), nil
+	return s.listLocked(), nil
+}
+
+func (s *Store) TopOffFetched(ctx context.Context, candidates []source.Candidate, targetItems int, fetch FetchFunc) ([]Entry, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if targetItems <= 0 {
+		targetItems = len(candidates)
+	}
+	ordered := s.prioritizedCandidatesLocked(candidates)
+	changed := false
+	for _, candidate := range ordered {
+		if len(s.manifest.Entries) >= targetItems {
+			break
+		}
+		if _, ok := s.manifest.Entries[candidate.ID]; ok {
+			continue
+		}
+		entry, err := s.cacheFetched(ctx, candidate, fetch)
+		if err != nil {
+			return s.listLocked(), changed, err
+		}
+		s.manifest.Entries[entry.AssetID] = entry
+		changed = true
+	}
+	if changed {
+		if err := s.saveLocked(); err != nil {
+			return nil, changed, err
+		}
+	}
+	return s.listLocked(), changed, nil
+}
+
+type EvictOptions struct {
+	TargetItems  int
+	SourceIDs    map[string]struct{}
+	ProtectedIDs map[string]struct{}
+}
+
+func (s *Store) EvictSourceRemoved(sourceIDs, protectedIDs map[string]struct{}) ([]Entry, []string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var evicted []string
+	for _, entry := range s.evictionCandidatesLocked(EvictOptions{SourceIDs: sourceIDs, ProtectedIDs: protectedIDs}) {
+		if _, inSource := sourceIDs[entry.AssetID]; inSource {
+			continue
+		}
+		if _, protected := protectedIDs[entry.AssetID]; protected {
+			continue
+		}
+		delete(s.manifest.Entries, entry.AssetID)
+		_ = os.Remove(entry.CachePath)
+		evicted = append(evicted, entry.AssetID)
+	}
+	if len(evicted) > 0 {
+		if err := s.saveLocked(); err != nil {
+			return nil, evicted, err
+		}
+	}
+	return s.listLocked(), evicted, nil
+}
+
+func (s *Store) Evict(opts EvictOptions) ([]Entry, []string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if opts.TargetItems <= 0 || len(s.manifest.Entries) <= opts.TargetItems {
+		return s.listLocked(), nil, nil
+	}
+	victims := s.evictionCandidatesLocked(opts)
+	var evicted []string
+	for _, entry := range victims {
+		if len(s.manifest.Entries) <= opts.TargetItems {
+			break
+		}
+		if _, protected := opts.ProtectedIDs[entry.AssetID]; protected {
+			continue
+		}
+		delete(s.manifest.Entries, entry.AssetID)
+		_ = os.Remove(entry.CachePath)
+		evicted = append(evicted, entry.AssetID)
+	}
+	if len(evicted) > 0 {
+		if err := s.saveLocked(); err != nil {
+			return nil, evicted, err
+		}
+	}
+	return s.listLocked(), evicted, nil
 }
 
 func (s *Store) Get(assetID string) (Entry, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	entry, ok := s.manifest.Entries[assetID]
 	return entry, ok
 }
 
 func (s *Store) MarkShown(assetID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	entry, ok := s.manifest.Entries[assetID]
 	if !ok {
 		return nil
 	}
 	entry.LastShown = time.Now()
 	s.manifest.Entries[assetID] = entry
-	return s.Save()
+	return s.saveLocked()
 }
 
 func (s *Store) List() []Entry {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.listLocked()
+}
+
+func (s *Store) Save() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.saveLocked()
+}
+
+func (s *Store) listLocked() []Entry {
 	entries := make([]Entry, 0, len(s.manifest.Entries))
 	for _, entry := range s.manifest.Entries {
 		entries = append(entries, entry)
@@ -139,7 +247,7 @@ func (s *Store) List() []Entry {
 	return entries
 }
 
-func (s *Store) Save() error {
+func (s *Store) saveLocked() error {
 	s.manifest.UpdatedAt = time.Now()
 	data, err := json.MarshalIndent(s.manifest, "", "  ")
 	if err != nil {
@@ -150,6 +258,58 @@ func (s *Store) Save() error {
 		return err
 	}
 	return os.Rename(tmp, s.ManifestPath)
+}
+
+func (s *Store) prioritizedCandidatesLocked(candidates []source.Candidate) []source.Candidate {
+	ordered := append([]source.Candidate(nil), candidates...)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		left, leftCached := s.manifest.Entries[ordered[i].ID]
+		right, rightCached := s.manifest.Entries[ordered[j].ID]
+		if leftCached != rightCached {
+			return !leftCached
+		}
+		if !leftCached {
+			return false
+		}
+		if left.LastShown.Equal(right.LastShown) {
+			return left.AssetID < right.AssetID
+		}
+		if left.LastShown.IsZero() {
+			return true
+		}
+		if right.LastShown.IsZero() {
+			return false
+		}
+		return left.LastShown.Before(right.LastShown)
+	})
+	return ordered
+}
+
+func (s *Store) evictionCandidatesLocked(opts EvictOptions) []Entry {
+	entries := make([]Entry, 0, len(s.manifest.Entries))
+	for _, entry := range s.manifest.Entries {
+		entries = append(entries, entry)
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		left := entries[i]
+		right := entries[j]
+		_, leftInSource := opts.SourceIDs[left.AssetID]
+		_, rightInSource := opts.SourceIDs[right.AssetID]
+		if leftInSource != rightInSource {
+			return !leftInSource
+		}
+		if left.LastShown.IsZero() != right.LastShown.IsZero() {
+			return !left.LastShown.IsZero()
+		}
+		if left.LastShown.Equal(right.LastShown) {
+			if left.CachedAt.Equal(right.CachedAt) {
+				return left.AssetID < right.AssetID
+			}
+			return left.CachedAt.Before(right.CachedAt)
+		}
+		return left.LastShown.After(right.LastShown)
+	})
+	return entries
 }
 
 func (s *Store) cacheLocal(candidate source.Candidate) (Entry, error) {

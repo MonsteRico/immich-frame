@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/MonsteRico/immich-frame/internal/source"
 )
@@ -103,6 +104,107 @@ func TestStoreEnsureFetchedCachesRemoteRenditionMetadata(t *testing.T) {
 	}
 	if string(data) != "remote image" {
 		t.Fatalf("cached data = %q", data)
+	}
+}
+
+func TestTopOffFetchedPrefersUncachedAndStopsAtTarget(t *testing.T) {
+	root := t.TempDir()
+	store, err := Open(filepath.Join(root, "cache"))
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	var fetched []string
+	entries, changed, err := store.TopOffFetched(context.Background(), []source.Candidate{
+		{ID: "one", Title: "One", MediaType: "image/jpeg"},
+		{ID: "two", Title: "Two", MediaType: "image/jpeg"},
+		{ID: "three", Title: "Three", MediaType: "image/jpeg"},
+	}, 2, func(ctx context.Context, candidate source.Candidate) (io.ReadCloser, string, error) {
+		fetched = append(fetched, candidate.ID)
+		return io.NopCloser(strings.NewReader(candidate.ID)), "image/jpeg", nil
+	})
+	if err != nil {
+		t.Fatalf("TopOffFetched() error = %v", err)
+	}
+	if !changed || len(entries) != 2 {
+		t.Fatalf("TopOffFetched() changed=%t len=%d, want changed and 2 entries", changed, len(entries))
+	}
+	if strings.Join(fetched, ",") != "one,two" {
+		t.Fatalf("fetched = %v, want one,two", fetched)
+	}
+}
+
+func TestEvictDropsStaleBeforeValidAndPreservesProtected(t *testing.T) {
+	root := t.TempDir()
+	store, err := Open(filepath.Join(root, "cache"))
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	now := time.Now()
+	store.manifest.Entries = map[string]Entry{
+		"current": {AssetID: "current", CachePath: filepath.Join(root, "current.jpg"), CachedAt: now},
+		"stale":   {AssetID: "stale", CachePath: filepath.Join(root, "stale.jpg"), CachedAt: now.Add(-time.Hour)},
+		"valid":   {AssetID: "valid", CachePath: filepath.Join(root, "valid.jpg"), CachedAt: now.Add(-2 * time.Hour), LastShown: now},
+	}
+	for _, entry := range store.manifest.Entries {
+		writeFile(t, entry.CachePath, []byte(entry.AssetID))
+	}
+	entries, evicted, err := store.Evict(EvictOptions{
+		TargetItems: 2,
+		SourceIDs: map[string]struct{}{
+			"current": {},
+			"valid":   {},
+		},
+		ProtectedIDs: map[string]struct{}{"current": {}},
+	})
+	if err != nil {
+		t.Fatalf("Evict() error = %v", err)
+	}
+	if strings.Join(evicted, ",") != "stale" {
+		t.Fatalf("evicted = %v, want stale", evicted)
+	}
+	if len(entries) != 2 {
+		t.Fatalf("entries len = %d, want 2", len(entries))
+	}
+	if _, ok := store.Get("current"); !ok {
+		t.Fatal("protected current was evicted")
+	}
+	if _, err := os.Stat(filepath.Join(root, "stale.jpg")); !os.IsNotExist(err) {
+		t.Fatalf("stale file still exists or stat error = %v", err)
+	}
+}
+
+func TestEvictSourceRemovedPrunesStaleProtectedEntriesSurvive(t *testing.T) {
+	root := t.TempDir()
+	store, err := Open(filepath.Join(root, "cache"))
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	store.manifest.Entries = map[string]Entry{
+		"current-stale": {AssetID: "current-stale", CachePath: filepath.Join(root, "current-stale.jpg")},
+		"old-stale":     {AssetID: "old-stale", CachePath: filepath.Join(root, "old-stale.jpg")},
+		"valid":         {AssetID: "valid", CachePath: filepath.Join(root, "valid.jpg")},
+	}
+	for _, entry := range store.manifest.Entries {
+		writeFile(t, entry.CachePath, []byte(entry.AssetID))
+	}
+	entries, evicted, err := store.EvictSourceRemoved(
+		map[string]struct{}{"valid": {}},
+		map[string]struct{}{"current-stale": {}},
+	)
+	if err != nil {
+		t.Fatalf("EvictSourceRemoved() error = %v", err)
+	}
+	if strings.Join(evicted, ",") != "old-stale" {
+		t.Fatalf("evicted = %v, want old-stale", evicted)
+	}
+	if len(entries) != 2 {
+		t.Fatalf("entries len = %d, want 2", len(entries))
+	}
+	if _, ok := store.Get("current-stale"); !ok {
+		t.Fatal("protected stale entry was evicted")
+	}
+	if _, ok := store.Get("valid"); !ok {
+		t.Fatal("valid entry was evicted")
 	}
 }
 

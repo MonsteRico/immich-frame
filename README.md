@@ -8,6 +8,8 @@ Phase 0, the local Phase 1 mock slideshow loop, Phase 1.5 validation, Phase 2 Im
 
 The current work is **Phase 5: Browser MVP Polish And Hardening**.
 
+Phase 5 cache rotation and outage retry/backoff are implemented in the daemon. Remaining Phase 5 work is focused on degraded/offline frame UI polish, CLI status/reset hardening, browser MVP verification, and final docs alignment.
+
 The Raspberry Pi Chromium kiosk direction is paused. The browser MVP should be finished first so future hardware work can focus on replacing the renderer instead of rebuilding setup, cache, source, and Immich integration behavior.
 
 Start here:

@@ -91,6 +91,7 @@ Expected `/frame` behavior:
 - Photo info appears for the current mock photo.
 - The operational status overlay stays quiet while state is ready.
 - The current image URL is a local `/media/:assetID` URL, not an external URL.
+- Background cache maintenance may refresh the queue when local or Immich cache contents change.
 
 Expected `/setup` behavior:
 
@@ -220,6 +221,18 @@ Open `http://127.0.0.1:8787/setup` and confirm:
 - saved settings do not reveal the Immich API key.
 
 Mock HTTP unit tests cover setup/auth/settings/Immich validation behavior. Do not add live Immich integration tests to repo or CI for the MVP.
+
+## Cache Rotation And Outage Checks
+
+Unit tests cover the cache rotation rules that are hard to verify deterministically in a browser:
+
+- top-off stops at `cache.target_items`.
+- uncached candidates are preferred when filling the cache.
+- stale source entries are evicted before valid fallback photos.
+- current and near-upcoming playback entries are protected by `cache.prefetch_items`.
+- queue refresh preserves the current photo when cache contents change.
+
+For manual browser checks, use local mock source to confirm `/frame` stays calm and playable while the daemon runs. Immich outage behavior should be tested with mocked/unit-tested adapter failures for MVP development, not live Immich CI tests.
 
 ## Useful Local Commands
 

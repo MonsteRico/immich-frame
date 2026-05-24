@@ -199,3 +199,13 @@ Large
 ```
 
 Advanced config can expose raw cache values.
+
+## Cache Rotation And Sync
+
+`cache.target_items` is the warm-cache goal for display-targeted renditions. The daemon periodically refreshes Immich candidates for album and random-library sources and downloads missing renditions until the cache approaches that target.
+
+`cache.prefetch_items` protects the current photo and near-upcoming playback entries from eviction. This keeps the frame from deleting the next few items it is likely to show.
+
+`sync.refresh_interval_minutes` controls the normal Immich candidate refresh interval. When Immich is unavailable, the daemon keeps playing from cache when possible and retries refresh with bounded backoff. The last user-safe refresh error is stored in `state.json` and exposed through status surfaces without secrets.
+
+Eviction favors assets that are no longer in the selected Immich source before removing valid fallback photos. If more valid photos still need to be removed, recently shown entries are less valuable than never-shown or least-recently-shown entries.

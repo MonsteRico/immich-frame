@@ -320,26 +320,26 @@ Phase 3.5 is complete. Phase 4 appliance installer work was reverted and hardwar
 
 ### Phase 5 Browser MVP Polish And Hardening Checklist
 
-- [ ] Baseline verification before changes:
-  - [ ] Confirm branch is `master`.
-  - [ ] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
-  - [ ] Run `go test ./...`.
-  - [ ] Run `pnpm typecheck`.
-  - [ ] Run `pnpm build`.
-- [ ] Implement cache rotation and eviction:
-  - [ ] Periodically refresh Immich candidates for album and random-library sources.
-  - [ ] Top off cached display-targeted renditions toward `cache.target_items`.
-  - [ ] Maintain a near-term prefetch buffer using `cache.prefetch_items`.
-  - [ ] Prefer never-shown and least-recently-shown candidates.
-  - [ ] Evict assets that left the selected source before evicting valid offline fallback photos.
-  - [ ] Avoid evicting current and near-upcoming playback entries.
-  - [ ] Refresh playback queue when cache contents change so the frame does not loop one static seed forever.
-  - [ ] Add focused unit tests.
-- [ ] Implement outage retry/backoff:
-  - [ ] Continue slideshow from cache when Immich/network is unavailable.
-  - [ ] Retry Immich refresh with bounded backoff.
-  - [ ] Preserve useful last-error details for status surfaces without noisy bright failures.
-  - [ ] Add focused unit tests.
+- [x] Baseline verification before changes:
+  - [x] Confirm branch is `master`.
+  - [x] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+  - [x] Run `go test ./...`.
+  - [x] Run `pnpm typecheck`.
+  - [x] Run `pnpm build`.
+- [x] Implement cache rotation and eviction:
+  - [x] Periodically refresh Immich candidates for album and random-library sources.
+  - [x] Top off cached display-targeted renditions toward `cache.target_items`.
+  - [x] Maintain a near-term prefetch buffer using `cache.prefetch_items`.
+  - [x] Prefer never-shown and least-recently-shown candidates.
+  - [x] Evict assets that left the selected source before evicting valid offline fallback photos.
+  - [x] Avoid evicting current and near-upcoming playback entries.
+  - [x] Refresh playback queue when cache contents change so the frame does not loop one static seed forever.
+  - [x] Add focused unit tests.
+- [x] Implement outage retry/backoff:
+  - [x] Continue slideshow from cache when Immich/network is unavailable.
+  - [x] Retry Immich refresh with bounded backoff.
+  - [x] Preserve useful last-error details for status surfaces without noisy bright failures.
+  - [x] Add focused unit tests.
 - [ ] Tighten degraded/offline UI states:
   - [ ] Show operational status overlay only when degraded/error conditions exist.
   - [ ] Keep the current photo visible when the next fetch fails.
@@ -354,13 +354,28 @@ Phase 3.5 is complete. Phase 4 appliance installer work was reverted and hardwar
   - [ ] `/frame` slideshow, overlays, controls, and SSE state remain stable.
   - [ ] Embedded UI serving still works after `pnpm build:embedded-ui`.
 - [ ] Update docs:
-  - [ ] Update `README.md`.
-  - [ ] Update `AGENT_BRIEF.md`.
-  - [ ] Update `docs/implementation-plan.md`.
-  - [ ] Update `docs/architecture.md`, `docs/configuration.md`, `docs/security.md`, and `docs/local-development.md` for changed behavior.
-  - [ ] Update `docs/future.md` with renderer/hardware follow-up notes.
-  - [ ] Update `GOAL.md` with Phase 5 verification notes.
+  - [x] Update `README.md`.
+  - [x] Update `AGENT_BRIEF.md`.
+  - [x] Update `docs/implementation-plan.md`.
+  - [x] Update `docs/architecture.md`, `docs/configuration.md`, `docs/security.md`, and `docs/local-development.md` for changed behavior.
+  - [x] Update `docs/future.md` with renderer/hardware follow-up notes.
+  - [x] Update `GOAL.md` with Phase 5 verification notes.
 - [ ] Commit and push after each coherent checklist feature or feature plus subitems is complete.
+
+### Phase 5 Cache Rotation And Outage Slice Notes - 2026-05-24
+
+- Baseline before code changes passed on `master`: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
+- `origin` was `https://github.com/MonsteRico/immich-frame.git`.
+- Added daemon background cache maintenance for configured Immich album and random-library sources.
+- Immich candidates now refresh periodically using `sync.refresh_interval_minutes`; failures retry with bounded backoff while cached playback continues.
+- The cache tops off display-targeted renditions toward `cache.target_items`.
+- Cache eviction prefers assets no longer present in the selected source before removing valid fallback photos.
+- Source-removed cache entries are pruned after a successful candidate refresh, while protected current and near-upcoming entries survive.
+- Current and near-upcoming playback entries are protected according to `cache.prefetch_items`.
+- Playback queues refresh when cache contents change and preserve the current photo when possible.
+- Runtime refresh failures set calm degraded/error queue messages and persist a user-safe last error for status surfaces.
+- Focused unit tests cover top-off, source-aware eviction/pruning, protected playback entries, bounded backoff, degraded cache-first status, and queue refresh preserving the current photo.
+- Verification after this slice passed: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
 
 ## Stop Conditions
 

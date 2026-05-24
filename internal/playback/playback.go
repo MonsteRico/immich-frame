@@ -46,6 +46,44 @@ func NewQueue(entries []cache.Entry) *Queue {
 func (q *Queue) Replace(entries []cache.Entry) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
+	q.replaceLocked(entries, "")
+}
+
+func (q *Queue) Refresh(entries []cache.Entry) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	currentID := ""
+	if q.current >= 0 && q.current < len(q.entries) {
+		currentID = q.entries[q.current].AssetID
+	}
+	q.replaceLocked(entries, currentID)
+}
+
+func (q *Queue) SetStatus(status, message string) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	q.status = status
+	q.message = message
+}
+
+func (q *Queue) ProtectedIDs(prefetch int) map[string]struct{} {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	protected := map[string]struct{}{}
+	if len(q.entries) == 0 || q.current < 0 {
+		return protected
+	}
+	protected[q.entries[q.current].AssetID] = struct{}{}
+	if prefetch < 0 {
+		prefetch = 0
+	}
+	for i := 1; i <= prefetch && i < len(q.entries); i++ {
+		protected[q.entries[(q.current+i)%len(q.entries)].AssetID] = struct{}{}
+	}
+	return protected
+}
+
+func (q *Queue) replaceLocked(entries []cache.Entry, preferredCurrentID string) {
 	q.entries = append([]cache.Entry(nil), entries...)
 	q.previous = nil
 	if len(q.entries) == 0 {
@@ -55,6 +93,12 @@ func (q *Queue) Replace(entries []cache.Entry) {
 		return
 	}
 	q.current = 0
+	for idx, entry := range q.entries {
+		if entry.AssetID == preferredCurrentID {
+			q.current = idx
+			break
+		}
+	}
 	q.status = "ready"
 	q.message = ""
 }

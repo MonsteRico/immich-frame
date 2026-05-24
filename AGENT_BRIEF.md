@@ -77,8 +77,8 @@ The next planned phase is **Phase 5: Browser MVP Polish And Hardening**. Finish 
 
 Phase 5 priorities:
 
-- cache rotation and eviction so the same static cache seed is not shown forever.
-- Immich outage retry/backoff with cache-first playback.
+- cache rotation and eviction so the same static cache seed is not shown forever. Initial daemon maintenance, top-off, protected eviction, and queue refresh are implemented.
+- Immich outage retry/backoff with cache-first playback. Initial bounded retry and degraded queue status are implemented; remaining work should add focused retry/backoff tests and finish UI polish.
 - calm degraded/offline UI states.
 - CLI status/reset/config validation hardening.
 - browser MVP verification and docs.
@@ -144,7 +144,7 @@ For Phase 5, pay special attention to:
 - [ ] Read `GOAL.md`, especially the Phase 5 checklist.
 - [ ] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
 - [ ] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
-- [ ] Implement cache rotation and eviction.
+- [x] Implement cache rotation and eviction.
 - [ ] Implement outage retry/backoff.
 - [ ] Tighten degraded/offline frame UI states.
 - [ ] Harden CLI status/reset/config validation behavior.
