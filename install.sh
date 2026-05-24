@@ -16,7 +16,7 @@ usage() {
   cat <<'USAGE'
 Usage: sudo ./install.sh [--dry-run] [--skip-build]
 
-Installs Immich Frame for Ubuntu 24.04 LTS on Raspberry Pi:
+Installs Immich Frame for Raspberry Pi OS Lite:
   - builds the embedded UI and Go binary unless --skip-build is set
   - creates immich-frame service user/group
   - creates runtime config and data directories
@@ -60,24 +60,22 @@ require_repo_root() {
 
 install_packages() {
   export DEBIAN_FRONTEND=noninteractive
+  chromium_package="chromium-browser"
+  if [ "$DRY_RUN" -eq 0 ] && ! apt-cache show chromium-browser >/dev/null 2>&1; then
+    chromium_package="chromium"
+  fi
   run apt-get update
   run apt-get install -y --no-install-recommends \
     avahi-daemon \
     ca-certificates \
+    "$chromium_package" \
     dbus-x11 \
     fonts-dejavu-core \
     openbox \
-    snapd \
     unclutter \
     x11-xserver-utils \
     xinit \
     xserver-xorg
-
-  if [ "$DRY_RUN" -eq 1 ]; then
-    run snap install chromium
-  elif ! command -v chromium >/dev/null 2>&1; then
-    run snap install chromium
-  fi
 }
 
 build_binary() {

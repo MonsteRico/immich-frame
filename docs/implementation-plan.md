@@ -1,4 +1,4 @@
-# Implementation Plan
+﻿# Implementation Plan
 
 ## Phase 0: Scaffold
 
@@ -132,7 +132,7 @@ Checklist:
 - [ ] Install or configure Chromium kiosk service.
 - [ ] Configure `frame.local` mDNS.
 - [ ] Use `http://127.0.0.1:8787/frame` as kiosk URL.
-- [ ] Document tested Ubuntu Server 24.04 LTS version.
+- [ ] Document tested Raspberry Pi OS Lite version.
 - [ ] Verify boot/reboot recovery on Pi Zero 2 W.
 
 ## Phase 5: Polish And Hardening
