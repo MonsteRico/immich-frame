@@ -161,7 +161,7 @@ For Phase 6, pay special attention to:
 
 ## First Task Checklist
 
-- [ ] Read `GOAL.md`, especially the Phase 6 checklist.
+- [x] Read `GOAL.md`, especially the Phase 6 checklist.
 - [x] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
 - [x] Review the current `immich-config.dev.toml` diff before touching config files; Matthew may have local testing settings there.
 - [x] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
@@ -171,9 +171,9 @@ For Phase 6, pay special attention to:
 - [x] Build a narrow proof of concept for the recommended path.
 - [x] Prove or document how the new renderer keeps cached photos visible through state/media refresh failures.
 - [x] Add unit/fixture tests for renderer contract logic where practical.
-- [ ] Update developer-facing docs as behavior changes.
-- [ ] Update `GOAL.md` as items are completed.
-- [ ] Commit and push coherent slices as checklist features are completed.
+- [x] Update developer-facing docs as behavior changes.
+- [x] Update `GOAL.md` as items are completed.
+- [x] Commit and push coherent slices as checklist features are completed.
 
 ## Do Not Build Yet
 

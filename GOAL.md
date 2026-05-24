@@ -473,7 +473,7 @@ Post-Phase 5.5 logging addition:
 
 Goal: choose and prototype the appliance renderer direction while preserving the existing daemon, setup portal, Immich adapter, cache, playback, settings, and docs foundation.
 
-- [ ] Baseline verification before changes:
+- [x] Baseline verification before changes:
   - [x] Confirm branch is `master`.
   - [x] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
   - [x] Review the current `immich-config.dev.toml` diff before touching config files; Matthew may have local testing settings there.
@@ -500,17 +500,17 @@ Goal: choose and prototype the appliance renderer direction while preserving the
   - [x] Unit-test renderer contract parsing/state adaptation where practical.
   - [x] Add fixture-driven tests for outage/reconnect state handling if a full renderer cannot run in CI.
   - [x] Keep tests unit/mock only; no real-Immich integration tests in repo/CI.
-- [ ] Update docs:
-  - [ ] Update `docs/architecture.md` with browser-as-reference and new renderer boundary.
-  - [ ] Update `docs/implementation-plan.md` with the Phase 6 decision/prototype outcome.
-  - [ ] Update `docs/future.md` and hardware notes with what remains after the spike.
-  - [ ] Update `AGENT_BRIEF.md` and `GOAL.md` as work progresses.
-- [ ] Final verification:
-  - [ ] Run `go test ./...`.
-  - [ ] Run `pnpm typecheck`.
-  - [ ] Run `pnpm build`.
-  - [ ] Run any renderer-specific unit/build checks introduced by the phase.
-- [ ] Commit and push coherent slices to `master`.
+- [x] Update docs:
+  - [x] Update `docs/architecture.md` with browser-as-reference and new renderer boundary.
+  - [x] Update `docs/implementation-plan.md` with the Phase 6 decision/prototype outcome.
+  - [x] Update `docs/future.md` and hardware notes with what remains after the spike.
+  - [x] Update `AGENT_BRIEF.md` and `GOAL.md` as work progresses.
+- [x] Final verification:
+  - [x] Run `go test ./...`.
+  - [x] Run `pnpm typecheck`.
+  - [x] Run `pnpm build`.
+  - [x] Run any renderer-specific unit/build checks introduced by the phase.
+- [x] Commit and push coherent slices to `master`.
 
 ### Phase 6 Contract And Option Notes - 2026-05-24
 
@@ -533,6 +533,8 @@ Goal: choose and prototype the appliance renderer direction while preserving the
 - The renderer snapshot can include local cache file paths only across the loopback renderer boundary; `/api/state` remains the browser reference contract.
 - Added `immich-frame renderer-poc`, a Windows-friendly fixture/prototype command that renders a cached/local image through the renderer contract into a PNG preview with a status/clock overlay.
 - Added tests for renderer state adaptation, local-only renderer API behavior, preview generation, and keeping the previously decoded image visible when snapshot fetch or media decode fails.
+- Verification passed after the proof-of-concept slice: `go test ./...`, `pnpm typecheck`, `pnpm build`, and `go run ./cmd/immich-frame renderer-poc -image dev/photos/indy.jpg -out .immich-frame/renderer-poc.png -width 800 -height 480`.
+- Coherent Phase 6 slices were committed and pushed to `master`: renderer contract/options, then renderer contract prototype/outage loop/docs.
 - No installer, systemd, autostart, kiosk, or OS-image work was restarted.
 - The remaining hardware-facing work is to put an SDL display shell around the tested renderer contract/loop and then verify SDL packaging/runtime behavior on target hardware.
 

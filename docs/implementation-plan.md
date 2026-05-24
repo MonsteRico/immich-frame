@@ -204,9 +204,9 @@ Checklist:
 - [x] Build a narrow proof of concept for the recommended path.
 - [x] Show at least one cached/local image and one simple overlay in the proof of concept.
 - [x] Keep the current image visible if state/media refresh fails.
-- [ ] Reuse existing daemon, setup portal, Immich adapter, cache, playback, and settings behavior.
-- [ ] Avoid restarting installer/systemd work until a renderer direction is chosen.
-- [ ] Re-plan hardware install steps around the chosen renderer.
+- [x] Reuse existing daemon, setup portal, Immich adapter, cache, playback, and settings behavior.
+- [x] Avoid restarting installer/systemd work until a renderer direction is chosen.
+- [x] Re-plan hardware install steps around the chosen renderer.
 
 ### Phase 6 Renderer Contract Decision
 
