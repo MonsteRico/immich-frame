@@ -31,8 +31,6 @@ node --version
 pnpm --version
 ```
 
-If those commands work for the `frame` user but `sudo ./install.sh` cannot see them, the installer falls back to building the embedded UI as the invoking sudo user.
-
 The installer is designed to be idempotent. Re-running it should:
 
 - preserve `/etc/immich-frame/config.toml` if it already exists.
