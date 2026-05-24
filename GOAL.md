@@ -360,7 +360,7 @@ Phase 3.5 is complete. Phase 4 appliance installer work was reverted and hardwar
   - [x] Update `docs/architecture.md`, `docs/configuration.md`, `docs/security.md`, and `docs/local-development.md` for changed behavior.
   - [x] Update `docs/future.md` with renderer/hardware follow-up notes.
   - [x] Update `GOAL.md` with Phase 5 verification notes.
-- [ ] Commit and push after each coherent checklist feature or feature plus subitems is complete.
+- [x] Commit and push after each coherent checklist feature or feature plus subitems is complete.
 
 ### Phase 5 Cache Rotation And Outage Slice Notes - 2026-05-24
 
