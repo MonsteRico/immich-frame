@@ -1,14 +1,20 @@
 ﻿# Hardware
 
+## Hardware Status
+
+Hardware/appliance setup is paused while the browser MVP is finished.
+
+The previous Raspberry Pi Zero 2 W + Chromium kiosk direction is no longer the active implementation path. Keep this document as hardware context, but do not add new installer/systemd/kiosk work until the browser MVP is reliable and a lighter renderer direction is chosen.
+
 ## Reference Device
 
-Immich Frame MVP targets:
+The intended physical frame class is still:
 
 - Raspberry Pi Zero 2 W.
 - Raspberry Pi OS Lite.
 - HDMI display.
 - Wi-Fi.
-- Chromium kiosk.
+- Lightweight renderer to be chosen after browser MVP polish.
 - No touch required.
 - No keyboard required after setup.
 
@@ -65,9 +71,9 @@ orientation = "auto" # auto | landscape | portrait
 
 MVP does not manage OS-level display rotation.
 
-## Browser/Kiosk
+## Browser/Kiosk Experiment
 
-Default browser is Raspberry Pi OS Chromium. Browser command should be configurable.
+Chromium kiosk was the first explored path, but it is likely too heavy for the Pi Zero 2 W. Future hardware work should evaluate a lighter renderer before reviving install scripts.
 
 Kiosk URL:
 

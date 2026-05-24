@@ -4,24 +4,24 @@ This is the entry point for future coding agents. Read this file first, then fol
 
 ## Project Intent
 
-Build **Immich Frame**, a local appliance-style digital picture frame for self-built HDMI frames powered by Raspberry Pi Zero 2 W-class hardware.
+Build **Immich Frame**, a local digital picture frame app that can eventually power self-built HDMI frames.
 
-The frame runs its own local software on the device, connects outbound to a user's Immich server, caches display-appropriate photo renditions locally, and renders a fullscreen Chromium kiosk slideshow with subtle overlays.
+The frame runs local software, connects outbound to a user's Immich server, caches display-appropriate photo renditions locally, and currently renders a fullscreen browser slideshow with subtle overlays.
 
 This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 
-## Reference Platform
+## Current Reference Platform
 
-- Raspberry Pi Zero 2 W.
-- Raspberry Pi OS Lite.
-- HDMI display.
-- Wi-Fi already configured for MVP.
-- No touch or keyboard required after setup.
-- Chromium kiosk renderer.
+- Local desktop/browser development.
+- Go daemon.
+- Preact/Vite browser renderer.
+- Same-machine or same-LAN setup portal.
+- Future frame hardware remains important, but hardware/appliance setup is paused until the browser MVP behavior is solid.
 
 ## Non-Negotiable Decisions
 
-- Runtime target is a local Raspberry Pi appliance.
+- Current runtime target is the local browser MVP.
+- Raspberry Pi appliance/install work is paused.
 - Core daemon is Go.
 - Frontend uses Preact + Vite, with separate frame and setup bundles.
 - Frontend tooling uses the active Node/pnpm from the PowerShell environment.
@@ -29,7 +29,7 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 - Styling uses plain CSS/CSS modules, not Tailwind or a component library.
 - Icons are minimal inline SVGs, not an icon library.
 - Release Go binary embeds built UI assets.
-- Kiosk browser opens `http://127.0.0.1:8787/frame`.
+- Browser renderer opens `http://127.0.0.1:8787/frame`.
 - Setup portal is available at `http://frame.local:8787/setup` and IP fallback.
 - MVP networking assumes same Wi-Fi already configured.
 - Future public setup may add temporary Wi-Fi AP/captive portal.
@@ -40,10 +40,11 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 - Videos are out of MVP.
 - Weather is near-future, not MVP.
 - Docker/LAN/server-hosted modes are out of scope.
+- Future hardware work should evaluate a lighter renderer instead of assuming Chromium kiosk on Pi Zero 2 W.
 
 ## Current Phase
 
-**Phase 3.5: Setup Portal Hardening** is complete on `master`.
+**Phase 5: Browser MVP Polish And Hardening** is the current goal on `master`.
 
 Phase 0, the first local Phase 1 slice, Phase 1.5 validation, Phase 2 Immich adapter work, Phase 3 setup portal, and Phase 3.5 setup hardening are complete on `master`.
 
@@ -70,7 +71,18 @@ Phase 3.5 closed the PM review gaps found on 2026-05-21:
 - setup/settings UI guards unavailable actions and explains required validation or missing fields.
 - overlay configuration docs match the generic envelope fields the backend currently reads/writes.
 
-The next planned phase is **Phase 4: Pi Appliance**.
+Phase 4 Raspberry Pi appliance work was reverted after hardware exploration showed likely Chromium kiosk performance risk on the Pi Zero 2 W. Do not restart installer/systemd/kiosk work in the current phase.
+
+The next planned phase is **Phase 5: Browser MVP Polish And Hardening**. Finish the browser-based product behavior first so a future renderer swap only replaces the rendering layer rather than the daemon/setup/cache/source system.
+
+Phase 5 priorities:
+
+- cache rotation and eviction so the same static cache seed is not shown forever.
+- Immich outage retry/backoff with cache-first playback.
+- calm degraded/offline UI states.
+- CLI status/reset/config validation hardening.
+- browser MVP verification and docs.
+- preserve renderer boundaries so a lighter renderer can replace the browser later.
 
 ## Git Commit Guidance
 
@@ -78,7 +90,7 @@ Until the MVP/base is complete, work directly on `master` and commit there. Do n
 
 Create meaningful commits throughout the work. Prefer commits at coherent feature or fix boundaries, not broad phase markers like `phase 3 done`.
 
-For Phase 3.5, generally commit and push after each completed checklist feature or checklist item with its subitems. Do not commit after every tiny edit, but do commit/push once a distinct feature is implemented, tested, and documented.
+For Phase 5, generally commit and push after each completed checklist feature or checklist item with its subitems. Do not commit after every tiny edit, but do commit/push once a distinct feature is implemented, tested, and documented.
 
 Good commit boundaries include:
 
@@ -102,6 +114,11 @@ Good commit boundaries include:
 - validation-required setup completion.
 - lightweight status API/settings surface.
 - setup UI guardrails.
+- cache rotation.
+- cache eviction policy.
+- outage retry/backoff.
+- degraded/offline frame states.
+- CLI status/reset hardening.
 - setup UI screens.
 - focused bug fixes.
 - docs updates that record a changed decision or implemented behavior.
@@ -112,26 +129,29 @@ Avoid committing every tiny file edit. Also avoid waiting until an entire phase 
 
 Developer-facing docs must move with the code. When a feature changes how a human runs, configures, tests, or debugs the project, update the relevant docs in the same feature slice.
 
-For Phase 3.5, pay special attention to:
+For Phase 5, pay special attention to:
 
-- `docs/configuration.md` for config/state/secrets changes.
-- `docs/security.md` for setup/auth/session/media-access behavior.
-- `docs/local-development.md` for setup portal verification steps.
+- `docs/architecture.md` for cache/playback/source behavior.
+- `docs/configuration.md` for cache, sync, status, and reset settings.
+- `docs/security.md` for secret-safe status/reset/media behavior.
+- `docs/local-development.md` for browser MVP verification steps.
 - `docs/developer-guide.md` for durable human workflow notes.
+- `docs/future.md` for renderer/hardware follow-up notes.
 - `GOAL.md` for checklist progress and handoff status.
 
 ## First Task Checklist
 
-- [x] Read `GOAL.md`, especially the Phase 3.5 checklist.
-- [x] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
-- [x] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
-- [x] Require successful Immich validation before setup can complete.
-- [x] Add or reconcile the lightweight status surface.
-- [x] Tighten setup/settings UI guardrails around validation and required fields.
-- [x] Reconcile overlay configuration docs with implemented behavior.
-- [x] Update developer-facing docs as setup commands, config, or verification steps change.
-- [x] Update `GOAL.md` as items are completed.
-- [x] Commit and push coherent slices as checklist features are completed.
+- [ ] Read `GOAL.md`, especially the Phase 5 checklist.
+- [ ] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+- [ ] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
+- [ ] Implement cache rotation and eviction.
+- [ ] Implement outage retry/backoff.
+- [ ] Tighten degraded/offline frame UI states.
+- [ ] Harden CLI status/reset/config validation behavior.
+- [ ] Re-verify browser MVP behavior.
+- [ ] Update developer-facing docs as behavior changes.
+- [ ] Update `GOAL.md` as items are completed.
+- [ ] Commit and push coherent slices as checklist features are completed.
 
 ## Do Not Build Yet
 
@@ -140,12 +160,13 @@ For Phase 3.5, pay special attention to:
 - [ ] Favorites mode.
 - [ ] On-this-day mode.
 - [ ] GPIO buttons or IR remote.
-- [ ] Native renderer.
+- [ ] Native renderer or other lightweight renderer.
 - [ ] Video playback.
 - [ ] Flashable OS image.
 - [ ] Auto-updater.
 - [ ] Docker deployment mode.
 - [ ] Runtime third-party overlay plugins.
+- [ ] Raspberry Pi install/systemd/kiosk setup.
 
 ## Read Next
 
@@ -154,7 +175,7 @@ For Phase 3.5, pay special attention to:
 3. `docs/architecture.md` for system design.
 4. `docs/security.md` before handling auth, secrets, or media routes.
 5. `docs/configuration.md` before writing config/state code.
-6. `docs/hardware.md` before writing installer/systemd/kiosk code.
+6. `docs/future.md` for renderer and hardware follow-up notes.
 7. `docs/developer-guide.md` for human developer workflow expectations.
 8. `docs/development.md` before setting up local dev scripts or tests.
 9. `docs/future.md` to preserve future extensibility without building it early.

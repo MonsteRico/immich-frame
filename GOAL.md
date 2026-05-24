@@ -4,19 +4,16 @@ This document defines when an agent can stop working and what counts as done.
 
 ## Long-Term Product Goal
 
-Immich Frame is complete enough for an MVP when a Raspberry Pi Zero 2 W can act as a reliable self-built HDMI digital picture frame connected to Immich.
+Immich Frame is complete enough for the browser MVP when it can run as a reliable local browser-based digital picture frame connected to Immich.
 
-The frame should boot into a local Chromium kiosk, show a polished setup screen if unconfigured, accept setup from a phone/laptop on the same Wi-Fi, cache display-appropriate Immich photos, and run a fullscreen slideshow with subtle overlays.
+The browser MVP should show a polished setup screen if unconfigured, accept setup from a same-machine or same-LAN browser session, cache display-appropriate Immich photos, rotate cached photos without looping a static seed forever, and run a fullscreen slideshow with subtle overlays.
+
+Hardware/appliance setup is intentionally paused until the browser MVP behavior is solid. The Raspberry Pi Zero 2 W Chromium kiosk experiment showed enough performance risk that the next hardware phase should first evaluate a lighter rendering engine and reuse the browser MVP daemon/cache/setup behavior.
 
 ## MVP Definition Of Done
 
-The MVP is done when all items below are complete on the reference Pi Zero 2 W hardware:
+The browser MVP is done when all items below are complete in local/browser development:
 
-- [ ] Raspberry Pi OS Lite is flashed and Wi-Fi is configured through Raspberry Pi Imager.
-- [ ] `install.sh` installs Immich Frame idempotently.
-- [ ] `immich-frame serve` runs as a systemd service.
-- [ ] Chromium kiosk starts automatically on boot.
-- [ ] Kiosk opens `http://127.0.0.1:8787/frame`.
 - [ ] Unconfigured HDMI screen shows setup instructions, `frame.local:8787`, IP fallback, and first-boot setup code.
 - [ ] Setup portal accepts setup code.
 - [ ] User can create local admin password.
@@ -24,6 +21,7 @@ The MVP is done when all items below are complete on the reference Pi Zero 2 W h
 - [ ] Daemon validates Immich connection.
 - [ ] User can choose one album or random library mode.
 - [ ] Daemon caches first display-targeted photo renditions locally.
+- [ ] Cache rotation refreshes candidates, tops off target cache, and avoids cycling one static cache forever.
 - [ ] Slideshow starts as soon as first few cached images are ready.
 - [ ] Hidden controls work: previous, pause/play, next, info toggle.
 - [ ] Clock overlay works.
@@ -40,9 +38,9 @@ The MVP is done when all items below are complete on the reference Pi Zero 2 W h
 
 ## Current Session Goal
 
-Complete **Phase 3.5: Setup Portal Hardening**.
+Complete **Phase 5: Browser MVP Polish And Hardening**.
 
-Phase 3.5 is complete. The local scaffold, mock frame loop, Phase 1.5 validation, Phase 2 Immich adapter, Phase 3 setup portal, and Phase 3.5 hardening pass are complete. The next major phase is Phase 4: Pi Appliance.
+Phase 3.5 is complete. Phase 4 appliance installer work was reverted and hardware setup is paused. The next agent should finish the browser-based MVP behavior first, especially cache rotation, outage behavior, status overlays, reset/status details, and docs.
 
 ### Phase 0 Done Checklist
 
@@ -314,6 +312,56 @@ Phase 3.5 is complete. The local scaffold, mock frame loop, Phase 1.5 validation
 - Overlay docs now match the backend's implemented generic envelope fields: `enabled`, `slot`, and `visibility`.
 - Final verification passed: `go test ./...`, `pnpm typecheck`, `pnpm build`, and `pnpm build:embedded-ui`.
 
+### Phase 4 Appliance Work Reverted - 2026-05-23
+
+- Raspberry Pi/Chromium kiosk work was intentionally reverted after hardware exploration showed likely performance risk on the Pi Zero 2 W.
+- Hardware install scripts, packaging assets, and Pi appliance docs are not part of the current browser MVP path.
+- Future hardware work should start after Phase 5 and should evaluate a lighter renderer rather than assuming Chromium kiosk is the final target.
+
+### Phase 5 Browser MVP Polish And Hardening Checklist
+
+- [ ] Baseline verification before changes:
+  - [ ] Confirm branch is `master`.
+  - [ ] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+  - [ ] Run `go test ./...`.
+  - [ ] Run `pnpm typecheck`.
+  - [ ] Run `pnpm build`.
+- [ ] Implement cache rotation and eviction:
+  - [ ] Periodically refresh Immich candidates for album and random-library sources.
+  - [ ] Top off cached display-targeted renditions toward `cache.target_items`.
+  - [ ] Maintain a near-term prefetch buffer using `cache.prefetch_items`.
+  - [ ] Prefer never-shown and least-recently-shown candidates.
+  - [ ] Evict assets that left the selected source before evicting valid offline fallback photos.
+  - [ ] Avoid evicting current and near-upcoming playback entries.
+  - [ ] Refresh playback queue when cache contents change so the frame does not loop one static seed forever.
+  - [ ] Add focused unit tests.
+- [ ] Implement outage retry/backoff:
+  - [ ] Continue slideshow from cache when Immich/network is unavailable.
+  - [ ] Retry Immich refresh with bounded backoff.
+  - [ ] Preserve useful last-error details for status surfaces without noisy bright failures.
+  - [ ] Add focused unit tests.
+- [ ] Tighten degraded/offline UI states:
+  - [ ] Show operational status overlay only when degraded/error conditions exist.
+  - [ ] Keep the current photo visible when the next fetch fails.
+  - [ ] Show calm empty-cache plus unavailable-Immich state when no cached media can play.
+- [ ] Finish reset/status CLI behavior:
+  - [ ] Ensure `immich-frame status` reports setup/config/source/cache/last-error details without secrets.
+  - [ ] Ensure `reset` behavior is documented and privacy-preserving.
+  - [ ] Ensure `config validate` covers the settings needed by the browser MVP.
+- [ ] Re-verify browser MVP manually:
+  - [ ] Local mock source path still works.
+  - [ ] Setup portal flow still works with mocked/unit-tested Immich behavior.
+  - [ ] `/frame` slideshow, overlays, controls, and SSE state remain stable.
+  - [ ] Embedded UI serving still works after `pnpm build:embedded-ui`.
+- [ ] Update docs:
+  - [ ] Update `README.md`.
+  - [ ] Update `AGENT_BRIEF.md`.
+  - [ ] Update `docs/implementation-plan.md`.
+  - [ ] Update `docs/architecture.md`, `docs/configuration.md`, `docs/security.md`, and `docs/local-development.md` for changed behavior.
+  - [ ] Update `docs/future.md` with renderer/hardware follow-up notes.
+  - [ ] Update `GOAL.md` with Phase 5 verification notes.
+- [ ] Commit and push after each coherent checklist feature or feature plus subitems is complete.
+
 ## Stop Conditions
 
 An agent can stop when:
@@ -348,7 +396,7 @@ Commit and push at coherent feature or fix boundaries rather than only at phase 
 
 Do not commit after every tiny edit. Do not wait until all of Phase 0 or Phase 1 is complete if several distinct working pieces can be committed separately.
 
-For Phase 3.5 specifically, generally commit and push after each completed checklist feature or checklist item with its subitems. Examples: validation-required setup completion, status API/settings surface, setup UI guardrails, overlay docs reconciliation, security fixes, and docs updates.
+For Phase 5 specifically, generally commit and push after each completed checklist feature or checklist item with its subitems. Examples: cache rotation, eviction policy, outage retry/backoff, degraded UI states, CLI status/reset hardening, browser verification, and docs updates.
 
 Before each commit:
 
@@ -368,7 +416,8 @@ Before each commit:
 - [ ] People/location/date smart rules.
 - [ ] Video playback.
 - [ ] GPIO buttons, IR remotes, or Bluetooth remote integration.
-- [ ] Native framebuffer/SDL renderer.
+- [ ] Native framebuffer/SDL renderer or other lightweight renderer.
+- [ ] Raspberry Pi install/systemd/kiosk setup.
 - [ ] Flashable custom OS image.
 - [ ] Automatic updates.
 - [ ] Docker/LAN deployment mode.

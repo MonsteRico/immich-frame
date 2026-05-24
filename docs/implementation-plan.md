@@ -118,30 +118,32 @@ Checklist:
 - [x] Update README, agent handoff docs, and developer docs.
 - [x] Run `go test ./...`, `pnpm typecheck`, and `pnpm build`.
 
-## Phase 4: Pi Appliance
+## Phase 4: Pi Appliance Experiment - Reverted
 
-Goal: make the reference Pi Zero 2 W boot directly into the frame.
+Goal was to make the reference Pi Zero 2 W boot directly into the frame.
 
-Checklist:
-
-- [ ] Add idempotent install script.
-- [ ] Create `immich-frame` system user/group.
-- [ ] Create `/etc/immich-frame` and `/var/lib/immich-frame`.
-- [ ] Install daemon binary.
-- [ ] Install systemd service for daemon.
-- [ ] Install or configure Chromium kiosk service.
-- [ ] Configure `frame.local` mDNS.
-- [ ] Use `http://127.0.0.1:8787/frame` as kiosk URL.
-- [ ] Document tested Raspberry Pi OS Lite version.
-- [ ] Verify boot/reboot recovery on Pi Zero 2 W.
-
-## Phase 5: Polish And Hardening
-
-Goal: make MVP reliable enough to use daily.
+Status: reverted/paused. The Chromium kiosk path looks too heavy for the Pi Zero 2 W, and hardware setup work is premature before the browser MVP behavior is complete.
 
 Checklist:
 
-- [ ] Implement cache eviction policy.
+- [x] Remove installer/systemd/kiosk assets from the active codebase.
+- [x] Pause Raspberry Pi Chromium kiosk work.
+- [ ] Revisit hardware after Phase 5 with a lighter rendering strategy.
+
+## Phase 5: Browser MVP Polish And Hardening
+
+Goal: make the browser-based MVP reliable enough to use daily before swapping or replacing the renderer.
+
+Checklist:
+
+- [ ] Implement cache rotation and eviction policy:
+  - [ ] Refresh Immich candidate pools periodically.
+  - [ ] Top off cached display-targeted renditions toward `target_items`.
+  - [ ] Maintain a near-term prefetch buffer from `prefetch_items`.
+  - [ ] Prefer never-shown and least-recently-shown candidates.
+  - [ ] Evict entries that left the source before evicting valid offline fallback photos.
+  - [ ] Avoid evicting current and near-upcoming playback entries.
+  - [ ] Refresh playback queue when cache contents change so the frame does not loop one static seed forever.
 - [ ] Implement outage retry/backoff.
 - [ ] Implement subtle degraded status overlay.
 - [ ] Implement reset flows.
@@ -153,6 +155,18 @@ Checklist:
 - [ ] Confirm no Immich secrets reach browser or logs.
 - [ ] Confirm LAN clients cannot view cached photos unauthenticated.
 
+## Phase 6: Renderer And Hardware Re-evaluation
+
+Goal: replace or supplement the browser renderer only after the browser MVP behavior is working.
+
+Checklist:
+
+- [ ] Define renderer boundary between daemon state/media APIs and presentation layer.
+- [ ] Evaluate lightweight renderer options for Pi Zero 2 W-class hardware.
+- [ ] Reuse existing daemon, setup portal, Immich adapter, cache, playback, and settings behavior.
+- [ ] Avoid restarting installer/systemd work until a renderer direction is chosen.
+- [ ] Re-plan hardware install steps around the chosen renderer.
+
 ## MVP Exclusions
 
 - [ ] Temporary Wi-Fi AP setup.
@@ -160,7 +174,7 @@ Checklist:
 - [ ] Favorites source.
 - [ ] On-this-day source.
 - [ ] GPIO/remote input.
-- [ ] Native renderer.
+- [ ] Native renderer or other lightweight renderer.
 - [ ] Video playback.
 - [ ] Flashable image.
 - [ ] Auto-updates.

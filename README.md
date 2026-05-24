@@ -1,12 +1,14 @@
 ﻿# Immich Frame
 
-A self-hosted digital picture frame for Immich libraries, designed for self-built HDMI frames powered by Raspberry Pi Zero 2 W-class hardware.
+A local digital picture frame app for Immich libraries, designed to become the software core for self-built HDMI frames.
 
 ## Status
 
 Phase 0, the local Phase 1 mock slideshow loop, Phase 1.5 validation, Phase 2 Immich adapter, Phase 3 setup portal, and Phase 3.5 setup hardening are complete.
 
-The next work is **Phase 4: Pi Appliance**, which makes the reference Raspberry Pi boot directly into the frame.
+The current work is **Phase 5: Browser MVP Polish And Hardening**.
+
+The Raspberry Pi Chromium kiosk direction is paused. The browser MVP should be finished first so future hardware work can focus on replacing the renderer instead of rebuilding setup, cache, source, and Immich integration behavior.
 
 Start here:
 
@@ -20,17 +22,17 @@ Start here:
 
 ## Product Direction
 
-Immich Frame runs locally on the frame device. It connects outbound to a user's Immich server, caches display-appropriate photo renditions locally, and renders a fullscreen Chromium kiosk slideshow with subtle overlays.
+Immich Frame runs locally, connects outbound to a user's Immich server, caches display-appropriate photo renditions locally, and currently renders a fullscreen browser slideshow with subtle overlays.
 
 It is not primarily a hosted web app, Docker dashboard, or cloud service.
 
-## Reference Hardware
+## Current Target
 
-- Raspberry Pi Zero 2 W.
-- Raspberry Pi OS Lite.
-- HDMI display.
-- Wi-Fi configured before setup.
-- Chromium kiosk.
+- Local browser MVP.
+- Go daemon.
+- Preact/Vite frame and setup UIs.
+- Embedded browser assets for release-style serving.
+- Future lightweight renderer/hardware path after browser MVP behavior is solid.
 
 ## MVP Scope
 
@@ -42,6 +44,7 @@ It is not primarily a hosted web app, Docker dashboard, or cloud service.
 - Setup completion requires a successful Immich connection test for the saved URL/API key.
 - Album and random-library modes.
 - Display-targeted local image cache.
+- Cache rotation that avoids looping one static cached seed forever.
 - Clock, photo info, and operational status overlays.
 - Hidden controls.
 - Reboot recovery.

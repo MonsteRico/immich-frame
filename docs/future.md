@@ -43,6 +43,9 @@ Overlay contribution model remains source-level reviewed contributions, compiled
 
 ## Hardware
 
+- Hardware setup is paused until the browser MVP is complete.
+- The Pi Zero 2 W Chromium kiosk path appears likely to struggle, so the next hardware pass should evaluate a lighter renderer first.
+- Future install/systemd work should reuse the daemon, Immich adapter, setup portal, cache, playback, and settings behavior from the browser MVP rather than rebuilding the whole app.
 - GPIO buttons.
 - IR remote.
 - Bluetooth remote.
@@ -51,7 +54,7 @@ Overlay contribution model remains source-level reviewed contributions, compiled
 - Overlay burn-in mitigation such as subtle position nudging or dimming.
 - HDMI CEC.
 - Motion sensor wake.
-- Native image-only renderer for boards weaker than Pi Zero 2 W.
+- Native image-only renderer or other lightweight renderer for boards weaker than a browser can comfortably support.
 
 ## Media
 
