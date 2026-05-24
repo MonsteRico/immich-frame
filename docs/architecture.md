@@ -285,6 +285,7 @@ Implemented rotation behavior:
 - The cache manifest tracks `LastShown`.
 - Cached media is listed with unshown and least-recently-shown entries first.
 - The playback queue is seeded from the cache at startup and refreshed when cache contents change.
+- SSE clients receive state when cache contents change and when cache maintenance clears degraded/error status after a successful refresh, even if no cache files changed.
 - `target_items` is the desired warm cache size, not a fixed forever playlist.
 - `prefetch_items` defines near-upcoming playback entries that are protected from eviction.
 - The daemon periodically refreshes the Immich candidate pool for album and random-library sources.

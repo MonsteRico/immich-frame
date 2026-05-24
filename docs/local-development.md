@@ -234,6 +234,7 @@ Unit tests cover the cache rotation rules that are hard to verify deterministica
 - stale source entries are evicted before valid fallback photos.
 - current and near-upcoming playback entries are protected by `cache.prefetch_items`.
 - queue refresh preserves the current photo when cache contents change.
+- recovered ready status is published after outage retry succeeds, even when the cache did not change.
 
 For manual browser checks, use local mock source to confirm `/frame` stays calm and playable while the daemon runs. Immich outage behavior should be tested with mocked/unit-tested adapter failures for MVP development, not live Immich CI tests.
 

@@ -79,3 +79,47 @@ func TestSetDegradedRecordsCacheFirstStatusAndLastError(t *testing.T) {
 		t.Fatalf("LastError = %q", saved.LastError)
 	}
 }
+
+func TestSuccessfulRefreshPublishesRecoveredReadyStatusWithoutCacheChanges(t *testing.T) {
+	root := t.TempDir()
+	store, err := cache.Open(filepath.Join(root, "cache"))
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	queue := playback.NewQueue([]cache.Entry{{
+		AssetID:    "cached-one",
+		MediaType:  "image/jpeg",
+		Title:      "Cached One",
+		SourceName: "Immich",
+	}})
+	queue.SetStatus("degraded", "Immich is unavailable. Showing cached photos while retrying.")
+	server := &api.Server{
+		Config: config.DefaultConfig(),
+		State:  config.State{SetupComplete: true, LastError: "previous outage"},
+		Paths:  config.Paths{StateFile: filepath.Join(root, "state.json")},
+		Cache:  store,
+		Queue:  queue,
+		Hub:    api.NewHub(),
+	}
+	application := &App{Cache: store, Queue: queue, API: server}
+	ch, unsubscribe := server.Hub.Subscribe()
+	defer unsubscribe()
+
+	application.finishSuccessfulRefresh(false)
+
+	select {
+	case state := <-ch:
+		if state.Status != "ready" || state.Message != "" {
+			t.Fatalf("published status = %q message %q, want ready with empty message", state.Status, state.Message)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected recovered ready state to be published")
+	}
+	saved, err := config.LoadState(server.Paths.StateFile)
+	if err != nil {
+		t.Fatalf("LoadState() error = %v", err)
+	}
+	if saved.LastError != "" || saved.LastSync.IsZero() {
+		t.Fatalf("saved recovery state = %+v, want cleared LastError and LastSync", saved)
+	}
+}

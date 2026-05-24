@@ -419,9 +419,9 @@ Phase 5 was reported complete, but PM verification found acceptance gaps around 
   - [x] Add a preset intended for roughly 10 cached photos.
   - [x] Keep production defaults unchanged.
   - [x] Document that the preset exists to make cache rotation visible during development.
-- [ ] Fix ready-status publication after outage recovery:
-  - [ ] Publish recovered ready state when refresh succeeds after degraded/error status, even if cache contents do not change.
-  - [ ] Add or update a focused unit test where practical.
+- [x] Fix ready-status publication after outage recovery:
+  - [x] Publish recovered ready state when refresh succeeds after degraded/error status, even if cache contents do not change.
+  - [x] Add or update a focused unit test where practical.
 - [ ] Align docs and status:
   - [ ] Update `AGENT_BRIEF.md` to describe Phase 5.5 as current until complete.
   - [ ] Update `README.md` current status.

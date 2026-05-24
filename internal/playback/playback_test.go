@@ -72,6 +72,19 @@ func TestQueueEmptyStateAndCommands(t *testing.T) {
 	}
 }
 
+func TestQueueSetStatusReportsChanges(t *testing.T) {
+	queue := NewQueue([]cache.Entry{entry("asset-one")})
+	if !queue.SetStatus("degraded", "retrying") {
+		t.Fatal("SetStatus() changed = false, want true for new status")
+	}
+	if queue.SetStatus("degraded", "retrying") {
+		t.Fatal("SetStatus() changed = true, want false for unchanged status")
+	}
+	if !queue.SetStatus("ready", "") {
+		t.Fatal("SetStatus() changed = false, want true for recovered status")
+	}
+}
+
 func TestQueueRefreshPreservesCurrentAndProtectsUpcoming(t *testing.T) {
 	queue := NewQueue([]cache.Entry{
 		entry("asset-one"),

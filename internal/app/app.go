@@ -141,12 +141,7 @@ func (a *App) runCacheMaintenance(ctx context.Context) {
 				continue
 			}
 			backoff = time.Minute
-			a.Queue.SetStatus("ready", "")
-			a.API.RecordSyncStatus("", time.Now())
-			if changed {
-				a.Queue.Refresh(a.Cache.List())
-				a.API.PublishState()
-			}
+			a.finishSuccessfulRefresh(changed)
 			cfg, _, _ := a.API.RuntimeInputs()
 			interval := time.Duration(cfg.Sync.RefreshIntervalMinutes) * time.Minute
 			if interval <= 0 {
@@ -154,6 +149,17 @@ func (a *App) runCacheMaintenance(ctx context.Context) {
 			}
 			timer.Reset(interval)
 		}
+	}
+}
+
+func (a *App) finishSuccessfulRefresh(cacheChanged bool) {
+	statusChanged := a.Queue.SetStatus("ready", "")
+	a.API.RecordSyncStatus("", time.Now())
+	if cacheChanged {
+		a.Queue.Refresh(a.Cache.List())
+	}
+	if cacheChanged || statusChanged {
+		a.API.PublishState()
 	}
 }
 

@@ -59,11 +59,13 @@ func (q *Queue) Refresh(entries []cache.Entry) {
 	q.replaceLocked(entries, currentID)
 }
 
-func (q *Queue) SetStatus(status, message string) {
+func (q *Queue) SetStatus(status, message string) bool {
 	q.mu.Lock()
 	defer q.mu.Unlock()
+	changed := q.status != status || q.message != message
 	q.status = status
 	q.message = message
+	return changed
 }
 
 func (q *Queue) ProtectedIDs(prefetch int) map[string]struct{} {
