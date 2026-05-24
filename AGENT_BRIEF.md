@@ -44,7 +44,7 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 
 ## Current Phase
 
-**Phase 5: Browser MVP Polish And Hardening** is the current goal on `master`.
+**Phase 5.5: Browser MVP Acceptance Fix Pass** is complete on `master`.
 
 Phase 0, the first local Phase 1 slice, Phase 1.5 validation, Phase 2 Immich adapter work, Phase 3 setup portal, and Phase 3.5 setup hardening are complete on `master`.
 
@@ -73,16 +73,17 @@ Phase 3.5 closed the PM review gaps found on 2026-05-21:
 
 Phase 4 Raspberry Pi appliance work was reverted after hardware exploration showed likely Chromium kiosk performance risk on the Pi Zero 2 W. Do not restart installer/systemd/kiosk work in the current phase.
 
-The next planned phase is **Phase 5: Browser MVP Polish And Hardening**. Finish the browser-based product behavior first so a future renderer swap only replaces the rendering layer rather than the daemon/setup/cache/source system.
+Phase 5 browser MVP polish was reported complete, but PM verification found acceptance gaps around stable album cache churn, a very small local testing cache preset, recovered ready-state publication after outages, and stale phase-status docs. Phase 5.5 closed those gaps on 2026-05-24.
 
-Phase 5 priorities:
+Phase 5.5 completed:
 
-- cache rotation and eviction so the same static cache seed is not shown forever. Initial daemon maintenance, top-off, protected eviction, and queue refresh are implemented.
-- Immich outage retry/backoff with cache-first playback. Initial bounded retry and degraded queue status are implemented; remaining work should add focused retry/backoff tests and finish UI polish.
-- calm degraded/offline UI states.
-- CLI status/reset/config validation hardening. Status/reset/config validation hardening is implemented; remaining work should focus on final browser MVP verification and docs completion.
-- browser MVP verification and docs.
-- preserve renderer boundaries so a lighter renderer can replace the browser later.
+- stable album cache rotation when the cache is already full, preserving current and near-upcoming playback entries.
+- an `extra-small` cache preset for local testing with roughly 10 cached photos.
+- recovered `ready` status publication after outage retry succeeds even if cache contents did not change.
+- documentation/status alignment so Phase 6 renderer/hardware re-evaluation remains future work only.
+- final verification with `go test ./...`, `pnpm typecheck`, `pnpm build`, and `pnpm build:embedded-ui`.
+
+The next planned work is Phase 6 renderer/hardware re-evaluation. Keep it future-only until explicitly started, and do not restart installer/systemd/kiosk work without a new renderer direction.
 
 ## Git Commit Guidance
 
@@ -90,7 +91,7 @@ Until the MVP/base is complete, work directly on `master` and commit there. Do n
 
 Create meaningful commits throughout the work. Prefer commits at coherent feature or fix boundaries, not broad phase markers like `phase 3 done`.
 
-For Phase 5, generally commit and push after each completed checklist feature or checklist item with its subitems. Do not commit after every tiny edit, but do commit/push once a distinct feature is implemented, tested, and documented.
+For Phase 5.5, generally commit and push after each coherent fix slice. Do not commit after every tiny edit, but do commit/push once a distinct fix is implemented, tested, and documented.
 
 Good commit boundaries include:
 
@@ -129,7 +130,7 @@ Avoid committing every tiny file edit. Also avoid waiting until an entire phase 
 
 Developer-facing docs must move with the code. When a feature changes how a human runs, configures, tests, or debugs the project, update the relevant docs in the same feature slice.
 
-For Phase 5, pay special attention to:
+For Phase 5.5, pay special attention to:
 
 - `docs/architecture.md` for cache/playback/source behavior.
 - `docs/configuration.md` for cache, sync, status, and reset settings.
@@ -141,17 +142,20 @@ For Phase 5, pay special attention to:
 
 ## First Task Checklist
 
-- [ ] Read `GOAL.md`, especially the Phase 5 checklist.
+- [ ] Read `GOAL.md`, especially the Phase 5.5 checklist.
 - [ ] Confirm the local branch is `master` and remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
 - [ ] Run baseline checks: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
 - [x] Implement cache rotation and eviction.
-- [ ] Implement outage retry/backoff.
-- [ ] Tighten degraded/offline frame UI states.
+- [x] Add full-cache stable album churn and focused unit tests.
+- [x] Add the `extra-small` cache preset for local rotation testing.
+- [x] Ensure recovered ready status is published after outage retry succeeds.
+- [x] Implement outage retry/backoff.
+- [x] Tighten degraded/offline frame UI states.
 - [x] Harden CLI status/reset/config validation behavior.
-- [ ] Re-verify browser MVP behavior.
-- [ ] Update developer-facing docs as behavior changes.
-- [ ] Update `GOAL.md` as items are completed.
-- [ ] Commit and push coherent slices as checklist features are completed.
+- [x] Re-verify browser MVP behavior.
+- [x] Update developer-facing docs as behavior changes.
+- [x] Update `GOAL.md` as items are completed.
+- [x] Commit and push coherent slices as checklist features are completed.
 
 ## Do Not Build Yet
 

@@ -6,9 +6,9 @@ A local digital picture frame app for Immich libraries, designed to become the s
 
 Phase 0, the local Phase 1 mock slideshow loop, Phase 1.5 validation, Phase 2 Immich adapter, Phase 3 setup portal, and Phase 3.5 setup hardening are complete.
 
-The current work is **Phase 5: Browser MVP Polish And Hardening**.
+**Phase 5.5: Browser MVP Acceptance Fix Pass** is complete on `master`.
 
-Phase 5 cache rotation and outage retry/backoff are implemented in the daemon. Remaining Phase 5 work is focused on degraded/offline frame UI polish, CLI status/reset hardening, browser MVP verification, and final docs alignment.
+Phase 5 browser MVP polish was reported complete, and Phase 5.5 closed PM verification gaps: stable album cache churn when full, an extra-small local testing cache preset, recovered ready-status publication after outages, and final status/doc alignment.
 
 The Raspberry Pi Chromium kiosk direction is paused. The browser MVP should be finished first so future hardware work can focus on replacing the renderer instead of rebuilding setup, cache, source, and Immich integration behavior.
 

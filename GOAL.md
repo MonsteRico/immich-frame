@@ -38,7 +38,7 @@ The browser MVP is done when all items below are complete in local/browser devel
 
 ## Current Session Goal
 
-Complete **Phase 5.5: Browser MVP Acceptance Fix Pass**.
+Complete **Phase 5.5: Browser MVP Acceptance Fix Pass**. Phase 5.5 implementation and verification are complete as of 2026-05-24; final handoff state is committed on `master`.
 
 Phase 5 was reported complete, but PM verification found acceptance gaps around stable album cache rotation, local testing presets, outage recovery status publication, and stale status docs. This is a focused fix pass on `master`, not a new feature phase. Phase 4 appliance installer work remains reverted and hardware setup is paused.
 
@@ -316,7 +316,7 @@ Phase 5 was reported complete, but PM verification found acceptance gaps around 
 
 - Raspberry Pi/Chromium kiosk work was intentionally reverted after hardware exploration showed likely performance risk on the Pi Zero 2 W.
 - Hardware install scripts, packaging assets, and Pi appliance docs are not part of the current browser MVP path.
-- Future hardware work should start after Phase 5 and should evaluate a lighter renderer rather than assuming Chromium kiosk is the final target.
+- Future hardware work should start after the browser MVP acceptance pass and should evaluate a lighter renderer rather than assuming Chromium kiosk is the final target.
 
 ### Phase 5 Browser MVP Polish And Hardening Checklist
 
@@ -403,6 +403,14 @@ Phase 5 was reported complete, but PM verification found acceptance gaps around 
 
 ### Phase 5.5 Browser MVP Acceptance Fix Pass Checklist
 
+Phase 5.5 acceptance notes:
+
+- Full album caches now churn one safe slot per refresh for stable album sources larger than the cache target, using manifest history so never-cached candidates are introduced before recently evicted candidates are re-cached.
+- `cache.prefetch_items` continues to protect the current and near-upcoming playback entries during rotation/eviction.
+- `cache.preset = "extra-small"` is available for local testing at roughly 10 cached photos; `balanced` remains the default.
+- Cache maintenance publishes a recovered `ready` SSE state after a successful outage retry, even when cache contents did not change.
+- Phase 6 renderer/hardware work remains future-only; installer/systemd/kiosk work is still paused.
+
 - [x] Baseline verification before changes:
   - [x] Confirm branch is `master`.
   - [x] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
@@ -422,29 +430,29 @@ Phase 5 was reported complete, but PM verification found acceptance gaps around 
 - [x] Fix ready-status publication after outage recovery:
   - [x] Publish recovered ready state when refresh succeeds after degraded/error status, even if cache contents do not change.
   - [x] Add or update a focused unit test where practical.
-- [ ] Align docs and status:
-  - [ ] Update `AGENT_BRIEF.md` to describe Phase 5.5 as current until complete.
-  - [ ] Update `README.md` current status.
-  - [ ] Update `docs/implementation-plan.md` with Phase 5.5 current work and Phase 6 remaining future work.
-  - [ ] Update `GOAL.md` with Phase 5.5 acceptance notes.
-  - [ ] Keep Phase 6 renderer/hardware re-evaluation as future work only.
-- [ ] Final verification:
-  - [ ] Run `go test ./...`.
-  - [ ] Run `pnpm typecheck`.
-  - [ ] Run `pnpm build`.
-  - [ ] Run `pnpm build:embedded-ui` if embedded UI assets or frontend files changed.
-- [ ] Commit and push coherent fix slices to `master`.
+- [x] Align docs and status:
+  - [x] Update `AGENT_BRIEF.md` to describe Phase 5.5 as current until complete.
+  - [x] Update `README.md` current status.
+  - [x] Update `docs/implementation-plan.md` with Phase 5.5 current work and Phase 6 remaining future work.
+  - [x] Update `GOAL.md` with Phase 5.5 acceptance notes.
+  - [x] Keep Phase 6 renderer/hardware re-evaluation as future work only.
+- [x] Final verification:
+  - [x] Run `go test ./...`.
+  - [x] Run `pnpm typecheck`.
+  - [x] Run `pnpm build`.
+  - [x] Run `pnpm build:embedded-ui` because setup UI assets changed.
+- [x] Commit and push coherent fix slices to `master`.
 
 ## Stop Conditions
 
 An agent can stop when:
 
-- [ ] The requested phase checklist is complete.
-- [ ] Tests/builds for touched areas pass, or failures are clearly documented.
-- [ ] Docs are updated for any changed behavior or decision.
-- [ ] Work has been committed in meaningful increments.
-- [ ] No required dev servers, long-running commands, or install sessions are left running.
-- [ ] Remaining work is captured in a clear checklist.
+- [x] The requested phase checklist is complete.
+- [x] Tests/builds for touched areas pass, or failures are clearly documented.
+- [x] Docs are updated for any changed behavior or decision.
+- [x] Work has been committed in meaningful increments.
+- [x] No required dev servers, long-running commands, or install sessions are left running.
+- [x] Remaining work is captured in a clear checklist.
 
 ## Commit Expectations
 
@@ -469,7 +477,7 @@ Commit and push at coherent feature or fix boundaries rather than only at phase 
 
 Do not commit after every tiny edit. Do not wait until all of Phase 0 or Phase 1 is complete if several distinct working pieces can be committed separately.
 
-For Phase 5 specifically, generally commit and push after each completed checklist feature or checklist item with its subitems. Examples: cache rotation, eviction policy, outage retry/backoff, degraded UI states, CLI status/reset hardening, browser verification, and docs updates.
+For Phase 5.5, generally commit and push after each completed coherent fix slice or final documentation/verification slice. Examples: album cache rotation, cache preset support, outage recovery publication, and docs/checklist updates.
 
 Before each commit:
 

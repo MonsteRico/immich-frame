@@ -51,7 +51,7 @@ Runtime refresh errors are recorded as user-safe status text only. They must not
 
 ## Localhost Trust Boundary
 
-The Pi's Chromium kiosk opens `http://127.0.0.1:8787/frame`.
+The local browser frame opens `http://127.0.0.1:8787/frame`.
 
 Requests from localhost may access the frame and cached media so the device can boot into slideshow without login.
 

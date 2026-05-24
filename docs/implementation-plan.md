@@ -145,15 +145,28 @@ Checklist:
   - [x] Avoid evicting current and near-upcoming playback entries.
   - [x] Refresh playback queue when cache contents change so the frame does not loop one static seed forever.
 - [x] Implement outage retry/backoff.
-- [ ] Implement subtle degraded status overlay.
-- [ ] Implement reset flows.
-- [ ] Implement CLI status details.
-- [ ] Add unit tests for playback/cache/config/auth.
-- [ ] Keep tests unit-only; do not add real-Immich integration tests to repo/CI for MVP.
-- [ ] Add frontend typecheck/build CI.
-- [ ] Update all docs.
-- [ ] Confirm no Immich secrets reach browser or logs.
-- [ ] Confirm LAN clients cannot view cached photos unauthenticated.
+- [x] Implement subtle degraded status overlay.
+- [x] Implement reset flows.
+- [x] Implement CLI status details.
+- [x] Add unit tests for playback/cache/config/auth.
+- [x] Keep tests unit-only; do not add real-Immich integration tests to repo/CI for MVP.
+- [x] Add frontend typecheck/build verification.
+- [x] Update all docs.
+- [x] Confirm no Immich secrets reach browser or logs.
+- [x] Confirm LAN clients cannot view cached photos unauthenticated.
+
+## Phase 5.5: Browser MVP Acceptance Fix Pass
+
+Goal: close PM verification gaps found after Phase 5 was reported complete, without restarting hardware/appliance work.
+
+Checklist:
+
+- [x] Rotate/churn stable album caches even when already at `cache.target_items`.
+- [x] Preserve current and near-upcoming playback entries during album churn using `cache.prefetch_items`.
+- [x] Add an `extra-small` local testing cache preset with roughly 10 cached photos.
+- [x] Publish recovered `ready` status after outage retry succeeds, even if cache contents did not change.
+- [x] Align docs to show Phase 5.5 as the current fix pass until final verification is complete.
+- [x] Run final `go test ./...`, `pnpm typecheck`, `pnpm build`, and `pnpm build:embedded-ui` because setup UI assets changed.
 
 ## Phase 6: Renderer And Hardware Re-evaluation
 
