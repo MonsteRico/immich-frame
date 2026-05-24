@@ -45,6 +45,10 @@ run() {
   "$@"
 }
 
+shell_quote() {
+  printf "%q" "$1"
+}
+
 require_root() {
   if [ "$(id -u)" -ne 0 ]; then
     log "error: run as root, for example: sudo ./install.sh"
@@ -57,6 +61,27 @@ require_repo_root() {
     log "error: run this script from the immich-frame repository root"
     exit 1
   fi
+}
+
+build_embedded_ui() {
+  if command -v node >/dev/null 2>&1 && command -v pnpm >/dev/null 2>&1; then
+    run node --version
+    run pnpm --version
+    run pnpm build:embedded-ui
+    return 0
+  fi
+
+  if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
+    repo_dir="$(pwd)"
+    build_cmd="cd $(shell_quote "$repo_dir") && node --version && pnpm --version && pnpm build:embedded-ui"
+    log "Root PATH cannot see node/pnpm; building embedded UI as $SUDO_USER"
+    run sudo -H -u "$SUDO_USER" bash -lc "$build_cmd"
+    return 0
+  fi
+
+  log "error: node and pnpm are required before running install.sh"
+  log "hint: if they are installed for your user, run this script with sudo so it can build as that user"
+  exit 1
 }
 
 install_packages() {
@@ -88,17 +113,7 @@ build_binary() {
     log "Skipping local build; expecting an existing immich-frame binary at $BIN_PATH"
     return 0
   fi
-  if ! command -v node >/dev/null 2>&1; then
-    log "error: node is required before running install.sh"
-    exit 1
-  fi
-  if ! command -v pnpm >/dev/null 2>&1; then
-    log "error: pnpm is required before running install.sh"
-    exit 1
-  fi
-  run node --version
-  run pnpm --version
-  run pnpm build:embedded-ui
+  build_embedded_ui
   run go build -trimpath -ldflags "-s -w" -o ".dist/immich-frame" ./cmd/immich-frame
   run install -D -m 0755 ".dist/immich-frame" "$BIN_PATH"
 }
