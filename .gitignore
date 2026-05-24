@@ -1,5 +1,4 @@
-.immich-frame-setup-verify/
-.immich-frame/
+.immich-frame*
 dist/
 node_modules/
 .pnpm-store/
