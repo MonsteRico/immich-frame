@@ -7,8 +7,8 @@ Physical Pi verification is pending until Matthew runs these commands on the har
 ## Assumptions
 
 - Raspberry Pi Zero 2 W.
-- Raspberry Pi OS Lite.
-- Wi-Fi was configured with Raspberry Pi Imager before first boot.
+- Ubuntu Server 24.04 LTS.
+- Wi-Fi was configured before first boot, for example with cloud-init or the Ubuntu Raspberry Pi image setup flow.
 - The Pi and setup phone/laptop are on the same Wi-Fi.
 - The repository is available on the Pi.
 - Go, Node.js, and pnpm are available if building on the Pi.
@@ -156,7 +156,7 @@ After running the install on the physical Pi, send back:
 ```sh
 cat /etc/os-release
 uname -a
-chromium-browser --version || chromium --version
+/snap/bin/chromium --version
 systemctl status immich-frame.service --no-pager
 systemctl status immich-frame-kiosk.service --no-pager
 journalctl -u immich-frame.service -n 80 --no-pager

@@ -5,7 +5,7 @@
 Immich Frame MVP targets:
 
 - Raspberry Pi Zero 2 W.
-- Raspberry Pi OS Lite.
+- Ubuntu Server 24.04 LTS.
 - HDMI display.
 - Wi-Fi.
 - Chromium kiosk.
@@ -14,7 +14,7 @@ Immich Frame MVP targets:
 
 ## Setup Assumptions For MVP
 
-Wi-Fi is configured before Immich Frame setup, likely through Raspberry Pi Imager.
+Wi-Fi is configured before Immich Frame setup, for example with cloud-init or the Ubuntu Raspberry Pi image setup flow.
 
 The frame and setup phone/laptop must be on the same network.
 
@@ -67,7 +67,7 @@ MVP does not manage OS-level display rotation.
 
 ## Browser/Kiosk
 
-Default browser is Raspberry Pi OS Chromium. Browser command should be configurable.
+Default browser is Chromium installed through Snap on Ubuntu 24.04 LTS. Browser command should be configurable.
 
 Kiosk URL:
 
@@ -78,7 +78,7 @@ http://127.0.0.1:8787/frame
 Kiosk config may live in an env file such as:
 
 ```sh
-KIOSK_BROWSER=chromium-browser
+KIOSK_BROWSER=/snap/bin/chromium
 KIOSK_URL=http://127.0.0.1:8787/frame
 KIOSK_FLAGS="--kiosk --noerrdialogs --disable-infobars"
 ```
@@ -99,7 +99,7 @@ That launcher disables screen blanking with `xset`, hides the pointer with `uncl
 
 ## Display Server
 
-The prepared Raspberry Pi OS Lite path is:
+The prepared Ubuntu Server 24.04 LTS path is:
 
 ```text
 systemd service -> startx -> Xorg -> openbox -> Chromium kiosk
@@ -111,7 +111,8 @@ Required packages are installed by `install.sh`:
 xserver-xorg
 xinit
 openbox
-chromium-browser or chromium
+snapd
+chromium snap
 unclutter
 x11-xserver-utils
 dbus-x11
@@ -126,7 +127,7 @@ Do not tie the Go daemon to X11, Wayland, Labwc, Openbox, or any specific displa
 
 ## mDNS
 
-Phase 4 uses Avahi for `frame.local` on Raspberry Pi OS Lite.
+Phase 4 uses Avahi for `frame.local` on Ubuntu Server 24.04 LTS.
 
 The installer installs and enables:
 

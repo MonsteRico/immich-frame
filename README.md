@@ -1,4 +1,4 @@
-﻿# Immich Frame
+# Immich Frame
 
 A self-hosted digital picture frame for Immich libraries, designed for self-built HDMI frames powered by Raspberry Pi Zero 2 W-class hardware.
 
@@ -28,7 +28,7 @@ It is not primarily a hosted web app, Docker dashboard, or cloud service.
 ## Reference Hardware
 
 - Raspberry Pi Zero 2 W.
-- Raspberry Pi OS Lite.
+- Ubuntu Server 24.04 LTS.
 - HDMI display.
 - Wi-Fi configured before setup.
 - Chromium kiosk.

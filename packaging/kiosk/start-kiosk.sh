@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-KIOSK_BROWSER="${KIOSK_BROWSER:-chromium-browser}"
+KIOSK_BROWSER="${KIOSK_BROWSER:-/snap/bin/chromium}"
 KIOSK_URL="${KIOSK_URL:-http://127.0.0.1:8787/frame}"
 KIOSK_FLAGS="${KIOSK_FLAGS:---kiosk --noerrdialogs --disable-infobars}"
 

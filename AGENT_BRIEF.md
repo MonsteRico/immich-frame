@@ -1,4 +1,4 @@
-﻿# Immich Frame Agent Brief
+# Immich Frame Agent Brief
 
 This is the entry point for future coding agents. Read this file first, then follow the linked docs.
 
@@ -13,7 +13,7 @@ This is not primarily a hosted web app, Docker/LAN dashboard, or cloud service.
 ## Reference Platform
 
 - Raspberry Pi Zero 2 W.
-- Raspberry Pi OS Lite.
+- Ubuntu Server 24.04 LTS.
 - HDMI display.
 - Wi-Fi already configured for MVP.
 - No touch or keyboard required after setup.
@@ -79,7 +79,7 @@ Phase 4 should make the reference Raspberry Pi Zero 2 W boot directly into Immic
 - `/etc/immich-frame/config.toml` and `/var/lib/immich-frame` runtime data.
 - systemd service for `immich-frame serve`.
 - Chromium kiosk startup opening `http://127.0.0.1:8787/frame`.
-- `frame.local` mDNS through the chosen Raspberry Pi OS path.
+- `frame.local` mDNS through the chosen Ubuntu 24.04 LTS path.
 - appliance install/runbook docs.
 - clear physical Pi verification notes, especially if hardware verification remains pending.
 
@@ -133,7 +133,7 @@ Developer-facing docs must move with the code. When a feature changes how a huma
 
 For Phase 4, pay special attention to:
 
-- `docs/hardware.md` for Raspberry Pi OS, kiosk, display-server, and mDNS behavior.
+- `docs/hardware.md` for Ubuntu 24.04 LTS, kiosk, display-server, and mDNS behavior.
 - `docs/local-development.md` for setup portal verification steps.
 - `docs/developer-guide.md` for durable human workflow notes.
 - appliance install/runbook docs for human setup without AI help.

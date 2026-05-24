@@ -1,4 +1,4 @@
-﻿# Immich Frame Goal
+# Immich Frame Goal
 
 This document defines when an agent can stop working and what counts as done.
 
@@ -12,7 +12,7 @@ The frame should boot into a local Chromium kiosk, show a polished setup screen 
 
 The MVP is done when all items below are complete on the reference Pi Zero 2 W hardware:
 
-- [ ] Raspberry Pi OS Lite is flashed and Wi-Fi is configured through Raspberry Pi Imager.
+- [ ] Ubuntu Server 24.04 LTS is flashed and Wi-Fi is configured before first boot.
 - [ ] `install.sh` installs Immich Frame idempotently.
 - [ ] `immich-frame serve` runs as a systemd service.
 - [ ] Chromium kiosk starts automatically on boot.
@@ -331,7 +331,7 @@ Phase 3.5 is accepted as complete. The local scaffold, mock frame loop, Phase 1.
   - [x] Run `pnpm typecheck`.
   - [x] Run `pnpm build`.
 - [x] Add an idempotent Raspberry Pi install script:
-  - [x] Target Raspberry Pi OS Lite on Raspberry Pi Zero 2 W.
+  - [x] Target Ubuntu Server 24.04 LTS on Raspberry Pi Zero 2 W.
   - [x] Install or verify required OS packages for Chromium kiosk and mDNS.
   - [x] Build or install the `immich-frame` binary.
   - [x] Create/update `/etc/immich-frame` and `/var/lib/immich-frame`.
@@ -353,7 +353,7 @@ Phase 3.5 is accepted as complete. The local scaffold, mock frame loop, Phase 1.
   - [x] Avoid tying daemon code to a specific display server.
   - [x] Document the chosen tested display-server path.
 - [x] Configure `frame.local` mDNS:
-  - [x] Install/configure Avahi or the chosen Raspberry Pi OS mDNS path.
+  - [x] Install/configure Avahi or the chosen Ubuntu 24.04 LTS mDNS path.
   - [x] Ensure setup portal should be reachable as `http://frame.local:8787/setup` on same Wi-Fi.
   - [x] Keep IP fallback behavior documented.
 - [x] Add appliance CLI/install docs:
@@ -369,7 +369,7 @@ Phase 3.5 is accepted as complete. The local scaffold, mock frame loop, Phase 1.
   - [x] Run `pnpm build`.
   - [x] Run `pnpm build:embedded-ui` if installer/release assets depend on embedded UI.
 - [x] Record Pi verification status:
-  - [ ] If tested on the Pi Zero 2 W, record Raspberry Pi OS version, Chromium package/version if available, display path, and reboot result.
+  - [ ] If tested on the Pi Zero 2 W, record Ubuntu 24.04 LTS version, Chromium package/version if available, display path, and reboot result.
   - [x] If not tested on the Pi yet, clearly mark physical Pi verification as pending rather than implied complete.
 - [x] Update docs:
   - [x] Update `README.md`.
@@ -384,7 +384,7 @@ Phase 3.5 is accepted as complete. The local scaffold, mock frame loop, Phase 1.
 
 - Baseline before code changes passed on `master`: `go test ./...`, `pnpm typecheck`, and `pnpm build`.
 - `origin` was `https://github.com/MonsteRico/immich-frame.git`.
-- Added `install.sh` for Raspberry Pi OS Lite with idempotent package install, local build/install, service user/group creation, filesystem permissions, systemd unit installation, kiosk env/script installation, and Avahi enablement.
+- Added `install.sh` for Ubuntu Server 24.04 LTS with idempotent package install, local build/install, service user/group creation, filesystem permissions, systemd unit installation, kiosk env/script installation, and Avahi enablement.
 - Added appliance default config at `packaging/config/appliance-config.toml` so first boot uses Immich setup mode rather than desktop local-folder mock mode.
 - Added systemd daemon unit for `immich-frame serve -config /etc/immich-frame/config.toml -data-dir /var/lib/immich-frame`.
 - Added Chromium kiosk startup through `startx`, Xorg, Openbox, and configurable `/etc/immich-frame/kiosk.env`.
