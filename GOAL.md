@@ -38,9 +38,9 @@ The browser MVP is done when all items below are complete in local/browser devel
 
 ## Current Session Goal
 
-Complete **Phase 5: Browser MVP Polish And Hardening**.
+Complete **Phase 5.5: Browser MVP Acceptance Fix Pass**.
 
-Phase 3.5 is complete. Phase 4 appliance installer work was reverted and hardware setup is paused. The next agent should finish the browser-based MVP behavior first, especially cache rotation, outage behavior, status overlays, reset/status details, and docs.
+Phase 5 was reported complete, but PM verification found acceptance gaps around stable album cache rotation, local testing presets, outage recovery status publication, and stale status docs. This is a focused fix pass on `master`, not a new feature phase. Phase 4 appliance installer work remains reverted and hardware setup is paused.
 
 ### Phase 0 Done Checklist
 
@@ -400,6 +400,40 @@ Phase 3.5 is complete. Phase 4 appliance installer work was reverted and hardwar
 - HTTP smoke checks returned `200` for `/api/state`, the embedded frame JS asset, and the embedded frame CSS asset.
 - Browser verification passed for `http://127.0.0.1:8787/setup`: title `Immich Frame Setup`, setup code claim screen rendered from embedded setup assets, and no console warnings/errors. Setup/auth/settings/Immich validation behavior remains covered by mock HTTP unit tests; no real-Immich integration tests were added.
 - CLI smoke checks passed: `immich-frame version`, `config validate -config config.dev.toml`, and `status -config config.dev.toml -data-dir .immich-frame`.
+
+### Phase 5.5 Browser MVP Acceptance Fix Pass Checklist
+
+- [x] Baseline verification before changes:
+  - [x] Confirm branch is `master`.
+  - [x] Confirm remote is `origin` at `https://github.com/MonsteRico/immich-frame.git`.
+  - [x] Run `go test ./...`.
+  - [x] Run `pnpm typecheck`.
+  - [x] Run `pnpm build`.
+- [x] Fix stable album cache rotation:
+  - [x] Rotate/churn album-mode cache even when cache is already at `cache.target_items`.
+  - [x] Prefer never-cached or least-recently-shown album candidates from sources larger than the cache target.
+  - [x] Preserve current and near-upcoming playback entries using `cache.prefetch_items`.
+  - [x] Keep the rotation deterministic enough for unit tests.
+  - [x] Add focused unit tests proving a full cache can rotate in new album candidates.
+- [ ] Add an extra-small cache preset for local testing:
+  - [ ] Add a preset intended for roughly 10 cached photos.
+  - [ ] Keep production defaults unchanged.
+  - [ ] Document that the preset exists to make cache rotation visible during development.
+- [ ] Fix ready-status publication after outage recovery:
+  - [ ] Publish recovered ready state when refresh succeeds after degraded/error status, even if cache contents do not change.
+  - [ ] Add or update a focused unit test where practical.
+- [ ] Align docs and status:
+  - [ ] Update `AGENT_BRIEF.md` to describe Phase 5.5 as current until complete.
+  - [ ] Update `README.md` current status.
+  - [ ] Update `docs/implementation-plan.md` with Phase 5.5 current work and Phase 6 remaining future work.
+  - [ ] Update `GOAL.md` with Phase 5.5 acceptance notes.
+  - [ ] Keep Phase 6 renderer/hardware re-evaluation as future work only.
+- [ ] Final verification:
+  - [ ] Run `go test ./...`.
+  - [ ] Run `pnpm typecheck`.
+  - [ ] Run `pnpm build`.
+  - [ ] Run `pnpm build:embedded-ui` if embedded UI assets or frontend files changed.
+- [ ] Commit and push coherent fix slices to `master`.
 
 ## Stop Conditions
 

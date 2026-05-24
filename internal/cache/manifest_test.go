@@ -133,6 +133,90 @@ func TestTopOffFetchedPrefersUncachedAndStopsAtTarget(t *testing.T) {
 	}
 }
 
+func TestRotateFetchedReplacesUnprotectedEntryWhenCacheIsFull(t *testing.T) {
+	root := t.TempDir()
+	store, err := Open(filepath.Join(root, "cache"))
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	now := time.Now()
+	store.manifest.Entries = map[string]Entry{
+		"one":   {AssetID: "one", CachePath: filepath.Join(root, "one.jpg"), CachedAt: now.Add(-3 * time.Hour), LastShown: now.Add(-3 * time.Hour)},
+		"two":   {AssetID: "two", CachePath: filepath.Join(root, "two.jpg"), CachedAt: now.Add(-2 * time.Hour), LastShown: now.Add(-2 * time.Hour)},
+		"three": {AssetID: "three", CachePath: filepath.Join(root, "three.jpg"), CachedAt: now.Add(-time.Hour), LastShown: now},
+	}
+	for _, entry := range store.manifest.Entries {
+		store.recordHistoryLocked(entry)
+		writeFile(t, entry.CachePath, []byte(entry.AssetID))
+	}
+
+	var fetched []string
+	entries, changed, err := store.RotateFetched(context.Background(), candidates("one", "two", "three", "four", "five"), RotateOptions{
+		TargetItems:  3,
+		ProtectedIDs: map[string]struct{}{"one": {}, "two": {}},
+	}, func(ctx context.Context, candidate source.Candidate) (io.ReadCloser, string, error) {
+		fetched = append(fetched, candidate.ID)
+		return io.NopCloser(strings.NewReader(candidate.ID)), "image/jpeg", nil
+	})
+	if err != nil {
+		t.Fatalf("RotateFetched() error = %v", err)
+	}
+	if !changed || len(entries) != 3 {
+		t.Fatalf("RotateFetched() changed=%t len=%d, want changed and 3 entries", changed, len(entries))
+	}
+	if strings.Join(fetched, ",") != "four" {
+		t.Fatalf("fetched = %v, want four", fetched)
+	}
+	for _, id := range []string{"one", "two", "four"} {
+		if _, ok := store.Get(id); !ok {
+			t.Fatalf("expected %q to remain cached", id)
+		}
+	}
+	if _, ok := store.Get("three"); ok {
+		t.Fatal("unprotected recently-shown entry was not rotated out")
+	}
+	if _, err := os.Stat(filepath.Join(root, "three.jpg")); !os.IsNotExist(err) {
+		t.Fatalf("rotated file still exists or stat error = %v", err)
+	}
+}
+
+func TestRotateFetchedUsesHistoryBeforeRecachingEvictedEntries(t *testing.T) {
+	root := t.TempDir()
+	store, err := Open(filepath.Join(root, "cache"))
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	now := time.Now()
+	store.manifest.Entries = map[string]Entry{
+		"one":   {AssetID: "one", CachePath: filepath.Join(root, "one.jpg"), CachedAt: now.Add(-3 * time.Hour), LastShown: now.Add(-3 * time.Hour)},
+		"two":   {AssetID: "two", CachePath: filepath.Join(root, "two.jpg"), CachedAt: now.Add(-2 * time.Hour), LastShown: now.Add(-2 * time.Hour)},
+		"three": {AssetID: "three", CachePath: filepath.Join(root, "three.jpg"), CachedAt: now.Add(-time.Hour), LastShown: now},
+	}
+	for _, entry := range store.manifest.Entries {
+		store.recordHistoryLocked(entry)
+		writeFile(t, entry.CachePath, []byte(entry.AssetID))
+	}
+
+	var fetched []string
+	fetch := func(ctx context.Context, candidate source.Candidate) (io.ReadCloser, string, error) {
+		fetched = append(fetched, candidate.ID)
+		return io.NopCloser(strings.NewReader(candidate.ID)), "image/jpeg", nil
+	}
+	opts := RotateOptions{TargetItems: 3, ProtectedIDs: map[string]struct{}{"one": {}, "two": {}}}
+	if _, _, err := store.RotateFetched(context.Background(), candidates("one", "two", "three", "four", "five"), opts, fetch); err != nil {
+		t.Fatalf("RotateFetched() first error = %v", err)
+	}
+	if _, _, err := store.RotateFetched(context.Background(), candidates("one", "two", "three", "four", "five"), opts, fetch); err != nil {
+		t.Fatalf("RotateFetched() second error = %v", err)
+	}
+	if strings.Join(fetched, ",") != "four,five" {
+		t.Fatalf("fetched = %v, want four,five", fetched)
+	}
+	if _, ok := store.Get("five"); !ok {
+		t.Fatal("second rotation did not bring in the remaining never-cached candidate")
+	}
+}
+
 func TestEvictDropsStaleBeforeValidAndPreservesProtected(t *testing.T) {
 	root := t.TempDir()
 	store, err := Open(filepath.Join(root, "cache"))
@@ -206,6 +290,14 @@ func TestEvictSourceRemovedPrunesStaleProtectedEntriesSurvive(t *testing.T) {
 	if _, ok := store.Get("valid"); !ok {
 		t.Fatal("valid entry was evicted")
 	}
+}
+
+func candidates(ids ...string) []source.Candidate {
+	out := make([]source.Candidate, 0, len(ids))
+	for _, id := range ids {
+		out = append(out, source.Candidate{ID: id, Title: id, MediaType: "image/jpeg"})
+	}
+	return out
 }
 
 func writeFile(t *testing.T, path string, data []byte) {

@@ -97,7 +97,7 @@ internal/app
   Application wiring, source/cache/playback startup, and background cache maintenance.
 
 internal/cache
-  Cache manifest, local/fetched media storage, top-off, and eviction policy.
+  Cache manifest, local/fetched media storage, top-off, album rotation history, and eviction policy.
 
 internal/config
   Config, secrets, state models and file IO.

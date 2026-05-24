@@ -237,6 +237,24 @@ func (a *App) refreshCache(ctx context.Context) (bool, error) {
 	if err != nil {
 		return len(pruned) > 0 || toppedOff, err
 	}
+	rotated := false
+	if cfg.Source.Mode == "album" {
+		entries, rotated, err = a.Cache.RotateFetched(ctx, sourceCandidates, cache.RotateOptions{
+			TargetItems:  cfg.Cache.TargetItems,
+			ProtectedIDs: protectedIDs,
+		}, func(ctx context.Context, candidate source.Candidate) (io.ReadCloser, string, error) {
+			rendition, err := client.FetchRendition(ctx, candidate.ID, immich.Target{
+				Width: cfg.Display.Width, Height: cfg.Display.Height, Format: cfg.Cache.Rendition,
+			})
+			if err != nil {
+				return nil, "", err
+			}
+			return rendition.Body, rendition.ContentType, nil
+		})
+		if err != nil {
+			return len(pruned) > 0 || toppedOff, err
+		}
+	}
 	entries, evicted, err := a.Cache.Evict(cache.EvictOptions{
 		TargetItems:  cfg.Cache.TargetItems,
 		SourceIDs:    sourceIDs,
@@ -246,7 +264,7 @@ func (a *App) refreshCache(ctx context.Context) (bool, error) {
 		return len(pruned) > 0 || toppedOff, err
 	}
 	_ = entries
-	return len(pruned) > 0 || toppedOff || len(evicted) > 0, nil
+	return len(pruned) > 0 || toppedOff || rotated || len(evicted) > 0, nil
 }
 
 func immichCandidates(ctx context.Context, cfg config.Config, client *immich.Client) ([]immich.AssetCandidate, error) {

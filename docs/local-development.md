@@ -229,6 +229,8 @@ Unit tests cover the cache rotation rules that are hard to verify deterministica
 
 - top-off stops at `cache.target_items`.
 - uncached candidates are preferred when filling the cache.
+- a full stable-album cache can rotate in a new candidate without evicting current or near-upcoming playback entries.
+- rotation history prevents immediately re-caching the entry that was just evicted when never-cached album candidates remain.
 - stale source entries are evicted before valid fallback photos.
 - current and near-upcoming playback entries are protected by `cache.prefetch_items`.
 - queue refresh preserves the current photo when cache contents change.

@@ -33,9 +33,15 @@ type Entry struct {
 }
 
 type Manifest struct {
-	Version   int              `json:"version"`
-	Entries   map[string]Entry `json:"entries"`
-	UpdatedAt time.Time        `json:"updatedAt"`
+	Version   int                         `json:"version"`
+	Entries   map[string]Entry            `json:"entries"`
+	History   map[string]CandidateHistory `json:"history,omitempty"`
+	UpdatedAt time.Time                   `json:"updatedAt"`
+}
+
+type CandidateHistory struct {
+	CachedAt  time.Time `json:"cachedAt,omitempty"`
+	LastShown time.Time `json:"lastShown,omitempty"`
 }
 
 type Store struct {
@@ -51,7 +57,7 @@ func Open(dir string) (*Store, error) {
 	store := &Store{
 		Dir:          dir,
 		ManifestPath: filepath.Join(dir, "manifest.json"),
-		manifest:     Manifest{Version: 1, Entries: map[string]Entry{}, UpdatedAt: time.Now()},
+		manifest:     Manifest{Version: 1, Entries: map[string]Entry{}, History: map[string]CandidateHistory{}, UpdatedAt: time.Now()},
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, err
@@ -69,6 +75,9 @@ func Open(dir string) (*Store, error) {
 	if store.manifest.Entries == nil {
 		store.manifest.Entries = map[string]Entry{}
 	}
+	if store.manifest.History == nil {
+		store.manifest.History = map[string]CandidateHistory{}
+	}
 	return store, nil
 }
 
@@ -84,6 +93,7 @@ func (s *Store) Ensure(candidates []source.Candidate) ([]Entry, error) {
 			return nil, err
 		}
 		s.manifest.Entries[entry.AssetID] = entry
+		s.recordHistoryLocked(entry)
 	}
 	if err := s.saveLocked(); err != nil {
 		return nil, err
@@ -103,6 +113,7 @@ func (s *Store) EnsureFetched(ctx context.Context, candidates []source.Candidate
 			return nil, err
 		}
 		s.manifest.Entries[entry.AssetID] = entry
+		s.recordHistoryLocked(entry)
 	}
 	if err := s.saveLocked(); err != nil {
 		return nil, err
@@ -130,6 +141,7 @@ func (s *Store) TopOffFetched(ctx context.Context, candidates []source.Candidate
 			return s.listLocked(), changed, err
 		}
 		s.manifest.Entries[entry.AssetID] = entry
+		s.recordHistoryLocked(entry)
 		changed = true
 	}
 	if changed {
@@ -138,6 +150,68 @@ func (s *Store) TopOffFetched(ctx context.Context, candidates []source.Candidate
 		}
 	}
 	return s.listLocked(), changed, nil
+}
+
+type RotateOptions struct {
+	TargetItems  int
+	ProtectedIDs map[string]struct{}
+}
+
+func (s *Store) RotateFetched(ctx context.Context, candidates []source.Candidate, opts RotateOptions, fetch FetchFunc) ([]Entry, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	targetItems := opts.TargetItems
+	if targetItems <= 0 {
+		targetItems = len(candidates)
+	}
+	if targetItems <= 0 || len(candidates) <= targetItems || len(s.manifest.Entries) < targetItems {
+		return s.listLocked(), false, nil
+	}
+
+	var replacement source.Candidate
+	foundReplacement := false
+	for _, candidate := range s.prioritizedCandidatesLocked(candidates) {
+		if _, cached := s.manifest.Entries[candidate.ID]; cached {
+			continue
+		}
+		replacement = candidate
+		foundReplacement = true
+		break
+	}
+	if !foundReplacement {
+		return s.listLocked(), false, nil
+	}
+
+	sourceIDs := map[string]struct{}{}
+	for _, candidate := range candidates {
+		sourceIDs[candidate.ID] = struct{}{}
+	}
+	var victim Entry
+	foundVictim := false
+	for _, entry := range s.evictionCandidatesLocked(EvictOptions{SourceIDs: sourceIDs, ProtectedIDs: opts.ProtectedIDs}) {
+		if _, protected := opts.ProtectedIDs[entry.AssetID]; protected {
+			continue
+		}
+		victim = entry
+		foundVictim = true
+		break
+	}
+	if !foundVictim {
+		return s.listLocked(), false, nil
+	}
+
+	entry, err := s.cacheFetched(ctx, replacement, fetch)
+	if err != nil {
+		return s.listLocked(), false, err
+	}
+	delete(s.manifest.Entries, victim.AssetID)
+	_ = os.Remove(victim.CachePath)
+	s.manifest.Entries[entry.AssetID] = entry
+	s.recordHistoryLocked(entry)
+	if err := s.saveLocked(); err != nil {
+		return nil, true, err
+	}
+	return s.listLocked(), true, nil
 }
 
 type EvictOptions struct {
@@ -212,6 +286,7 @@ func (s *Store) MarkShown(assetID string) error {
 	}
 	entry.LastShown = time.Now()
 	s.manifest.Entries[assetID] = entry
+	s.recordHistoryLocked(entry)
 	return s.saveLocked()
 }
 
@@ -260,6 +335,20 @@ func (s *Store) saveLocked() error {
 	return os.Rename(tmp, s.ManifestPath)
 }
 
+func (s *Store) recordHistoryLocked(entry Entry) {
+	if s.manifest.History == nil {
+		s.manifest.History = map[string]CandidateHistory{}
+	}
+	history := s.manifest.History[entry.AssetID]
+	if entry.CachedAt.After(history.CachedAt) {
+		history.CachedAt = entry.CachedAt
+	}
+	if entry.LastShown.After(history.LastShown) {
+		history.LastShown = entry.LastShown
+	}
+	s.manifest.History[entry.AssetID] = history
+}
+
 func (s *Store) prioritizedCandidatesLocked(candidates []source.Candidate) []source.Candidate {
 	ordered := append([]source.Candidate(nil), candidates...)
 	sort.SliceStable(ordered, func(i, j int) bool {
@@ -269,7 +358,33 @@ func (s *Store) prioritizedCandidatesLocked(candidates []source.Candidate) []sou
 			return !leftCached
 		}
 		if !leftCached {
-			return false
+			leftHistory, leftKnown := s.manifest.History[ordered[i].ID]
+			rightHistory, rightKnown := s.manifest.History[ordered[j].ID]
+			if leftKnown != rightKnown {
+				return !leftKnown
+			}
+			if !leftKnown {
+				return false
+			}
+			if leftHistory.LastShown.Equal(rightHistory.LastShown) {
+				if leftHistory.CachedAt.Equal(rightHistory.CachedAt) {
+					return ordered[i].ID < ordered[j].ID
+				}
+				if leftHistory.CachedAt.IsZero() {
+					return true
+				}
+				if rightHistory.CachedAt.IsZero() {
+					return false
+				}
+				return leftHistory.CachedAt.Before(rightHistory.CachedAt)
+			}
+			if leftHistory.LastShown.IsZero() {
+				return true
+			}
+			if rightHistory.LastShown.IsZero() {
+				return false
+			}
+			return leftHistory.LastShown.Before(rightHistory.LastShown)
 		}
 		if left.LastShown.Equal(right.LastShown) {
 			return left.AssetID < right.AssetID
