@@ -252,13 +252,19 @@ go run ./cmd/immich-frame version
 Inspect runtime state when using a custom data directory:
 
 ```sh
-go run ./cmd/immich-frame status -data-dir .immich-frame
+go run ./cmd/immich-frame status -config config.dev.toml -data-dir .immich-frame
 ```
 
 Reset local generated state and cache:
 
 ```sh
 go run ./cmd/immich-frame reset -data-dir .immich-frame
+```
+
+To include a disposable config file in a reset, pass it explicitly:
+
+```sh
+go run ./cmd/immich-frame reset -data-dir .immich-frame -config .setup-verify.toml
 ```
 
 ## Troubleshooting

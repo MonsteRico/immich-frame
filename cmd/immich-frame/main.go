@@ -8,8 +8,10 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"github.com/MonsteRico/immich-frame/internal/app"
+	"github.com/MonsteRico/immich-frame/internal/cache"
 	"github.com/MonsteRico/immich-frame/internal/config"
 )
 
@@ -72,18 +74,47 @@ func serve(args []string) error {
 
 func status(args []string) error {
 	fs := flag.NewFlagSet("status", flag.ExitOnError)
+	configPath := fs.String("config", "config.dev.toml", "path to config.toml")
 	dataDir := fs.String("data-dir", ".immich-frame", "runtime data directory")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
+	cfg, configErr := config.Load(*configPath)
+	configOK := configErr == nil
 	statePath := filepath.Join(*dataDir, "state.json")
 	state, err := config.LoadState(statePath)
 	if err != nil {
 		return err
 	}
+	secrets, err := config.LoadSecrets(filepath.Join(*dataDir, "secrets.json"))
+	if err != nil {
+		return err
+	}
+	store, err := cache.Open(filepath.Join(*dataDir, "cache"))
+	if err != nil {
+		return err
+	}
+	validationCurrent := state.ImmichValidation.Matches(cfg.Immich.URL, secrets.ImmichAPIKey)
+	fmt.Printf("configured=%t\n", state.SetupComplete)
 	fmt.Printf("setup_complete=%t\n", state.SetupComplete)
+	fmt.Printf("setup_status=%s\n", nonEmpty(state.SetupStatus, "unknown"))
+	fmt.Printf("config_valid=%t\n", configOK)
+	if !configOK {
+		fmt.Printf("config_error=%s\n", configErr)
+	}
+	fmt.Printf("source_mode=%s\n", cfg.Source.Mode)
+	if cfg.Source.Mode == "album" {
+		fmt.Printf("album_configured=%t\n", cfg.Source.Album.ID != "")
+	}
+	fmt.Printf("immich_url_configured=%t\n", cfg.Immich.URL != "")
+	fmt.Printf("immich_api_key_configured=%t\n", secrets.ImmichAPIKey != "")
+	fmt.Printf("immich_validation_current=%t\n", validationCurrent)
+	fmt.Printf("cache_count=%d\n", len(store.List()))
 	if state.CurrentAssetID != "" {
 		fmt.Printf("current_asset=%s\n", state.CurrentAssetID)
+	}
+	if !state.LastSync.IsZero() {
+		fmt.Printf("last_sync=%s\n", state.LastSync.Format(time.RFC3339))
 	}
 	if state.LastError != "" {
 		fmt.Printf("last_error=%s\n", state.LastError)
@@ -93,6 +124,7 @@ func status(args []string) error {
 
 func reset(args []string) error {
 	fs := flag.NewFlagSet("reset", flag.ExitOnError)
+	configPath := fs.String("config", "", "optional config.toml path to remove")
 	dataDir := fs.String("data-dir", ".immich-frame", "runtime data directory")
 	keepCache := fs.Bool("keep-cache", false, "preserve cached media")
 	if err := fs.Parse(args); err != nil {
@@ -104,6 +136,9 @@ func reset(args []string) error {
 	}
 	if !*keepCache {
 		targets = append(targets, filepath.Join(*dataDir, "cache"))
+	}
+	if *configPath != "" {
+		targets = append(targets, *configPath)
 	}
 	for _, target := range targets {
 		if err := os.RemoveAll(target); err != nil {
@@ -137,9 +172,16 @@ func configCommand(args []string) error {
 func usage() error {
 	fmt.Println(`immich-frame commands:
   serve             run the local frame daemon
-  status            print runtime status
+  status            print runtime status without secrets
   reset             clear secrets, state, and cache unless --keep-cache is set
   config validate   validate config.toml
   version           print version`)
 	return nil
+}
+
+func nonEmpty(value, fallback string) string {
+	if value == "" {
+		return fallback
+	}
+	return value
 }

@@ -80,7 +80,7 @@ Phase 5 priorities:
 - cache rotation and eviction so the same static cache seed is not shown forever. Initial daemon maintenance, top-off, protected eviction, and queue refresh are implemented.
 - Immich outage retry/backoff with cache-first playback. Initial bounded retry and degraded queue status are implemented; remaining work should add focused retry/backoff tests and finish UI polish.
 - calm degraded/offline UI states.
-- CLI status/reset/config validation hardening.
+- CLI status/reset/config validation hardening. Status/reset/config validation hardening is implemented; remaining work should focus on final browser MVP verification and docs completion.
 - browser MVP verification and docs.
 - preserve renderer boundaries so a lighter renderer can replace the browser later.
 
@@ -147,7 +147,7 @@ For Phase 5, pay special attention to:
 - [x] Implement cache rotation and eviction.
 - [ ] Implement outage retry/backoff.
 - [ ] Tighten degraded/offline frame UI states.
-- [ ] Harden CLI status/reset/config validation behavior.
+- [x] Harden CLI status/reset/config validation behavior.
 - [ ] Re-verify browser MVP behavior.
 - [ ] Update developer-facing docs as behavior changes.
 - [ ] Update `GOAL.md` as items are completed.

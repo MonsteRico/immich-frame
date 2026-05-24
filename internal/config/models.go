@@ -252,10 +252,62 @@ func (c Config) Validate() error {
 		issues = append(issues, "slideshow.interval_seconds must be positive")
 	}
 	switch c.Source.Mode {
-	case "local_folder", "album", "random":
+	case "local_folder":
+		if strings.TrimSpace(c.Source.LocalFolder.Path) == "" {
+			issues = append(issues, "source.local_folder.path is required in local_folder mode")
+		}
+	case "album":
+		if strings.TrimSpace(c.Immich.URL) == "" {
+			issues = append(issues, "immich.url is required in album mode")
+		}
+		if strings.TrimSpace(c.Source.Album.ID) == "" {
+			issues = append(issues, "source.album.id is required in album mode")
+		}
+	case "random":
+		if strings.TrimSpace(c.Immich.URL) == "" {
+			issues = append(issues, "immich.url is required in random mode")
+		}
 	default:
 		issues = append(issues, "source.mode must be local_folder, album, or random")
 	}
+	if c.Cache.MaxSizeMB <= 0 {
+		issues = append(issues, "cache.max_size_mb must be positive")
+	}
+	if c.Cache.MinFreeMB < 0 {
+		issues = append(issues, "cache.min_free_mb must not be negative")
+	}
+	if c.Cache.TargetItems <= 0 {
+		issues = append(issues, "cache.target_items must be positive")
+	}
+	if c.Cache.PrefetchItems < 0 {
+		issues = append(issues, "cache.prefetch_items must not be negative")
+	}
+	if c.Cache.PrefetchItems > c.Cache.TargetItems {
+		issues = append(issues, "cache.prefetch_items must be less than or equal to cache.target_items")
+	}
+	switch c.Cache.Rendition {
+	case "auto", "webp", "jpeg":
+	default:
+		issues = append(issues, "cache.rendition must be auto, webp, or jpeg")
+	}
+	if c.Sync.RefreshIntervalMinutes <= 0 {
+		issues = append(issues, "sync.refresh_interval_minutes must be positive")
+	}
+	validateOverlay := func(name string, overlay OverlayEnvelope) {
+		switch overlay.Slot {
+		case "top-left", "top-center", "top-right", "middle-left", "center", "middle-right", "bottom-left", "bottom-center", "bottom-right":
+		default:
+			issues = append(issues, name+".slot must be a supported overlay slot")
+		}
+		switch overlay.Visibility {
+		case "always", "on-photo-change", "when-degraded":
+		default:
+			issues = append(issues, name+".visibility must be always, on-photo-change, or when-degraded")
+		}
+	}
+	validateOverlay("overlays.clock", c.Overlays.Clock)
+	validateOverlay("overlays.photo_info", c.Overlays.PhotoInfo)
+	validateOverlay("overlays.status", c.Overlays.Status)
 	if len(issues) > 0 {
 		return errors.New(strings.Join(issues, "; "))
 	}

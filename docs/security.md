@@ -103,6 +103,8 @@ If a frame is lost, sold, stolen, or replaced:
 
 For troubleshooting only, a CLI reset may offer an explicit keep-cache option, but privacy-preserving reset is the default.
 
+`immich-frame reset` clears secrets and state by default and removes cached media unless `--keep-cache` is explicitly set. Config removal is explicit with `--config /path/to/config.toml` so local development configs are not deleted accidentally.
+
 ## Metadata Minimization
 
 Browser receives minimal display metadata by default:

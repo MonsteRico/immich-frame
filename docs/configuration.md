@@ -78,7 +78,7 @@ max_size_mb = 2048
 min_free_mb = 1024
 target_items = 500
 prefetch_items = 20
-rendition = "auto" # auto | thumbnail | preview | original
+rendition = "auto" # auto | webp | jpeg
 
 [sync]
 refresh_interval_minutes = 360
@@ -152,6 +152,19 @@ Implemented browser-facing behavior:
 - Random mode stores `source.mode = "random"`.
 - Display fit, slide interval, cache preset, and overlay enabled flags are editable from the portal.
 
+## Config Validation
+
+`immich-frame config validate` checks the browser MVP settings needed for a usable frame:
+
+- server port.
+- source mode and required source fields.
+- Immich URL for album/random-library modes.
+- display fit and transition.
+- positive slideshow interval.
+- cache size, target, prefetch, and rendition values.
+- sync refresh interval.
+- overlay slots and visibility values.
+
 ## Reset Behavior
 
 Factory reset deletes cached photos by default because the frame may be leaving the owner's control.
@@ -162,6 +175,8 @@ Troubleshooting flows may explicitly keep the cache:
 sudo immich-frame reset --keep-cache
 ```
 
+The CLI always clears `secrets.json` and `state.json` under the selected data directory. It clears cached media unless `--keep-cache` is set. Pass `--config /path/to/config.toml` when the reset should also remove the non-secret config file, such as a factory reset on a dedicated frame device.
+
 Settings UI should distinguish:
 
 ```text
@@ -170,7 +185,7 @@ Reset Immich connection
   may keep cached photos
 
 Factory reset
-  clears config, secrets, state, and cached photos by default
+  clears secrets, state, cached photos, and config when --config is provided
 ```
 
 ## Overlay Config

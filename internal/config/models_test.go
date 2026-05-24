@@ -37,6 +37,9 @@ name = "Kitchen Frame"
 host = "127.0.0.1"
 port = 9999
 
+[immich]
+url = "https://immich.example.com"
+
 [source]
 mode = "random"
 
@@ -79,6 +82,12 @@ func TestValidateReportsInvalidBaseSettings(t *testing.T) {
 	cfg.Display.Transition = "wipe"
 	cfg.Slideshow.IntervalSeconds = 0
 	cfg.Source.Mode = "favorites"
+	cfg.Cache.TargetItems = 0
+	cfg.Cache.PrefetchItems = 10
+	cfg.Cache.Rendition = "original"
+	cfg.Sync.RefreshIntervalMinutes = 0
+	cfg.Overlays.Status.Slot = "somewhere"
+	cfg.Overlays.Status.Visibility = "never"
 
 	err := cfg.Validate()
 	if err == nil {
@@ -90,6 +99,12 @@ func TestValidateReportsInvalidBaseSettings(t *testing.T) {
 		"display.transition",
 		"slideshow.interval_seconds",
 		"source.mode",
+		"cache.target_items",
+		"cache.prefetch_items",
+		"cache.rendition",
+		"sync.refresh_interval_minutes",
+		"overlays.status.slot",
+		"overlays.status.visibility",
 	} {
 		if !strings.Contains(err.Error(), want) {
 			t.Fatalf("Validate() error %q does not contain %q", err.Error(), want)
