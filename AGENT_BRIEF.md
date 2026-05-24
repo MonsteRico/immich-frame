@@ -72,7 +72,7 @@ Phase 3.5 closed the PM review gaps found on 2026-05-21:
 
 PM review accepted Phase 3.5 as complete. The next planned phase is **Phase 4: Pi Appliance**.
 
-Phase 4 should make the reference Raspberry Pi Zero 2 W boot directly into Immich Frame. Build the install/runtime layer around the existing daemon and UI, then stop at hardware verification gates for Matthew to run on the Pi:
+Phase 4 should make the reference Raspberry Pi Zero 2 W boot directly into Immich Frame. Build the install/runtime layer around the existing daemon and UI:
 
 - idempotent Raspberry Pi install script.
 - `immich-frame` service user and filesystem permissions.
@@ -82,8 +82,6 @@ Phase 4 should make the reference Raspberry Pi Zero 2 W boot directly into Immic
 - `frame.local` mDNS through the chosen Raspberry Pi OS path.
 - appliance install/runbook docs.
 - clear physical Pi verification notes, especially if hardware verification remains pending.
-
-Current Phase 4 install/runtime assets include `install.sh`, `packaging/config/appliance-config.toml`, `packaging/systemd/`, `packaging/kiosk/`, `scripts/validate-pi-install-assets.sh`, and `docs/runbooks/pi-appliance-install.md`. Physical Pi boot/reboot/kiosk/mDNS verification remains pending until Matthew runs the runbook on hardware and reports output.
 
 ## Git Commit Guidance
 

@@ -83,66 +83,11 @@ KIOSK_URL=http://127.0.0.1:8787/frame
 KIOSK_FLAGS="--kiosk --noerrdialogs --disable-infobars"
 ```
 
-The Phase 4 installer writes the editable kiosk env file to:
-
-```text
-/etc/immich-frame/kiosk.env
-```
-
-The installed kiosk systemd service starts X with `startx` and runs:
-
-```text
-/usr/local/lib/immich-frame/start-kiosk.sh
-```
-
-That launcher disables screen blanking with `xset`, hides the pointer with `unclutter`, starts `openbox-session`, and opens Chromium at the kiosk URL.
-
 ## Display Server
 
-The prepared Raspberry Pi OS Lite path is:
-
-```text
-systemd service -> startx -> Xorg -> openbox -> Chromium kiosk
-```
-
-Required packages are installed by `install.sh`:
-
-```text
-xserver-xorg
-xinit
-openbox
-chromium-browser or chromium
-unclutter
-x11-xserver-utils
-dbus-x11
-fonts-dejavu-core
-```
-
-Physical Pi verification of this display path is pending.
-
-Keep display-server specifics isolated in installer/systemd files.
+Document one tested Raspberry Pi OS Lite path. Keep display-server specifics isolated in installer/systemd files.
 
 Do not tie the Go daemon to X11, Wayland, Labwc, Openbox, or any specific display server.
-
-## mDNS
-
-Phase 4 uses Avahi for `frame.local` on Raspberry Pi OS Lite.
-
-The installer installs and enables:
-
-```text
-avahi-daemon.service
-```
-
-Expected setup URL on same Wi-Fi:
-
-```text
-http://frame.local:8787/setup
-```
-
-The HDMI setup screen and runbook keep IP fallback as the required backup path because local mDNS behavior depends on the client OS and network.
-
-Physical Pi and same-Wi-Fi client verification of `frame.local` is pending.
 
 ## Future Hardware Features
 
