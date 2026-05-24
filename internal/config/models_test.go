@@ -75,6 +75,32 @@ interval_seconds = 5
 	}
 }
 
+func TestLoadAppliesExtraSmallCachePresetWithExplicitOverrides(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.toml")
+	data := []byte(`
+[cache]
+preset = "extra-small"
+prefetch_items = 2
+`)
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.Cache.Preset != "extra-small" {
+		t.Fatalf("Cache.Preset = %q, want extra-small", cfg.Cache.Preset)
+	}
+	if cfg.Cache.TargetItems != 10 || cfg.Cache.MaxSizeMB != 128 {
+		t.Fatalf("extra-small preset values not applied: %+v", cfg.Cache)
+	}
+	if cfg.Cache.PrefetchItems != 2 {
+		t.Fatalf("explicit prefetch override = %d, want 2", cfg.Cache.PrefetchItems)
+	}
+}
+
 func TestValidateReportsInvalidBaseSettings(t *testing.T) {
 	cfg := DefaultConfig()
 	cfg.Server.Port = 0
@@ -84,6 +110,7 @@ func TestValidateReportsInvalidBaseSettings(t *testing.T) {
 	cfg.Source.Mode = "favorites"
 	cfg.Cache.TargetItems = 0
 	cfg.Cache.PrefetchItems = 10
+	cfg.Cache.Preset = "tiny"
 	cfg.Cache.Rendition = "original"
 	cfg.Sync.RefreshIntervalMinutes = 0
 	cfg.Overlays.Status.Slot = "somewhere"
@@ -101,6 +128,7 @@ func TestValidateReportsInvalidBaseSettings(t *testing.T) {
 		"source.mode",
 		"cache.target_items",
 		"cache.prefetch_items",
+		"cache.preset",
 		"cache.rendition",
 		"sync.refresh_interval_minutes",
 		"overlays.status.slot",

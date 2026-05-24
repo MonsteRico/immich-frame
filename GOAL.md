@@ -415,10 +415,10 @@ Phase 5 was reported complete, but PM verification found acceptance gaps around 
   - [x] Preserve current and near-upcoming playback entries using `cache.prefetch_items`.
   - [x] Keep the rotation deterministic enough for unit tests.
   - [x] Add focused unit tests proving a full cache can rotate in new album candidates.
-- [ ] Add an extra-small cache preset for local testing:
-  - [ ] Add a preset intended for roughly 10 cached photos.
-  - [ ] Keep production defaults unchanged.
-  - [ ] Document that the preset exists to make cache rotation visible during development.
+- [x] Add an extra-small cache preset for local testing:
+  - [x] Add a preset intended for roughly 10 cached photos.
+  - [x] Keep production defaults unchanged.
+  - [x] Document that the preset exists to make cache rotation visible during development.
 - [ ] Fix ready-status publication after outage recovery:
   - [ ] Publish recovered ready state when refresh succeeds after degraded/error status, even if cache contents do not change.
   - [ ] Add or update a focused unit test where practical.

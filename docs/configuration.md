@@ -73,7 +73,7 @@ interval_seconds = 30
 recent_history_limit = 100
 
 [cache]
-preset = "balanced" # light | balanced | large | custom
+preset = "balanced" # extra-small | light | balanced | large | custom
 max_size_mb = 2048
 min_free_mb = 1024
 target_items = 500
@@ -203,6 +203,9 @@ Future overlay-specific settings such as clock format, timezone, color, or photo
 Expose plain-language presets first:
 
 ```text
+Extra small
+  local testing preset, roughly 10 cached photos so cache rotation is easy to see
+
 Light
   less SD card usage, less offline history
 
@@ -214,6 +217,8 @@ Large
 ```
 
 Advanced config can expose raw cache values.
+
+When a TOML file sets `cache.preset`, the daemon applies that preset as the starting cache shape while parsing the file. Explicit raw values such as `target_items` or `prefetch_items` later in the same `[cache]` table still override the preset. The `extra-small` preset is for development visibility only and is not the production default.
 
 ## Cache Rotation And Sync
 

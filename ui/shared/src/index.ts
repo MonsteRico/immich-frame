@@ -83,7 +83,7 @@ export interface AppConfig {
   };
   slideshow: { intervalSeconds: number; recentHistoryLimit: number };
   cache: {
-    preset: "light" | "balanced" | "large" | "custom";
+    preset: "extra-small" | "light" | "balanced" | "large" | "custom";
     maxSizeMb: number;
     minFreeMb: number;
     targetItems: number;

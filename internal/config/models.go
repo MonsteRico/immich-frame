@@ -285,6 +285,11 @@ func (c Config) Validate() error {
 	if c.Cache.PrefetchItems > c.Cache.TargetItems {
 		issues = append(issues, "cache.prefetch_items must be less than or equal to cache.target_items")
 	}
+	switch c.Cache.Preset {
+	case "extra-small", "light", "balanced", "large", "custom":
+	default:
+		issues = append(issues, "cache.preset must be extra-small, light, balanced, large, or custom")
+	}
 	switch c.Cache.Rendition {
 	case "auto", "webp", "jpeg":
 	default:
@@ -516,6 +521,7 @@ func assign(cfg *Config, table, key, value string) {
 		cfg.Slideshow.RecentHistoryLimit = intValue
 	case "cache.preset":
 		cfg.Cache.Preset = stringValue
+		applyCachePreset(&cfg.Cache, stringValue)
 	case "cache.max_size_mb":
 		cfg.Cache.MaxSizeMB = intValue
 	case "cache.min_free_mb":
@@ -546,6 +552,27 @@ func assign(cfg *Config, table, key, value string) {
 		cfg.Overlays.Status.Slot = stringValue
 	case "overlays.status.visibility":
 		cfg.Overlays.Status.Visibility = stringValue
+	}
+}
+
+func applyCachePreset(cache *CacheConfig, preset string) {
+	switch preset {
+	case "extra-small":
+		cache.MaxSizeMB = 128
+		cache.TargetItems = 10
+		cache.PrefetchItems = 3
+	case "light":
+		cache.MaxSizeMB = 512
+		cache.TargetItems = 150
+		cache.PrefetchItems = 10
+	case "balanced":
+		cache.MaxSizeMB = 2048
+		cache.TargetItems = 500
+		cache.PrefetchItems = 20
+	case "large":
+		cache.MaxSizeMB = 4096
+		cache.TargetItems = 1000
+		cache.PrefetchItems = 40
 	}
 }
 

@@ -237,6 +237,8 @@ Unit tests cover the cache rotation rules that are hard to verify deterministica
 
 For manual browser checks, use local mock source to confirm `/frame` stays calm and playable while the daemon runs. Immich outage behavior should be tested with mocked/unit-tested adapter failures for MVP development, not live Immich CI tests.
 
+To make cache rotation visible during local Immich checks, set `[cache] preset = "extra-small"` or set `target_items = 10` in a temporary config. Keep this as a development/testing setting; production defaults remain `balanced`.
+
 ## Useful Local Commands
 
 Validate config:

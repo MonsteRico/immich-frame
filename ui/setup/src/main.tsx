@@ -296,7 +296,7 @@ function SettingsPanel({ config, hasKey, status, onValidated, onSave, onError }:
     <div className="settings-grid">
       <label>Slide seconds<input type="number" min="5" value={draft.slideshow.intervalSeconds} onInput={(event) => setDraft({ ...draft, slideshow: { ...draft.slideshow, intervalSeconds: Number(event.currentTarget.value) } })} /></label>
       <label>Display fit<select value={draft.display.fit} onInput={(event) => setDraft({ ...draft, display: { ...draft.display, fit: event.currentTarget.value as "contain" | "cover" } })}><option value="contain">Contain</option><option value="cover">Cover</option></select></label>
-      <label>Cache preset<select value={draft.cache.preset} onInput={(event) => setDraft({ ...draft, cache: presetCache(draft.cache, event.currentTarget.value) })}><option value="light">Light</option><option value="balanced">Balanced</option><option value="large">Large</option></select></label>
+      <label>Cache preset<select value={draft.cache.preset} onInput={(event) => setDraft({ ...draft, cache: presetCache(draft.cache, event.currentTarget.value) })}><option value="extra-small">Extra small</option><option value="light">Light</option><option value="balanced">Balanced</option><option value="large">Large</option></select></label>
     </div>
     <div className="toggle-row">
       <label><input type="checkbox" checked={draft.overlays.clock.enabled} onInput={(event) => setDraft({ ...draft, overlays: { ...draft.overlays, clock: { ...draft.overlays.clock, enabled: event.currentTarget.checked } } })} /> Clock</label>
@@ -350,6 +350,7 @@ function albumCount(album: ImmichAlbum) {
 }
 
 function presetCache(cache: AppConfig["cache"], preset: string): AppConfig["cache"] {
+  if (preset === "extra-small") return { ...cache, preset: "extra-small", maxSizeMb: 128, targetItems: 10, prefetchItems: 3 };
   if (preset === "light") return { ...cache, preset: "light", maxSizeMb: 512, targetItems: 150, prefetchItems: 10 };
   if (preset === "large") return { ...cache, preset: "large", maxSizeMb: 4096, targetItems: 1000, prefetchItems: 40 };
   return { ...cache, preset: "balanced", maxSizeMb: 2048, targetItems: 500, prefetchItems: 20 };
